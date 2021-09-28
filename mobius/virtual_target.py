@@ -9,87 +9,143 @@ import pandas as pd
 
 
 class VirtualTarget:
-	"""Class to handle a virtual target"""
-	def __init__(self, forcefield, seed=None):
-		"""Initialize the virtual target
+    """Class to handle a virtual target"""
+    def __init__(self, forcefield, seed=None):
+        """Initialize the virtual target
 
 
-		Args:
-			forcefield (Forcefield): a forcefield to score interaction between
-				a sequence and the virtual target
-			seed (int): random seed
+        Args:
+            forcefield (Forcefield): a forcefield to score interaction between
+                a sequence and the virtual target
+            seed (int): random seed
 
-		"""
-		self._forcefield = forcefield
-		self._sequence_length = None
-		self._random_seed = seed
-		self._rng = np.random.default_rng(self._random_seed)
+        """
+        self._forcefield = forcefield
+        self._sequence_length = None
+        self._pharmacophore = None
+        self._random_seed = seed
+        self._rng = np.random.default_rng(self._random_seed)
 
-	def __repr__(self):
-		repr_str = ""
-		return repr_str
+    def __repr__(self):
+        repr_str = ""
+        return repr_str
 
-	def load_pocket(input_filename):
-		"""Load virtual target
-		
-		Args:
-			input_filename (str): input csv filename containing the virtual
-				target
+    def load_pharmacophore(self, input_filename):
+        """Load the virtual phamacophore
+        
+        Args:
+            input_filename (str): input csv filename containing the virtual
+                pharmacophore
 
-		"""
-		self._pocket = pd.read_csv(input_filename)
+        """
+        self._pharmacophore = pd.read_csv(input_filename)
+        # Get the optimal sequence (sequence with the lowest score)
+        self._optimal_sequence = self._find_optimal_sequence()
 
-	def generate_random_pocket(self, sequence_length=None):
-		"""Generate a random pocket
+    def optimal_sequence(self):
+        """Return the optimal sequence for the current pharmacophore
+        
+        Returns:
+            str: optimal sequence
 
-		Args:
-			sequence_length (int): length of the sequence to generate
+        """
+        return self._optimal_sequence
 
-		"""
-		columns = ['solvant_exposed', 'hb_type', 'charge', 'length', 'volume']
-		self._sequence_length = sequence_length
+    def _find_optimal_sequence(self):
+        scores = []
+        residue_names = self._forcefield.parameters()['AA1'].values
 
-		for i in range(self._sequence_length):
-			solvant_exposed = self._rng.choice([0, 1])
+        # Score each residue at each position
+        for residue_name in residue_names:
+            sequence = [residue_name] * self._sequence_length
+            _, score_details = self._forcefield.score(self._pharmacophore, sequence, True) 
+            scores.append(score_details)
 
-			if solvant_exposed:
-				hb_type = self._rng.choice(['D', 'A', 'DA'])
-			else:
-				hb_type = self._rng.choice(['H',  'D', 'A', 'DA'])
+        # Get the index of the residues with the best (lowest) score
+        residue_indices = np.argmin(scores, axis=0)
+        # Get the residues names based on the index
+        optimal_sequence = ''.join(residue_names[residue_indices])
 
-			charge = self._rng.choice(['H', 'D', 'A', 'DA'])
-			length = self._rng.random()
-			volume = self._rng.random()
+        return optimal_sequence
 
-			data.append([solvant_exposed, hb_type, charge, length, volume])
-		
-		pocket = pd.DataFrame(data=data, columns=columns)
+    def generate_random_pharmacophore(self, sequence_length=None):
+        """Generate a random pharmacophore
 
-		self._pocket = pocket
+        Args:
+            sequence_length (int): length of the sequence to generate
 
-	def score_peptides(peptides):
-		"""Score interaction between peptides and the virtual target 
-		using the provided forcefield
+        """
+        data = []
+        self._sequence_length = sequence_length
 
-		Args:
-			peptides (list): list of peptide strings
+        for i in range(self._sequence_length):
+            solvent_exposure = self._rng.uniform()
+            """The hydrophilicity of that position cannot be inferior than the solvent
+            exposure. We want to avoid the not-so-realistic scenario where an hydrophobic
+            residue is totally solvent exposed.
+            Example:
+                solvent_exposure = 0 --> hydrophilicity can be between 0 (hydrophobe) and 1 (polar)
+                solvent_exposure = 1 --> Can only be 1 (polar)
+            """
+            hydrophilicity = self._rng.uniform(low=solvent_exposure)
+            # In case the position is totally solvent exposed, the volume won't
+            # have much effect in the scoring of that position
+            volume = self._rng.uniform()
+            data.append((solvent_exposure, hydrophilicity, volume))
 
-		Returns:
-			np.ndarray: array of score for each peptide
+        columns = ['solvent_exposure', 'hydrophilicity', 'volume']
+        self._pharmacophore = pd.DataFrame(data=data, columns=columns)
 
-		"""
-		score = []
+        # Get the optimal sequence (sequence with the lowest score)
+        self._optimal_sequence = self._find_optimal_sequence()
 
-		for p in peptides:
-			score.append(self._forcefield.score(p))
+    def generate_pharmacophore_from_sequence(self, peptide_sequence, solvent_exposure=None):
+        """Generate a pharmacophore from a peptide sequence
+        
+        Args:
+            peptide_sequence (str): peptide sequence
+            solvent_exposure (array-like): exposure to the solvent for each residue
 
-		return np.array(score) 
+        """
+        assert len(peptide_sequence) == len(solvent_exposure), "The peptide sequence and solvent exposure have different size."
 
-	def export_pocket(output_filename):
-		"""Export virtual target as json file
+        parameters = 
 
-		Args:
-			output_filename (str): output csv filename
 
-		"""
-		self._pocket.to_csv(output_filename, index=False)
+    def generate_random_parent_peptides(self, n=1):
+        """Generate peptide sequences that would not optimally 
+        fit the pharmacophore
+
+        Args:
+            n (int): number of peptides to generate
+
+        """
+        parents = []
+        return parents
+
+    def score_peptides(self, peptides):
+        """Score interaction between peptides and the virtual target
+        using the provided forcefield
+
+        Args:
+            peptides (list): list of peptide strings
+
+        Returns:
+            np.ndarray: array of score for each peptide
+
+        """
+        score = []
+
+        for p in peptides:
+            score.append(self._forcefield.score(self._pharmacophore, p))
+
+        return np.array(score)
+
+    def export_pharmacophore(self, output_filename):
+        """Export virtual pharmacophore as csv file
+
+        Args:
+            output_filename (str): output csv filename
+
+        """
+        self._pharmacophore.to_csv(output_filename, index=False)
