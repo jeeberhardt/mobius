@@ -182,23 +182,25 @@ class VirtualTarget:
 
         return parents
 
-    def score_peptides(self, peptides):
+    def score_peptides(self, peptides, noise=0):
         """Score interaction between peptides and the virtual target
         using the provided forcefield
 
         Args:
             peptides (list): list of peptide strings
+            noise (float): standard deviation of the Gaussian noise to add (default: 0)
 
         Returns:
             np.ndarray: array of score for each peptide
 
         """
-        score = []
+        scores = []
 
         for peptide in peptides:
-            score.append(self._forcefield.score(self._pharmacophore, peptide))
+            score = self._forcefield.score(self._pharmacophore, peptide) + self._rng.normal(scale=noise)
+            scores.append(score)
 
-        return np.array(score)
+        return np.array(scores)
 
     def export_pharmacophore(self, output_filename):
         """Export virtual pharmacophore as csv file
