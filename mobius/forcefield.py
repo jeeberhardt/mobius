@@ -46,7 +46,7 @@ class ForceField:
         """Return all the parameters for each amino acid"""
         return self._parameters
 
-    def _score_volume(self, v_residue, v_pharmacophore, epsilon=1, smooth=0.1, n=9, m=3):
+    def _volume(self, v_residue, v_pharmacophore, epsilon=1, smooth=0.1, n=9, m=3):
         """Score the residue based on its volume compared to the pharmacophore
 
         A "reversed" Lennard-Jones potential is used for the volume term:
@@ -76,7 +76,7 @@ class ForceField:
 
         return score
 
-    def _score_hydrophilicity(self, h_residue, h_pharmacophore, k=10):
+    def _hydrophilicity(self, h_residue, h_pharmacophore, k=10):
         """Calculate the hydrophilic score
 
         Use a quadratic function to score
@@ -92,7 +92,7 @@ class ForceField:
         """
         return k * (h_residue - h_pharmacophore)**2
 
-    def _score_desolvation(self, h_residue, se_pharmacophore, k=10):
+    def _desolvation(self, h_residue, se_pharmacophore, k=10):
         """Calculate the desolvation cost
 
         A desolvation cost is paid only if the solvent exposure is higher than
@@ -146,9 +146,9 @@ class ForceField:
             """
 
             # Score of the volume, hydrophilicity and desolvation terms
-            score_volume = self._score_volume(param_residue['volume'], param_pharmacophore['volume'])
-            score_hydrophilicity = self._score_hydrophilicity(param_residue['hydrophilicity'], param_pharmacophore['hydrophilicity'])
-            score_desolvation = self._score_desolvation(param_residue['hydrophilicity'], param_pharmacophore['solvent_exposure'])
+            score_volume = self._volume(param_residue['volume'], param_pharmacophore['volume'])
+            score_hydrophilicity = self._hydrophilicity(param_residue['hydrophilicity'], param_pharmacophore['hydrophilicity'])
+            score_desolvation = self._desolvation(param_residue['hydrophilicity'], param_pharmacophore['solvent_exposure'])
 
             """The volume and hydrophicility terms are weighted by the buriedness. More buried is the residue, 
             stronger are the interactions between the residue and the pharmacophore. In contrary, a completely 

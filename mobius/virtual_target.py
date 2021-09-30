@@ -46,7 +46,7 @@ class VirtualTarget:
     def __repr__(self):
         repr_str = 'Pharmacophore:\n'
         repr_str += '%s\n\n' % (pd.DataFrame(self._pharmacophore))
-        repr_str += 'Optimal sequence: %s (score: %8.3f) \n\n' % (self._optimal_sequence, self.score_peptides([self._optimal_sequence]))
+        repr_str += 'Optimal sequence: %s\n\n' % (self._optimal_sequence)
         repr_str += 'Parameters for the optimal sequence:\n'
 
         parameters = self._forcefield.parameters()
@@ -86,29 +86,28 @@ class VirtualTarget:
             sequence_length (int): length of the sequence to generate
 
         """
-        data = []
-        self._sequence_length = sequence_length
+        parameters = self._forcefield.parameters()
 
-        for i in range(self._sequence_length):
-            solvent_exposure = self._rng.uniform()
-            """The hydrophilicity of that position cannot be inferior than the solvent
-            exposure. We want to avoid the not-so-realistic scenario where an hydrophobic
-            residue is totally solvent exposed.
-            Example:
-                solvent_exposure = 0 --> hydrophilicity can be between 0 (hydrophobe) and 1 (polar)
-                solvent_exposure = 1 --> Can only be 1 (polar)
-            """
-            hydrophilicity = self._rng.uniform(low=solvent_exposure)
-            # In case the position is totally solvent exposed, the volume won't
-            # have much effect in the scoring of that position
-            volume = self._rng.uniform()
-            data.append((solvent_exposure, hydrophilicity, volume))
+        # Create random sequence
+        self._optimal_sequence = ''.join(self._rng.choice(parameters['AA1'], size=sequence_length))
+
+        # Get the index of each amino acid in the parameters
+        indices = [np.argwhere(np.in1d(parameters['AA1'], n)).ravel()[0] for n in self._optimal_sequence]
+
+        # Retrieve all their parameters
+        """The solvent exposure at that position cannot be inferior than the hydrophilicity.
+        We want to avoid the not-so-realistic scenario where an hydrophobic residue is totally solvent exposed.
+        Example:
+            hydrophilicity = 1 --> solvent_exposure can be between 0 (buried) and 1 (in water)
+            hydrophilicity = 0 --> Can only be 0 (buried)
+        """
+        hydrophilicity = parameters[indices]['hydrophilicity']
+        volume = parameters[indices]['volume']
+        solvent_exposure = self._rng.uniform(low=0, high=hydrophilicity, size=sequence_length)
 
         dtype = [('solvent_exposure', 'f4'), ('hydrophilicity', 'f4'), ('volume', 'f4')]
-        self._pharmacophore = np.array(data, dtype=dtype)
-
-        # Get the optimal sequence (sequence with the lowest score)
-        self._optimal_sequence = _find_optimal_sequence(self._forcefield, self._pharmacophore)
+        data = np.stack((solvent_exposure, hydrophilicity, volume), axis=-1)
+        self._pharmacophore = np.core.records.fromarrays(data.transpose(), dtype=dtype)
 
     def generate_pharmacophore_from_sequence(self, peptide_sequence, solvent_exposures=None):
         """Generate a pharmacophore from a peptide sequence
@@ -197,7 +196,13 @@ class VirtualTarget:
         scores = []
 
         for peptide in peptides:
-            score = self._forcefield.score(self._pharmacophore, peptide) + self._rng.normal(scale=noise)
+            score = self._forcefield.score(self._pharmacophore, peptide)
+
+            if noise > 0:
+                score += self._rng.normal(scale=noise)
+                # Score cannot be negative
+                score = 0. if score < 0 else score
+
             scores.append(score)
 
         return np.array(scores)
