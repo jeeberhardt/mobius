@@ -39,15 +39,15 @@ class ForceField:
         if parameter_file is None:
             parameter_file = os.path.join(utils.path_module('mobius'), 'data/parameters.csv')
 
-        dtype = [('AA3', 'U3'), ('AA1', 'U1'), ('hydrophilicity', 'f4'), ('volume', 'f4')]
+        dtype = [('AA3', 'U3'), ('AA1', 'U1'), ('hydrophilicity', 'f4'), ('volume', 'f4'), ('net_charge', 'i4')]
         self._parameters = np.genfromtxt(parameter_file, dtype=dtype, delimiter=',', skip_header=1)
 
     def parameters(self):
         """Return all the parameters for each amino acid"""
         return self._parameters
 
-    def _volume(self, v_residue, v_pharmacophore, epsilon=1, smooth=0.1, n=9, m=3):
-        """Score the residue based on its volume compared to the pharmacophore
+    def _van_der_waals(self, v_residue, v_pharmacophore, epsilon=1, smooth=0.1, n=9, m=3):
+        """Calculate the score of the van der Waals-like term
 
         A "reversed" Lennard-Jones potential is used for the volume term:
 
@@ -55,14 +55,14 @@ class ForceField:
 
         Args:
             v_residue (float): volume of the residue
-            v_pharmacophore (float): volume of the pharmacophore at that position
+            v_pharmacophore (float): volume of the pharmacophore
             epsilon (float): depth of the reversed LJ potential
             smooth (float): smoothing factor like in AutoDock
             n (int): repulsive term
             m (int): attractive term
 
         Returns:
-            float: score of the volume term
+            float: score of the vdW term (between 0 and inf)
 
         """
         A = _reversed_lj_coefficient(epsilon, v_pharmacophore, m, n)
@@ -76,44 +76,53 @@ class ForceField:
 
         return score
 
-    def _hydrophilicity(self, h_residue, h_pharmacophore, k=10):
-        """Calculate the hydrophilic score
+    def _electrostatic(self, h_residue, h_pharmacophore, c_residue, c_phamacophore):
+        """Calculate the score of the electrostatic-like term
 
-        Use a quadratic function to score
+        Cumulative sum of:
+            - a quadratic function for the hydrophilicity (score between 0 and 1)
+            - an absolute sum of the net charges (score between 0 and 2)
 
-        Args:
-            h_residue (float): hydrophilicity of the residue
-            h_pharmacophore (float): hydrophilicity at that position in the pharmacophore
-            k (int): factor
-
-        Returns:
-            float: score for the hydrophilic term
-
-        """
-        return k * (h_residue - h_pharmacophore)**2
-
-    def _desolvation(self, h_residue, se_pharmacophore, k=10):
-        """Calculate the desolvation cost
-
-        A desolvation cost is paid only if the solvent exposure is higher than
-        the hydrophilicity of the residue. For example:
-            - Solvent_exposure = 1 and hydrophilicity = 0 --> cost: 1 witk k = 1
-            - Solvent exposure = 1 and hydrophilicity = 1 --> cost: 0 with k = 1
-            - Solvent exposure = 0 and hydrophilicity = 1 --> cost: 0 because exposure < hydrophilicity
+        Net_charge scoring:
+            c_1 =  0  +  c_2 =  0  --> 0
+            c_1 =  1  +  c_2 = -1  --> 0
+            c_1 =  0  +  c_2 =  1  --> 1
+            c_1 =  1  +  c_2 =  1  --> 2
+            c_1 = -1  +  c_2 = -1  --> 2
 
         Args:
             h_residue (float): hydrophilicity of the residue
-            se_pharmacophore (float): solvent exposure at that position in the pharmacophore
-            k (int): factor
+            h_pharmacophore (float): hydrophilicity of the pharmacophore
+            c_residue (int): net charge of the residue
+            c_phamacophore (int): net charge of the pharmacophore
 
         Returns:
-            float: score for the desolvation term
+            float: score of the electrostatic term (between 0 and 3)
 
         """
-        if h_residue < se_pharmacophore:
-            return k * (se_pharmacophore - h_residue)**2
-        else:
-            return 0.
+        score = (h_residue - h_pharmacophore)**2
+        score += np.abs(c_residue + c_phamacophore)
+
+        return score
+
+    def _desolvation(self, h_residue, se_pharmacophore):
+        """Calculate the score of the desolvation cost
+
+        The desolvation cost is the hydrophobicity (1 - hydrophilicity) of that 
+        residue weighted by the solvent exposure. For example:
+            - Solvent_exposure = 1 and hydrophobicity = 1      --> cost: 1
+            - Solvent exposure = 1 and hydrophobicity = 0      --> cost: 0
+            - Solvent exposure = 0 and hydrophobicity = 0 or 1 --> cost: 0
+
+        Args:
+            h_residue (float): hydrophilicity of the residue
+            se_pharmacophore (float): solvent exposure of the pharmacophore
+
+        Returns:
+            float: score of the desolvation term (between 0 and 1)
+
+        """
+        return se_pharmacophore * (1 - h_residue)
 
     def score(self, pharmacophore, peptide, details=False):
         """Score the peptide sequence based on the provded pharmacophore
@@ -146,24 +155,27 @@ class ForceField:
             """
 
             # Score of the volume, hydrophilicity and desolvation terms
-            score_volume = self._volume(param_residue['volume'], param_pharmacophore['volume'])
-            score_hydrophilicity = self._hydrophilicity(param_residue['hydrophilicity'], param_pharmacophore['hydrophilicity'])
+            score_vdw = self._van_der_waals(param_residue['volume'], param_pharmacophore['volume'])
+            score_electrostatic = self._electrostatic(param_residue['hydrophilicity'], param_pharmacophore['hydrophilicity'],
+                                                      param_residue['net_charge'], param_pharmacophore['net_charge'])
             score_desolvation = self._desolvation(param_residue['hydrophilicity'], param_pharmacophore['solvent_exposure'])
 
-            """The volume and hydrophicility terms are weighted by the buriedness. More buried is the residue, 
+            """The vdW and electrostatic terms are weighted by the buriedness. More buried is the residue, 
             stronger are the interactions between the residue and the pharmacophore. In contrary, a completely 
             exposed residue (solvent_exposure = 1) is not interacting with the pharmacophore, so 
-            (volume + hydrophilicity) = 0. However there is a desolvation cost to pay if the residue is completely 
+            (vdW + electrostatic) = 0. However there is a desolvation cost to pay if the residue is completely 
             hydrophobic.
 
             Examples:
-                Buried pocket (solvent exposure = 0)           --> score = volume + hydrophilicity
+                Buried pocket (solvent exposure = 0)           --> score = vdW + electrostatic
                 Solvent exposed (solvent exposure = 1)         --> score = desolvation
-                Pocket on the surface (solvant exposure = 0.5) --> score = 0.5 * (volume + hydrophilicity) + desolvation
+                Pocket on the surface (solvant exposure = 0.5) --> score = 0.5 * (vdW + electrostatic) + desolvation
 
             """
             buriedness = 1 - param_pharmacophore['solvent_exposure']
-            score_residue = buriedness * (score_volume + score_hydrophilicity) + score_desolvation
+            score_residue = buriedness * (score_vdw + score_electrostatic) + score_desolvation
+
+            print(score_vdw, score_electrostatic, score_desolvation)
 
             #print('Score         - V: %12.3f / H: %12.3f / D : %12.3f' % (score_volume, score_hydrophilicity, score_desolvation))
 

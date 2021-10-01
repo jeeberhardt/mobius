@@ -13,3 +13,8 @@ def path_module(module_name):
     if specs is not None:
         return specs.submodule_search_locations[0]
     return None
+
+
+def opposite_signs(x, y):
+    return ((x ^ y) < 0)
+

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 
-def _find_optimal_sequence(forcefield, pharmacophore):
+def _find_target_sequence(forcefield, pharmacophore):
     scores = []
     residue_names = forcefield.parameters()['AA1']
 
@@ -21,9 +21,9 @@ def _find_optimal_sequence(forcefield, pharmacophore):
     # Get the index of the residues with the best (lowest) score
     residue_indices = np.argmin(scores, axis=0)
     # Get the residues names based on the index
-    optimal_sequence = ''.join(residue_names[residue_indices])
+    target_sequence = ''.join(residue_names[residue_indices])
 
-    return optimal_sequence
+    return target_sequence
 
 
 class VirtualTarget:
@@ -42,16 +42,18 @@ class VirtualTarget:
         self._pharmacophore = None
         self._random_seed = seed
         self._rng = np.random.default_rng(self._random_seed)
+        self._dtype = [('solvent_exposure', 'f4'), ('hydrophilicity', 'f4'), 
+                       ('volume', 'f4'), ('net_charge', 'i4')]
 
     def __repr__(self):
         repr_str = 'Pharmacophore:\n'
         repr_str += '%s\n\n' % (pd.DataFrame(self._pharmacophore))
-        repr_str += 'Optimal sequence: %s\n\n' % (self._optimal_sequence)
-        repr_str += 'Parameters for the optimal sequence:\n'
+        repr_str += 'Target sequence: %s\n\n' % (self._target_sequence)
+        repr_str += 'Parameters for the target sequence:\n'
 
         parameters = self._forcefield.parameters()
         data = []
-        for s in self._optimal_sequence:
+        for s in self._target_sequence:
             data.append(parameters[parameters['AA1'] == s])
         repr_str += '%s' % (pd.DataFrame(np.hstack(data)))
 
@@ -65,19 +67,18 @@ class VirtualTarget:
                 pharmacophore
 
         """
-        dtype = [('solvent_exposure', 'f4'), ('hydrophilicity', 'f4'), ('volume', 'f4')]
-        self._pharmacophore = np.genfromtxt(input_filename, dtype=dtype, delimiter=',', skip_header=1)
-        # Get the optimal sequence (sequence with the lowest score)
-        self._optimal_sequence = _find_optimal_sequence(self._forcefield, self._pharmacophore)
+        self._pharmacophore = np.genfromtxt(input_filename, dtype=self._dtype, delimiter=',', skip_header=1)
+        # Get the target sequence (sequence with the lowest score)
+        self._target_sequence = _find_target_sequence(self._forcefield, self._pharmacophore)
 
-    def optimal_sequence(self):
-        """Return the optimal sequence for the current pharmacophore
+    def target_sequence(self):
+        """Return the target sequence for the current pharmacophore
 
         Returns:
-            str: optimal sequence
+            str: target sequence
 
         """
-        return self._optimal_sequence
+        return self._target_sequence
 
     def generate_random_pharmacophore(self, sequence_length):
         """Generate a random pharmacophore
@@ -89,10 +90,10 @@ class VirtualTarget:
         parameters = self._forcefield.parameters()
 
         # Create random sequence
-        self._optimal_sequence = ''.join(self._rng.choice(parameters['AA1'], size=sequence_length))
+        self._target_sequence = ''.join(self._rng.choice(parameters['AA1'], size=sequence_length))
 
         # Get the index of each amino acid in the parameters
-        indices = [np.argwhere(np.in1d(parameters['AA1'], n)).ravel()[0] for n in self._optimal_sequence]
+        indices = [np.argwhere(np.in1d(parameters['AA1'], n)).ravel()[0] for n in self._target_sequence]
 
         # Retrieve all their parameters
         """The solvent exposure at that position cannot be inferior than the hydrophilicity.
@@ -103,11 +104,12 @@ class VirtualTarget:
         """
         hydrophilicity = parameters[indices]['hydrophilicity']
         volume = parameters[indices]['volume']
+        # The pharmacophore needs to be the opposite charge of the target sequence
+        net_charge = -1. * parameters[indices]['net_charge']
         solvent_exposure = self._rng.uniform(low=0, high=hydrophilicity, size=sequence_length)
 
-        dtype = [('solvent_exposure', 'f4'), ('hydrophilicity', 'f4'), ('volume', 'f4')]
-        data = np.stack((solvent_exposure, hydrophilicity, volume), axis=-1)
-        self._pharmacophore = np.core.records.fromarrays(data.transpose(), dtype=dtype)
+        data = np.stack((solvent_exposure, hydrophilicity, volume, net_charge), axis=-1)
+        self._pharmacophore = np.core.records.fromarrays(data.transpose(), dtype=self._dtype)
 
     def generate_pharmacophore_from_sequence(self, peptide_sequence, solvent_exposures=None):
         """Generate a pharmacophore from a peptide sequence
@@ -133,53 +135,42 @@ class VirtualTarget:
                 # To avoid hydrophobic residues to be fully solvent exposed
                 solvent_exposure = self._rng.uniform(high=param_residue['hydrophilicity'])
 
-            data.append((solvent_exposure, param_residue['hydrophilicity'], param_residue['volume']))
+            # The pharmacophore needs to be the opposite charge of the target sequence
+            net_charge = -1. * param_residue['net_charge']
+            data.append((solvent_exposure, param_residue['hydrophilicity'], param_residue['volume'], net_charge))
 
-        dtype = [('solvent_exposure', 'f4'), ('hydrophilicity', 'f4'), ('volume', 'f4')]
-        self._pharmacophore = np.array(data, dtype=dtype)
-        self._optimal_sequence = peptide_sequence
+        self._pharmacophore = np.array(data, dtype=self._dtype)
+        self._target_sequence = peptide_sequence
 
-    def generate_random_peptides_from_pharmacophore(self, n=2, sigmas=None):
-        """Generate peptide sequences that would not optimally fit the pharmacophore
-
-        Basically we add noise to the current pharmacophore (except solvent exposure)
-        and we select the peptide sequence that gives the best score. Maybe not the optimal
-        way to generate parents... the other option would be to use a substitution matrix to
-        generate parents from optimal_sequence.
+    def generate_random_peptides_from_pharmacophore(self, n=2, maximum_mutations=3):
+        """Generate random peptide sequences from target sequence.
 
         Args:
             n (int): number of peptides to generate
-            sigmas (array-like or float): Standard-deviation of the Gaussian noise 
-                (default: [0, 0.1, 0.1]; no noise is added to the solvent exposure, only 
-                hydrophilicity and volume)
+            maximum_mutations (int): maximum number of mutations (default: 3)
+
+        Returns:
+            list: list of mutated peptides
 
         """
         assert self._pharmacophore is not None, 'Pharmacophore was not generated.'
+        assert maximum_mutations <= len(self._target_sequence), 'Max number of mutations greater than peptide length.'
 
-        parents = []
-
-        if sigmas is None:
-            sigmas = [0, 0.1, 0.1]
-        else:
-            if not isinstance(sigmas, (list, tuple, np.ndarray)):
-                sigmas = [sigmas] * len(self._pharmacophore.dtype.names)
-
-            error_str = 'Number of sigma values must be equal to the number of pharmacophore features'
-            assert len(sigmas) == len(self._pharmacophore.dtype.names), error_str
+        mutants = []
+        parameters = self._forcefield.parameters()
 
         for i in range(n):
-            pharmacophore = self._pharmacophore.copy()
+            number_mutations = self._rng.integers(low=1, high=maximum_mutations)
+            mutation_positions = self._rng.integers(low=0, high=len(self._target_sequence), size=number_mutations)
 
-            for feature_name, sigma in zip(self._pharmacophore.dtype.names, sigmas):
-                if sigma > 0:
-                    pharmacophore[feature_name] += self._rng.normal(scale=sigma, size=self._pharmacophore.shape)
-                    # Avoid negative numbers
-                    pharmacophore[feature_name][pharmacophore[feature_name] < 0.] = 1E-10
+            mutant = self._target_sequence.split()
 
-            parent = _find_optimal_sequence(self._forcefield, pharmacophore)
-            parents.append(parent)
+            for mutation_position in mutation_positions:
+                mutant[mutation_position] = self._rng.choice(parameters['AA1'])
 
-        return parents
+            mutants.append(''.join(mutants))
+
+        return mutants
 
     def score_peptides(self, peptides, noise=0):
         """Score interaction between peptides and the virtual target
