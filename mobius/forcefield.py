@@ -175,7 +175,7 @@ class ForceField:
             buriedness = 1 - param_pharmacophore['solvent_exposure']
             score_residue = buriedness * (score_vdw + score_electrostatic) + score_desolvation
 
-            print(score_vdw, score_electrostatic, score_desolvation)
+            #print(score_vdw, score_electrostatic, score_desolvation)
 
             #print('Score         - V: %12.3f / H: %12.3f / D : %12.3f' % (score_volume, score_hydrophilicity, score_desolvation))
 

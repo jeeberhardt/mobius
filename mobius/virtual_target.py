@@ -4,6 +4,8 @@
 # Mobius - virtual target
 #
 
+import pickle
+
 import numpy as np
 import pandas as pd
 
@@ -39,6 +41,7 @@ class VirtualTarget:
         """
         self._forcefield = forcefield
         self._sequence_length = None
+        self._target_sequence = None
         self._pharmacophore = None
         self._random_seed = seed
         self._rng = np.random.default_rng(self._random_seed)
@@ -59,17 +62,18 @@ class VirtualTarget:
 
         return repr_str
 
-    def load_pharmacophore(self, input_filename):
-        """Load the virtual phamacophore
+    @classmethod
+    def load_virtual_target(cls, input_filename):
+        """Load the virtual target
 
         Args:
-            input_filename (str): input csv filename containing the virtual
-                pharmacophore
+            input_filename (str): serialized (pickle) filename containing the virtual target
 
         """
-        self._pharmacophore = np.genfromtxt(input_filename, dtype=self._dtype, delimiter=',', skip_header=1)
-        # Get the target sequence (sequence with the lowest score)
-        self._target_sequence = _find_target_sequence(self._forcefield, self._pharmacophore)
+        with open(input_filename, 'rb') as f:
+            obj = pickle.load(f)
+
+        return obj
 
     def target_sequence(self):
         """Return the target sequence for the current pharmacophore
@@ -80,8 +84,9 @@ class VirtualTarget:
         """
         return self._target_sequence
 
-    def generate_random_pharmacophore(self, sequence_length):
-        """Generate a random pharmacophore
+    def generate_random_target_sequence(self, sequence_length):
+        """Generate a random target sequence and the pharmacophore associated to
+        that sequence
 
         Args:
             sequence_length (int): length of the sequence to generate
@@ -111,11 +116,11 @@ class VirtualTarget:
         data = np.stack((solvent_exposure, hydrophilicity, volume, net_charge), axis=-1)
         self._pharmacophore = np.core.records.fromarrays(data.transpose(), dtype=self._dtype)
 
-    def generate_pharmacophore_from_sequence(self, peptide_sequence, solvent_exposures=None):
-        """Generate a pharmacophore from a peptide sequence
+    def generate_pharmacophore_from_target_sequence(self, target_sequence, solvent_exposures=None):
+        """Generate a pharmacophore from a given target sequence
 
         Args:
-            peptide_sequence (str): peptide sequence
+            target_sequence (str): peptide sequence
             solvent_exposures (array-like): exposure to the solvent for each residue (default: None)
 
         """
@@ -142,7 +147,7 @@ class VirtualTarget:
         self._pharmacophore = np.array(data, dtype=self._dtype)
         self._target_sequence = peptide_sequence
 
-    def generate_random_peptides_from_pharmacophore(self, n=2, maximum_mutations=3):
+    def generate_random_peptides_from_target_sequence(self, n=2, maximum_mutations=3):
         """Generate random peptide sequences from target sequence.
 
         Args:
@@ -153,27 +158,30 @@ class VirtualTarget:
             list: list of mutated peptides
 
         """
-        assert self._pharmacophore is not None, 'Pharmacophore was not generated.'
-        assert maximum_mutations <= len(self._target_sequence), 'Max number of mutations greater than peptide length.'
+        assert self._target_sequence is not None, 'Target sequence was not generated.'
+        assert maximum_mutations <= len(self._target_sequence), 'Max number of mutations greater than the target peptide length.'
 
         mutants = []
         parameters = self._forcefield.parameters()
+        possible_positions = list(range(len(self._target_sequence)))
 
         for i in range(n):
             number_mutations = self._rng.integers(low=1, high=maximum_mutations)
-            mutation_positions = self._rng.integers(low=0, high=len(self._target_sequence), size=number_mutations)
+            mutation_positions = self._rng.choice(possible_positions, size=number_mutations, replace=False)
 
-            mutant = self._target_sequence.split()
+            mutant = list(self._target_sequence)
 
             for mutation_position in mutation_positions:
+                # This should be replaced by a probability matrix in order to avoid
+                # the generation of very far distant sequence...
                 mutant[mutation_position] = self._rng.choice(parameters['AA1'])
 
-            mutants.append(''.join(mutants))
+            mutants.append(''.join(mutant))
 
         return mutants
 
     def score_peptides(self, peptides, noise=0):
-        """Score interaction between peptides and the virtual target
+        """Score interaction between peptides and the pharmacophore
         using the provided forcefield
 
         Args:
@@ -198,12 +206,12 @@ class VirtualTarget:
 
         return np.array(scores)
 
-    def export_pharmacophore(self, output_filename):
-        """Export virtual pharmacophore as csv file
+    def export_virtual_target(self, output_filename):
+        """Export virtual target as serialized (pickle) file
 
         Args:
-            output_filename (str): output csv filename
+            output_filename (str): output pickle filename
 
         """
-        header = ','.join(self._pharmacophore.dtype.names)
-        np.savetxt(output_filename, self._pharmacophore, delimiter=',', fmt='%f', header=header)
+        with open(output_filename, 'wb') as w:
+            pickle.dump(self, w)
