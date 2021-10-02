@@ -129,9 +129,9 @@ class VirtualTarget:
 
         if solvent_exposures is not None:
             error_str = "The peptide sequence and solvent exposure have different size."
-            assert len(peptide_sequence) == len(solvent_exposures), error_str
+            assert len(target_sequence) == len(solvent_exposures), error_str
 
-        for i, residue_name in enumerate(peptide_sequence):
+        for i, residue_name in enumerate(target_sequence):
             param_residue = parameters[parameters['AA1'] == residue_name]
 
             if solvent_exposures is not None:
@@ -145,7 +145,7 @@ class VirtualTarget:
             data.append((solvent_exposure, param_residue['hydrophilicity'], param_residue['volume'], net_charge))
 
         self._pharmacophore = np.array(data, dtype=self._dtype)
-        self._target_sequence = peptide_sequence
+        self._target_sequence = target_sequence
 
     def generate_random_peptides_from_target_sequence(self, n=2, maximum_mutations=3):
         """Generate random peptide sequences from target sequence.
