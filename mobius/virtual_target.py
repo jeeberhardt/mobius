@@ -28,6 +28,16 @@ def _find_target_sequence(forcefield, pharmacophore):
     return target_sequence
 
 
+def _fingerprint(parameters, sequence, exclude_features):
+    selected_features = list(set(parameters.dtype.names).difference(exclude_features))
+    selected_parameters = parameters[selected_features]
+
+    indices = [np.argwhere(np.in1d(parameters['AA1'], n)).ravel()[0] for n in sequence]
+    fp = np.ravel(selected_parameters[indices].tolist())
+
+    return fp
+
+
 class VirtualTarget:
     """Class to handle a virtual target"""
     def __init__(self, forcefield, seed=None):
@@ -83,6 +93,15 @@ class VirtualTarget:
 
         """
         return self._target_sequence
+
+    def fingerprint(self):
+        """Return peptide fingerprint
+
+        Returns:
+            ndarray: peptide fingerprint
+
+        """
+        return _fingerprint(self._forcefield.parameters(), self._target_sequence, ['AA3', 'AA1'])
 
     def generate_random_target_sequence(self, sequence_length):
         """Generate a random target sequence and the pharmacophore associated to
@@ -205,6 +224,23 @@ class VirtualTarget:
             scores.append(score)
 
         return np.array(scores)
+
+    def fingerprint_peptides(self, peptides):
+        """Fingerprint peptide sequences
+
+        Args:
+            peptides (list): list of peptide strings
+
+        Returns:
+            np.ndarry: array of fingerprint for each peptide
+
+        """
+        fingerprints = []
+
+        for peptide in peptides:
+            fingerprints.append(_fingerprint(self._forcefield.parameters(), peptide, ['AA3', 'AA1']))
+
+        return np.array(fingerprints)
 
     def export_virtual_target(self, output_filename):
         """Export virtual target as serialized (pickle) file
