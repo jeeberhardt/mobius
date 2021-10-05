@@ -39,7 +39,9 @@ class ForceField:
         if parameter_file is None:
             parameter_file = os.path.join(utils.path_module('mobius'), 'data/parameters.csv')
 
-        dtype = [('AA3', 'U3'), ('AA1', 'U1'), ('hydrophilicity', 'f4'), ('volume', 'f4'), ('net_charge', 'i4')]
+        dtype = [('AA3', 'U3'), ('AA1', 'U1'), ('hydrophilicity', 'f4'),
+                 ('volume', 'f4'), ('net_charge', 'i4'),
+                 ('hb_donor', 'i4'), ('hb_acceptor', 'i4')]
         self._parameters = np.genfromtxt(parameter_file, dtype=dtype, delimiter=',', skip_header=1)
 
     def parameters(self):
@@ -105,6 +107,34 @@ class ForceField:
 
         return score
 
+    def _hydrogen_bond(self, hb_residue, hb_pharmacophore):
+        """Calculate the score for the hydrogen bond-like term
+        
+        Cumulative sum of:
+            - absolute difference of hb_don_res and hb_acc_pharmacophore (0 or 1)
+            - absolute difference of hb_acc_res and hb_don_pharmacophore (0 or 1)
+
+        Example:
+            - HB don. residue (1)     - HB acc. pharmacophore (1)     --> 0
+            - Not HB don. residue (0) - HB acc. pharmacophore (1)     --> 1
+            - HB don. residue (1)     - Not HB acc. pharmacophore (0) --> 1
+            - etc...
+
+        Args:
+            hb_residue (list): hb parameters of residue [hb_don, hb_acc]
+            hb_pharmacophore (list): hb parameters of pharmacophore [hb_don, hb_acc]
+
+        Returns:
+            int: score of the hydrogen bond term (between 0 and 2)
+
+        """
+        # HB don. residue vs HB acc. phamacophore
+        score = np.abs(hb_residue[0] - hb_pharmacophore[1])
+        # HB acc. residue vs HB don. phamacophore
+        score += np.abs(hb_residue[1] - hb_pharmacophore[0])
+
+        return score
+
     def _desolvation(self, h_residue, se_pharmacophore):
         """Calculate the score of the desolvation cost
 
@@ -142,22 +172,18 @@ class ForceField:
 
         score_residues = []
 
+        #print('Peptide %s' % peptide)
+
         for i in range(len(pharmacophore)):
             param_residue = self._parameters[self._parameters['AA1'] == peptide[i]]
             param_pharmacophore = pharmacophore[i]
-
-            """
-            print('Pharmacophore - V: %12.3f / H: %12.3f / SE: %12.3f' % (param_pharmacophore['volume'],
-                                                                          param_pharmacophore['hydrophilicity'],
-                                                                          param_pharmacophore['solvent_exposure']))
-            print('Residue %s     - V: %12.3f / H: %12.3f' % (peptide[i], param_residue['volume'],
-                                                              param_residue['hydrophilicity']))
-            """
 
             # Score of the volume, hydrophilicity and desolvation terms
             score_vdw = self._van_der_waals(param_residue['volume'], param_pharmacophore['volume'])
             score_electrostatic = self._electrostatic(param_residue['hydrophilicity'], param_pharmacophore['hydrophilicity'],
                                                       param_residue['net_charge'], param_pharmacophore['net_charge'])
+            score_hydrogen_bond = self._hydrogen_bond([param_residue['hb_donor'], param_residue['hb_acceptor']],
+                                                      [param_pharmacophore['hb_donor'], param_pharmacophore['hb_acceptor']])
             score_desolvation = self._desolvation(param_residue['hydrophilicity'], param_pharmacophore['solvent_exposure'])
 
             """The vdW and electrostatic terms are weighted by the buriedness. More buried is the residue, 
@@ -167,17 +193,16 @@ class ForceField:
             hydrophobic.
 
             Examples:
-                Buried pocket (solvent exposure = 0)           --> score = vdW + electrostatic
+                Buried pocket (solvent exposure = 0)           --> score = vdW + electrostatic + hydrogen_bond
                 Solvent exposed (solvent exposure = 1)         --> score = desolvation
-                Pocket on the surface (solvant exposure = 0.5) --> score = 0.5 * (vdW + electrostatic) + desolvation
+                Pocket on the surface (solvant exposure = 0.5) --> score = 0.5 * (vdW + electrostatic + hydrogen_bond) + desolvation
 
             """
             buriedness = 1 - param_pharmacophore['solvent_exposure']
-            score_residue = buriedness * (score_vdw + score_electrostatic) + score_desolvation
+            score_residue = buriedness * (score_vdw + score_electrostatic + score_hydrogen_bond) + score_desolvation
 
-            #print(score_vdw, score_electrostatic, score_desolvation)
-
-            #print('Score         - V: %12.3f / H: %12.3f / D : %12.3f' % (score_volume, score_hydrophilicity, score_desolvation))
+            #print('Residue %s     - %s' % (peptide[i], param_residue))
+            #print('Score         - V: %12.3f / E: %12.3f / HB: %12.3f / D : %12.3f' % (score_volume, score_electrostatic, score_hydrogen_bond, score_desolvation))
 
             score_residues.extend(score_residue)
 
