@@ -111,6 +111,18 @@ class ForceField:
     def _hydrogen_bond(self, hb_residue, hb_pharmacophore):
         """Calculate the score for the hydrogen bond-like term
 
+        Scoring:
+            - A     ## D                 --> 0
+            - A + D ## A + D             --> 0
+            - AD    ## AD                --> 0
+            - A     ## A or AD or A + D  --> 1 (because 1 unsatisfied HB)
+            - AD    ## A or D or A + D   --> 1
+            - A     ## None              --> 1
+            - AD    ## None              --> 2 (because 2 unsatisfied HB)
+            - A + D ## None              --> 2
+
+        Note: A + D (Asn, Gln) != AD (Thr, Ser, Cys, Tyr)
+
         Args:
             hb_residue (list): hb parameters of residue [hb_don, hb_acc, hb_don_acc]
             hb_pharmacophore (list): hb parameters of pharmacophore [hb_don, hb_acc, hb_don_acc]
