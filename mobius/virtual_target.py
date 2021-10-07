@@ -57,20 +57,12 @@ class VirtualTarget:
         self._rng = np.random.default_rng(self._random_seed)
         self._dtype = [('solvent_exposure', 'f4'), ('hydrophilicity', 'f4'),
                        ('volume', 'f4'), ('net_charge', 'i4'),
-                       ('hb_donor', 'i4'), ('hb_acceptor', 'i4')]
+                       ('hb_don', 'i4'), ('hb_acc', 'i4'), ('hb_don_acc', 'i4')]
 
     def __repr__(self):
-        repr_str = 'Pharmacophore:\n'
+        repr_str = 'Target sequence: %s\n\n' % (self._target_sequence)
+        repr_str += 'Pharmacophore:\n'
         repr_str += '%s\n\n' % (pd.DataFrame(self._pharmacophore))
-        repr_str += 'Target sequence: %s\n\n' % (self._target_sequence)
-        repr_str += 'Parameters for the target sequence:\n'
-
-        parameters = self._forcefield.parameters()
-        data = []
-        for s in self._target_sequence:
-            data.append(parameters[parameters['AA1'] == s])
-        repr_str += '%s' % (pd.DataFrame(np.hstack(data)))
-
         return repr_str
 
     @classmethod
@@ -138,19 +130,16 @@ class VirtualTarget:
         """
         hydrophilicity = parameters[indices]['hydrophilicity']
         solvent_exposure = self._rng.uniform(low=0, high=hydrophilicity, size=sequence_length)
-        
-        # The pharmacophore needs to be the opposite charge of the target sequence
-        net_charge = -1. * parameters[indices]['net_charge']
-        
-        # We also do the printed mold of the hydrogen bonds
-        hb_donor = parameters[indices]['hb_acceptor']
-        hb_acceptor = parameters[indices]['hb_donor']
+        net_charge = parameters[indices]['net_charge']
+        hb_don = parameters[indices]['hb_don']
+        hb_acc = parameters[indices]['hb_acc']
+        hb_don_acc = parameters[indices]['hb_don_acc']
 
         # ... and get the volume
         volume = parameters[indices]['volume']
 
-        data = np.stack((solvent_exposure, hydrophilicity, volume, net_charge,
-                         hb_donor, hb_acceptor), axis=-1)
+        data = np.stack((solvent_exposure, hydrophilicity, volume,
+                         net_charge, hb_don, hb_acc, hb_don_acc), axis=-1)
         self._pharmacophore = np.core.records.fromarrays(data.transpose(), dtype=self._dtype)
 
     def generate_pharmacophore_from_target_sequence(self, target_sequence, solvent_exposures=None):
@@ -177,15 +166,13 @@ class VirtualTarget:
                 # To avoid hydrophobic residues to be fully solvent exposed
                 solvent_exposure = self._rng.uniform(high=param_residue['hydrophilicity'])
 
-            # The pharmacophore needs to be the opposite charge of the target sequence
-            net_charge = -1. * param_residue['net_charge']
-
-            # We also do the printed mold of the hydrogen bonds
-            hb_donor = param_residue['hb_acceptor']
-            hb_acceptor = param_residue['hb_donor']
+            net_charge = param_residue['net_charge']
+            hb_don = param_residue['hb_don']
+            hb_acc = param_residue['hb_acc']
+            hb_don_acc = param_residue['hb_don_acc']
 
             data.append((solvent_exposure, param_residue['hydrophilicity'], param_residue['volume'],
-                         net_charge, hb_donor, hb_acceptor))
+                         net_charge, hb_don, hb_acc, hb_don_acc))
 
         self._pharmacophore = np.array(data, dtype=self._dtype)
         self._target_sequence = target_sequence

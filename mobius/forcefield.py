@@ -41,7 +41,7 @@ class ForceField:
 
         dtype = [('AA3', 'U3'), ('AA1', 'U1'), ('hydrophilicity', 'f4'),
                  ('volume', 'f4'), ('net_charge', 'i4'),
-                 ('hb_donor', 'i4'), ('hb_acceptor', 'i4')]
+                 ('hb_don', 'i4'), ('hb_acc', 'i4'), ('hb_don_acc', 'i4')]
         self._parameters = np.genfromtxt(parameter_file, dtype=dtype, delimiter=',', skip_header=1)
 
     def parameters(self):
@@ -83,14 +83,15 @@ class ForceField:
 
         Cumulative sum of:
             - a quadratic function for the hydrophilicity (score between 0 and 1)
-            - an absolute sum of the net charges (score between 0 and 2)
+            - an absolute sum of the net charges (score between 0 and 1)
 
         Net_charge scoring:
-            c_1 =  0  +  c_2 =  0  --> 0
-            c_1 =  1  +  c_2 = -1  --> 0
-            c_1 =  0  +  c_2 =  1  --> 1
-            c_1 =  1  +  c_2 =  1  --> 2
-            c_1 = -1  +  c_2 = -1  --> 2
+            c_1 =  0  -  c_2 =  0  --> 0
+            c_1 =  1  -  c_2 =  1  --> 0
+            c_1 = -1  -  c_2 = -1  --> 0
+            c_1 =  0  -  c_2 =  1  --> 1
+            c_1 =  1  -  c_2 =  0  --> 1
+            c_1 =  1  -  c_2 = -1  --> 2
 
         Args:
             h_residue (float): hydrophilicity of the residue
@@ -99,41 +100,44 @@ class ForceField:
             c_phamacophore (int): net charge of the pharmacophore
 
         Returns:
-            float: score of the electrostatic term (between 0 and 3)
+            float: score of the electrostatic term (between 0 and 2)
 
         """
         score = (h_residue - h_pharmacophore)**2
-        score += np.abs(c_residue + c_phamacophore)
+        score += np.abs(c_residue - c_phamacophore)
 
         return score
 
     def _hydrogen_bond(self, hb_residue, hb_pharmacophore):
         """Calculate the score for the hydrogen bond-like term
-        
-        Cumulative sum of:
-            - absolute difference of hb_don_res and hb_acc_pharmacophore (0 or 1)
-            - absolute difference of hb_acc_res and hb_don_pharmacophore (0 or 1)
-
-        Example:
-            - HB don. residue (1)     - HB acc. pharmacophore (1)     --> 0
-            - Not HB don. residue (0) - HB acc. pharmacophore (1)     --> 1
-            - HB don. residue (1)     - Not HB acc. pharmacophore (0) --> 1
-            - etc...
 
         Args:
-            hb_residue (list): hb parameters of residue [hb_don, hb_acc]
-            hb_pharmacophore (list): hb parameters of pharmacophore [hb_don, hb_acc]
+            hb_residue (list): hb parameters of residue [hb_don, hb_acc, hb_don_acc]
+            hb_pharmacophore (list): hb parameters of pharmacophore [hb_don, hb_acc, hb_don_acc]
 
         Returns:
             int: score of the hydrogen bond term (between 0 and 2)
 
         """
-        # HB don. residue vs HB acc. phamacophore
-        score = np.abs(hb_residue[0] - hb_pharmacophore[1])
-        # HB acc. residue vs HB don. phamacophore
-        score += np.abs(hb_residue[1] - hb_pharmacophore[0])
-
-        return score
+        if all([hb_residue[2], hb_pharmacophore[2]]):
+            # If both are hb_donor_acceptor
+            return 0
+        elif any([hb_residue[2], hb_pharmacophore[2]]):
+            # If one of the two is hb_donor_acceptor
+            if np.sum([hb_residue[:2], hb_pharmacophore[:2]]) > 0:
+                # It means that one is donor_acceptor and the other
+                # one is donor or acceptor or (donor, acceptor)
+                return 1
+            else:
+                # It means that one is donor_acceptor and the other
+                # one is neither donor or acceptor
+                return 2
+        else:
+            # HB donor
+            score = np.abs(hb_residue[0] - hb_pharmacophore[0])
+            # HB acceptor
+            score += np.abs(hb_residue[1] - hb_pharmacophore[1])
+            return score
 
     def _desolvation(self, h_residue, se_pharmacophore):
         """Calculate the score of the desolvation cost
@@ -178,12 +182,19 @@ class ForceField:
             param_residue = self._parameters[self._parameters['AA1'] == peptide[i]]
             param_pharmacophore = pharmacophore[i]
 
-            # Score of the volume, hydrophilicity and desolvation terms
-            score_vdw = self._van_der_waals(param_residue['volume'], param_pharmacophore['volume'])
+            # vdW
+            score_vdw = self._van_der_waals(param_residue['volume'], param_pharmacophore['volume'], smooth=0)
+
+            # Electrostatic
             score_electrostatic = self._electrostatic(param_residue['hydrophilicity'], param_pharmacophore['hydrophilicity'],
                                                       param_residue['net_charge'], param_pharmacophore['net_charge'])
-            score_hydrogen_bond = self._hydrogen_bond([param_residue['hb_donor'], param_residue['hb_acceptor']],
-                                                      [param_pharmacophore['hb_donor'], param_pharmacophore['hb_acceptor']])
+
+            # HBond
+            hb_residue = param_residue[['hb_don', 'hb_acc', 'hb_don_acc']].item()
+            hb_pharmacophore = param_pharmacophore[['hb_don', 'hb_acc', 'hb_don_acc']].item()
+            score_hydrogen_bond = self._hydrogen_bond(hb_residue, hb_pharmacophore)
+
+            # Desolvation
             score_desolvation = self._desolvation(param_residue['hydrophilicity'], param_pharmacophore['solvent_exposure'])
 
             """The vdW and electrostatic terms are weighted by the buriedness. More buried is the residue, 
@@ -202,7 +213,7 @@ class ForceField:
             score_residue = buriedness * (score_vdw + score_electrostatic + score_hydrogen_bond) + score_desolvation
 
             #print('Residue %s     - %s' % (peptide[i], param_residue))
-            #print('Score         - V: %12.3f / E: %12.3f / HB: %12.3f / D : %12.3f' % (score_volume, score_electrostatic, score_hydrogen_bond, score_desolvation))
+            #print('Score         - V: %12.3f / E: %12.3f / HB: %12.3f / D : %12.3f' % (score_vdw, score_electrostatic, score_hydrogen_bond, score_desolvation))
 
             score_residues.extend(score_residue)
 
