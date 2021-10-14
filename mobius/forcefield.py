@@ -43,12 +43,17 @@ class ForceField:
                  ('volume', 'f4'), ('net_charge', 'i4'),
                  ('hb_don', 'i4'), ('hb_acc', 'i4'), ('hb_don_acc', 'i4')]
         self._parameters = np.genfromtxt(parameter_file, dtype=dtype, delimiter=',', skip_header=1)
+        self._term_parameters = {'vdw': {"epsilon": 1,
+                                         'smooth': 0.1,
+                                         'score_max': None,
+                                         'n': 9,
+                                         'm': 3}}
 
     def parameters(self):
         """Return all the parameters for each amino acid"""
         return self._parameters
 
-    def _van_der_waals(self, v_residue, v_pharmacophore, epsilon=1, smooth=0.1, n=9, m=3):
+    def _van_der_waals(self, v_residue, v_pharmacophore, epsilon=1, smooth=0.1, n=9, m=3, score_max=None):
         """Calculate the score of the van der Waals-like term
 
         A "reversed" Lennard-Jones potential is used for the volume term:
@@ -62,6 +67,7 @@ class ForceField:
             smooth (float): smoothing factor like in AutoDock
             n (int): repulsive term
             m (int): attractive term
+            score_max (float): truncate energy (default: None)
 
         Returns:
             float: score of the vdW term (between 0 and inf)
@@ -75,6 +81,11 @@ class ForceField:
 
         # We add epsilon so V is equal to zero when v_residue == v_pharmacophore
         score = epsilon + (((v_residue**n) / A)) - (((v_residue**m) / B))
+
+        try:
+            score = score_max if score > score_max else score
+        except:
+            pass
 
         return score
 
@@ -187,6 +198,7 @@ class ForceField:
         assert len(pharmacophore) == len(peptide), "The pharmacophore and peptide have different size."
 
         score_residues = []
+        score_terms = np.zeros(4)
 
         #print('Peptide %s' % peptide)
 
@@ -195,7 +207,12 @@ class ForceField:
             param_pharmacophore = pharmacophore[i]
 
             # vdW
-            score_vdw = self._van_der_waals(param_residue['volume'], param_pharmacophore['volume'], smooth=0)
+            score_vdw = self._van_der_waals(param_residue['volume'], param_pharmacophore['volume'],
+                                            epsilon=self._term_parameters['vdw']['epsilon'],
+                                            smooth=self._term_parameters['vdw']['smooth'],
+                                            n=self._term_parameters['vdw']['n'],
+                                            m=self._term_parameters['vdw']['m'],
+                                            score_max=self._term_parameters['vdw']['score_max'])
 
             # Electrostatic
             score_electrostatic = self._electrostatic(param_residue['hydrophilicity'], param_pharmacophore['hydrophilicity'],
@@ -228,6 +245,10 @@ class ForceField:
             #print('Score         - V: %12.3f / E: %12.3f / HB: %12.3f / D : %12.3f' % (score_vdw, score_electrostatic, score_hydrogen_bond, score_desolvation))
 
             score_residues.extend(score_residue)
+            score_terms[0] += buriedness * score_vdw
+            score_terms[1] += buriedness * score_electrostatic
+            score_terms[2] += buriedness * score_hydrogen_bond
+            score_terms[3] += score_desolvation
 
         #print("")
 
@@ -235,6 +256,6 @@ class ForceField:
         score = np.sum(score_residues)
 
         if details:
-            return score, score_residues
+            return score, score_terms #score_residues
         else:
             return score
