@@ -45,15 +45,15 @@ class ForceField:
         self._parameters = np.genfromtxt(parameter_file, dtype=dtype, delimiter=',', skip_header=1)
         self._term_parameters = {'vdw': {"epsilon": 1,
                                          'smooth': 0.1,
-                                         'score_max': None,
-                                         'n': 9,
+                                         'max_score': 2,
+                                         'n': 4,
                                          'm': 3}}
 
     def parameters(self):
         """Return all the parameters for each amino acid"""
         return self._parameters
 
-    def _van_der_waals(self, v_residue, v_pharmacophore, epsilon=1, smooth=0.1, n=9, m=3, score_max=None):
+    def _van_der_waals(self, v_residue, v_pharmacophore, epsilon=1, smooth=0.1, n=9, m=3, max_score=None):
         """Calculate the score of the van der Waals-like term
 
         A "reversed" Lennard-Jones potential is used for the volume term:
@@ -67,7 +67,7 @@ class ForceField:
             smooth (float): smoothing factor like in AutoDock
             n (int): repulsive term
             m (int): attractive term
-            score_max (float): truncate energy (default: None)
+            max_score (float): truncate energy to maximum score (default: None)
 
         Returns:
             float: score of the vdW term (between 0 and inf)
@@ -83,7 +83,7 @@ class ForceField:
         score = epsilon + (((v_residue**n) / A)) - (((v_residue**m) / B))
 
         try:
-            score = score_max if score > score_max else score
+            score = max_score if score > max_score else score
         except:
             pass
 
@@ -212,7 +212,7 @@ class ForceField:
                                             smooth=self._term_parameters['vdw']['smooth'],
                                             n=self._term_parameters['vdw']['n'],
                                             m=self._term_parameters['vdw']['m'],
-                                            score_max=self._term_parameters['vdw']['score_max'])
+                                            max_score=self._term_parameters['vdw']['max_score'])
 
             # Electrostatic
             score_electrostatic = self._electrostatic(param_residue['hydrophilicity'], param_pharmacophore['hydrophilicity'],
