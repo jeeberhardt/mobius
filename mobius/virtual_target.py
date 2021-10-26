@@ -177,26 +177,35 @@ class VirtualTarget:
         self._pharmacophore = np.array(data, dtype=self._dtype)
         self._target_sequence = target_sequence
 
-    def generate_random_peptides_from_target_sequence(self, n=2, maximum_mutations=3):
+    def generate_random_peptides_from_target_sequence(self, n=2, minimum_mutations=1, maximum_mutations=None):
         """Generate random peptide sequences from target sequence.
 
         Args:
             n (int): number of peptides to generate
-            maximum_mutations (int): maximum number of mutations (default: 3)
+            minimum_mutations (int): minimum number of mutations (default: 1)
+            maximum_mutations (int): maximum number of mutations (default: None, length of target peptide)
 
         Returns:
             list: list of mutated peptides
 
         """
         assert self._target_sequence is not None, 'Target sequence was not generated.'
-        assert maximum_mutations <= len(self._target_sequence), 'Max number of mutations greater than the target peptide length.'
+        if maximum_mutations is not None:
+            assert maximum_mutations <= len(self._target_sequence), 'Max number of mutations greater than the target peptide length.'
+            assert minimum_mutations <= maximum_mutations, 'Min number of mutations greater than max number.'
+        else:
+            maximum_mutations = len(self._target_sequence)
 
         mutants = []
         parameters = self._forcefield.parameters()
         possible_positions = list(range(len(self._target_sequence)))
 
         for i in range(n):
-            number_mutations = self._rng.integers(low=1, high=maximum_mutations)
+            if minimum_mutations == maximum_mutations:
+                number_mutations = maximum_mutations
+            else:
+                number_mutations = self._rng.integers(low=minimum_mutations, high=maximum_mutations)
+
             mutation_positions = self._rng.choice(possible_positions, size=number_mutations, replace=False)
 
             mutant = list(self._target_sequence)
