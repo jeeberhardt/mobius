@@ -5,12 +5,12 @@
 #
 
 import torch
+import botorch
 import gpytorch
 import numpy as np
 
 from scipy.stats import norm
 from rdkit import Chem
-from botorch.models.gpytorch import GPyTorchModel
 from botorch.fit import fit_gpytorch_model
 from map4 import MAP4Calculator
 
@@ -48,7 +48,7 @@ class TanimotoSimilarityKernel(gpytorch.kernels.Kernel):
 
     
 # We will use the simplest form of GP model, exact inference
-class ExactGPModel(gpytorch.models.ExactGP, GPyTorchModel):
+class ExactGPModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchModel):
     # to inform GPyTorchModel API
     _num_outputs = 1
     
@@ -89,9 +89,10 @@ def get_fitted_model(train_x, train_y, state_dict=None, kernel=None):
 
 
 def predict(model, likelihood, test_x):
+    # Set model in evaluation mode
     model.eval()
     likelihood.eval()
-    
+
     # Make predictions by feeding model through likelihood
     with torch.no_grad(), gpytorch.settings.fast_pred_var():
         # Test points are regularly spaced along [0,1]
