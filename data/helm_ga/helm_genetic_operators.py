@@ -4,9 +4,34 @@
 # HELM
 #
 
+import random
+
 import numpy as np
 
 from helm import build_helm_string, parse_helm
+
+
+def constrained_sum_sample_pos(n, total):
+    """Return a randomly chosen list of n positive integers summing to total.
+    Each such list is equally likely to occur.
+    
+    Source: https://stackoverflow.com/questions/3589214/generate-random-numbers-summing-to-a-predefined-value
+
+    """
+
+    dividers = sorted(random.sample(range(1, total), n - 1))
+    return np.array([a - b for a, b in zip(dividers + [total], [0] + dividers)])
+
+
+def constrained_sum_sample_nonneg(n, total):
+    """Return a randomly chosen list of n nonnegative integers summing to total.
+    Each such list is equally likely to occur.
+
+    Source: https://stackoverflow.com/questions/3589214/generate-random-numbers-summing-to-a-predefined-value
+
+    """
+
+    return np.array([x - 1 for x in constrained_sum_sample_pos(n, total + n)])
 
 
 class HELMGeneticOperators:
@@ -22,7 +47,7 @@ class HELMGeneticOperators:
                                    ('SourceMonomerPosition', 'i4'), ('SourceAttachment', 'U2'),
                                    ('TargetMonomerPosition', 'i4'), ('TargetAttachment', 'U2')]
         
-    def insert(self, helm_string, n=10, probability=0.05, only_terminus=False, maximum_size=None):
+    def insert(self, helm_string, n=10, only_terminus=False, maximum_size=None):
         mutant_helm_strings = []
         
         polymers, connections, _, _ = parse_helm(helm_string)
@@ -30,47 +55,52 @@ class HELMGeneticOperators:
         # Generate mutants...
         for i in range(n):
             mutant_polymers = {}
-            n_mutations = 0
+            total_mutations = 0
         
             for pid, sequence in polymers.items():
                 mutated_sequence = list(sequence)
 
+                # Choose positions where to insert new mutations
                 if only_terminus:
-                    possible_positions = np.array([0, len(sequence)])
+                    mutation_positions = np.array([0, len(sequence)])
                 else:
-                    possible_positions = np.array(range(len(sequence)))
+                    mutation_positions = np.array(range(len(sequence)))
 
-                # Choose positions to insert
-                mutation_probabilities = self._rng.uniform(size=len(possible_positions))
-                mutation_positions = possible_positions[mutation_probabilities <= probability]
+                # Define the max number of mutations that will be inserted
+                if maximum_size is not None:
+                    # In the case where mutation_positions is smaller than diff maximum_size and sequence
+                    maximum_mutations = maximum_size - len(sequence)
+                else:
+                    maximum_mutations = mutation_positions.shape[0]
 
-                # We move to the next polymer if there is no monomer to insert...
-                if len(mutation_positions) == 0:
+                # Choose random number of mutations per position
+                if maximum_mutations > 0:
+                    # There will always be at least one mutation
+                    try:
+                        n_mutations = np.random.randint(1, high=maximum_mutations + 1)
+                    except ValueError:
+                        n_mutations = 1
+
+                    mutations_per_position = constrained_sum_sample_nonneg(mutation_positions.shape[0], n_mutations)
+                else:
+                    # We move to the next polymer since the sequence length exceed already the maximum length allowed
                     mutant_polymers[pid] = (sequence, np.array([]))
                     continue
 
-                if maximum_size is not None:
-                    # In the case where mutation_positions is smaller than diff maximum_size and sequence
-                    mutations_to_select = np.min([maximum_size - len(sequence), len(mutation_positions)])
+                # Keep positions where there are mutations
+                mutation_positions = mutation_positions[mutations_per_position > 0]
+                mutations_per_position = mutations_per_position[mutations_per_position > 0]
 
-                    if mutations_to_select > 0:
-                        mutation_positions = self._rng.choice(mutation_positions, size=mutations_to_select, replace=False)
-                    else:
-                        # We move to the next polymer since the sequence length exceed already the maximum length allowed
-                        mutant_polymers[pid] = (sequence, np.array([]))
-                        continue
+                for mutation_position, n_mutations in zip(mutation_positions[::-1], mutations_per_position[::-1]):
+                    for _ in range(n_mutations):
+                        chosen_monomer = self._monomer_library[self._rng.choice(len(self._monomer_library))]['symbol']
+                        mutated_sequence.insert(mutation_position, chosen_monomer)
 
-                # Since we are going to insert from the end, the array must be sorted
-                mutation_positions = np.sort(mutation_positions)
+                # Stored mutated sequence, number of mutations per position and where they were inserted
+                mutant_polymers[pid] = (''.join(mutated_sequence), (mutation_positions, mutations_per_position))
+                total_mutations += np.sum(mutations_per_position)
 
-                for mutation_position in mutation_positions[::-1]:
-                    chosen_monomer = self._monomer_library[self._rng.choice(len(self._monomer_library))]['symbol']
-                    mutated_sequence.insert(mutation_position, chosen_monomer)
-
-                mutant_polymers[pid] = (''.join(mutated_sequence), mutation_positions)
-                n_mutations += len(mutation_positions)
-
-            if n_mutations > 0:
+            if total_mutations > 0:
                 data = []
 
                 # Shift attachment positions
@@ -78,8 +108,11 @@ class HELMGeneticOperators:
                     source_mutations = mutant_polymers[connection['SourcePolymerID']][1]
                     target_mutations = mutant_polymers[connection['TargetPolymerID']][1]
 
-                    source_position = connection['SourceMonomerPosition'] + np.sum([source_mutations < connection['SourceMonomerPosition']])
-                    target_position = connection['TargetMonomerPosition'] + np.sum([target_mutations < connection['TargetMonomerPosition']])
+                    source_position = connection['SourceMonomerPosition'] \
+                                    + np.sum(source_mutations[1][source_mutations[0] < connection['SourceMonomerPosition']]) \
+
+                    target_position = connection['TargetMonomerPosition'] \
+                                    + np.sum(target_mutations[1][target_mutations[0] < connection['TargetMonomerPosition']])
 
                     data.append((connection['SourcePolymerID'], connection['TargetPolymerID'], 
                                  source_position, connection['SourceAttachment'],
@@ -95,8 +128,8 @@ class HELMGeneticOperators:
                 mutant_helm_strings.append(helm_string)
         
         return mutant_helm_strings
-        
-    def remove(self, helm_string, n=10, probability=0.05, only_terminus=False, minimun_size=None, keep_connections=True):
+
+    def delete(self, helm_string, n=10, only_terminus=False, minimum_size=None, keep_connections=True):
         mutant_helm_strings = []
         
         polymers, connections, _, _ = parse_helm(helm_string)
@@ -104,15 +137,16 @@ class HELMGeneticOperators:
         # Generate mutants...
         for i in range(n):
             mutant_polymers = {}
-            n_mutations = 0
+            total_mutations = 0
         
             for pid, sequence in polymers.items():
                 mutated_sequence = list(sequence)
 
+                # Choose positions where to insert new mutations
                 if only_terminus:
-                    possible_positions = [0, len(sequence) - 1]
+                    mutation_positions = np.array([0, len(sequence) - 1])
                 else:
-                    possible_positions = range(len(sequence))
+                    mutation_positions = np.array(range(len(sequence)))
 
                 # Residues involved in a connection within and between polymers won't be removed
                 if keep_connections and pid in polymers.keys():
@@ -120,39 +154,44 @@ class HELMGeneticOperators:
                     connection_resids += list(connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition'])
                     # Because positions are 1-based in HELM
                     connection_resids = np.array(connection_resids) - 1
-                    possible_positions = list(set(possible_positions).difference(connection_resids))
+                    mutation_positions = np.array(list(set(mutation_positions).difference(connection_resids)))
 
-                # Choose positions to remove
-                possible_positions = np.array(possible_positions)
-                mutation_probabilities = self._rng.uniform(size=len(possible_positions))
-                mutation_positions = possible_positions[mutation_probabilities <= probability]
+                # Define the max number of mutations that will be inserted
+                if minimum_size is not None:
+                    # In the case where mutation_positions is smaller than diff maximum_size and sequence
+                    maximum_mutations = len(sequence) - minimum_size
+                else:
+                    maximum_mutations = mutation_positions.shape[0]
 
-                # We move to the next polymer if there is no monomer to remove...
-                if len(mutation_positions) == 0:
+                # Choose random number of mutations per position
+                if maximum_mutations > 0:
+                    # There will always be at least one mutation
+                    try:
+                        n_mutations = np.random.randint(1, high=maximum_mutations + 1)
+                    except ValueError:
+                        n_mutations = 1
+
+                    mutations_per_position = constrained_sum_sample_nonneg(mutation_positions.shape[0], n_mutations)
+
+                    # FOR NOW, WE LIMIT TO ONE DELETION PER POSITION BECAUSE OF THE CONNECTIONS. Need to figure this out...
+                    mutations_per_position[mutations_per_position > 1] = 1
+                else:
+                    # We move to the next polymer since the sequence length exceed already the maximum length allowed
                     mutant_polymers[pid] = (sequence, np.array([]))
                     continue
 
-                if minimun_size is not None:
-                    # In the case where mutation_positions is smaller than diff maximum_size and sequence
-                    mutations_to_select = np.min([len(sequence) - minimun_size, len(mutation_positions)])
+                # Keep positions where there are mutations
+                mutation_positions = mutation_positions[mutations_per_position > 0]
+                mutations_per_position = mutations_per_position[mutations_per_position > 0]
 
-                    if mutations_to_select > 0:
-                        mutation_positions = self._rng.choice(mutation_positions, size=mutations_to_select, replace=False)
-                    else:
-                        # We move to the next polymer since the sequence length exceed already the maximum length allowed
-                        mutant_polymers[pid] = (sequence, np.array([]))
-                        continue
+                for mutation_position, n_mutations in zip(mutation_positions[::-1], mutations_per_position[::-1]):
+                    for _ in range(n_mutations):
+                        mutated_sequence.pop(mutation_position)
 
-                # Since we are going to remove from the end, the array must be sorted
-                mutation_positions = np.sort(mutation_positions)
+                mutant_polymers[pid] = (''.join(mutated_sequence), (mutation_positions, mutations_per_position))
+                total_mutations += np.sum(mutations_per_position)
 
-                for mutation_position in mutation_positions[::-1]:
-                    mutated_sequence.pop(mutation_position)
-
-                mutant_polymers[pid] = (''.join(mutated_sequence), mutation_positions)
-                n_mutations += len(mutation_positions)
-
-            if n_mutations > 0:
+            if total_mutations > 0:
                 connections_to_keep = []
                 data = []
 
@@ -160,8 +199,8 @@ class HELMGeneticOperators:
                 for i, connection in enumerate(connections):
                     # The connection positions must not be in the mutation lists
                     # mutant_polymers[connection['XXXXXPolymerID']][1] + 1 because positions are 1-based in HELM
-                    if connection['SourceMonomerPosition'] not in mutant_polymers[connection['SourcePolymerID']][1] + 1 and \
-                       connection['TargetMonomerPosition'] not in mutant_polymers[connection['TargetPolymerID']][1] + 1:
+                    if connection['SourceMonomerPosition'] not in mutant_polymers[connection['SourcePolymerID']][1][0] + 1 and \
+                       connection['TargetMonomerPosition'] not in mutant_polymers[connection['TargetPolymerID']][1][0] + 1:
                         connections_to_keep.append(i)
 
                 # Shift attachment positions (only the connections to keep)
@@ -169,8 +208,10 @@ class HELMGeneticOperators:
                     source_mutations = mutant_polymers[connection['SourcePolymerID']][1]
                     target_mutations = mutant_polymers[connection['TargetPolymerID']][1]
 
-                    source_position = connection['SourceMonomerPosition'] - np.sum([source_mutations < connection['SourceMonomerPosition']])
-                    target_position = connection['TargetMonomerPosition'] - np.sum([target_mutations < connection['TargetMonomerPosition']])
+                    source_position = connection['SourceMonomerPosition'] \
+                                    - np.sum(source_mutations[1][source_mutations[0] < connection['SourceMonomerPosition']])
+                    target_position = connection['TargetMonomerPosition'] \
+                                    - np.sum(target_mutations[1][target_mutations[0] < connection['TargetMonomerPosition']])
 
                     data.append((connection['SourcePolymerID'], connection['TargetPolymerID'], 
                                  source_position, connection['SourceAttachment'],
