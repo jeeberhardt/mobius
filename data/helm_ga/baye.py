@@ -142,7 +142,7 @@ def expected_improvement(model, Y_train, Xsamples, greater_is_better=False, xi=0
         xi: Exploitation-exploration trade-off parameter
 
     """
-    # calculate mean and stdev via surrogate function
+    # calculate mean and stdev via surrogate function*
     observed_pred = predict(model, model.likelihood, Xsamples)
     sigma = observed_pred.variance.sqrt().detach().numpy()
     mu = observed_pred.mean.detach().numpy()
