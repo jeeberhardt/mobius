@@ -4,6 +4,8 @@
 # Bayesian optimization
 #
 
+from collections import defaultdict
+
 import botorch
 import gpytorch
 import numpy as np
