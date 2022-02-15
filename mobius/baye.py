@@ -9,6 +9,7 @@ from collections import defaultdict
 import botorch
 import gpytorch
 import numpy as np
+import pandas as pd
 import torch
 from botorch.fit import fit_gpytorch_model
 from map4 import MAP4Calculator
