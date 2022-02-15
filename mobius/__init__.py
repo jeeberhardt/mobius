@@ -10,9 +10,9 @@ from .baye import TanimotoSimilarityKernel
 from .baye import DMTSimulation
 from .forcefield import ForceField
 from .ga import SequenceGA, ScaffoldGA, GA
-from .helm_genetic_operators import HELMGeneticOperators
+from .helm_genetic_operators import HELMGeneticOperators, compute_probability_matrix
 from .mhc import MHCIPeptideScorer
-from .utils import affinity_binding_to_energy, energy_to_affinity_binding, compute_probability_matrix, plot_results
+from .utils import affinity_binding_to_energy, energy_to_affinity_binding, plot_results
 from .virtual_target import VirtualTarget
 
 __all__ = ['VirtualTarget', 'ForceField',
