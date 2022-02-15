@@ -10,8 +10,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from .baye import map4_fingerprint, TanimotoSimilarityKernel
-
 
 def path_module(module_name):
     specs = util.find_spec(module_name)
