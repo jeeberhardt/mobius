@@ -8,6 +8,7 @@ import random
 
 import numpy as np
 
+from .baye import TanimotoSimilarityKernel, Map4Fingerprint
 from .helm import build_helm_string, parse_helm
 
 
@@ -40,7 +41,8 @@ def compute_probability_matrix(smiles, kernel=None):
     if kernel is None:
         kernel = TanimotoSimilarityKernel
 
-    fps = map4_fingerprint(smiles, input_type='smiles', radius=2)
+    map4calc = Map4Fingerprint(input_type='smiles')
+    fps = map4calc.transform(smiles)
     
     t = kernel()
     similarity_matrix = t.forward(fps, fps).numpy()
