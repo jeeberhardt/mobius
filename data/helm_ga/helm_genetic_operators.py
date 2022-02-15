@@ -34,11 +34,31 @@ def constrained_sum_sample_nonneg(n, total):
     return np.array([x - 1 for x in constrained_sum_sample_pos(n, total + n)])
 
 
+def compute_probability_matrix(smiles, kernel=None):
+    probability_matrix = []
+    
+    if kernel is None:
+        kernel = TanimotoSimilarityKernel
+
+    fps = map4_fingerprint(smiles, input_type='smiles', radius=2)
+    
+    t = kernel()
+    similarity_matrix = t.forward(fps, fps).numpy()
+
+    for aa in similarity_matrix:
+        tmp = aa.copy()
+        tmp[tmp == 1.0] = 0
+        probability_matrix.append(tmp / np.sum(tmp))
+
+    probability_matrix = np.array(probability_matrix)
+    
+    return probability_matrix
+
+
 class HELMGeneticOperators:
     
-    def __init__(self, monomer_library, probability_matrix=None, seed=None):
-        self._monomer_library = monomer_library
-        self._monomer_symbols = [m['symbol'] for m in self._monomer_library]
+    def __init__(self, monomer_symbols, probability_matrix=None, seed=None):
+        self._monomer_symbols = monomer_symbols
         self._probability_matrix = probability_matrix
         
         self._random_seed = seed
@@ -93,7 +113,7 @@ class HELMGeneticOperators:
 
                 for mutation_position, n_mutations in zip(mutation_positions[::-1], mutations_per_position[::-1]):
                     for _ in range(n_mutations):
-                        chosen_monomer = self._monomer_library[self._rng.choice(len(self._monomer_library))]['symbol']
+                        chosen_monomer = self._rng.choice(self._monomer_symbols)
                         mutated_sequence.insert(mutation_position, chosen_monomer)
 
                 # Stored mutated sequence, number of mutations per position and where they were inserted

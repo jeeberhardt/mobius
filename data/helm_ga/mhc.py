@@ -94,7 +94,7 @@ class MHCIPeptideScorer:
 
         return pred_scores
     
-    def generate_random_peptides(self, n_peptides, energy_bounds, peptide_lengths, return_predicted_energy=True):
+    def generate_random_peptides(self, n_peptides, peptide_lengths, energy_bounds, return_predicted_energy=True):
         random_peptides = []
         random_peptide_scores = []
         
