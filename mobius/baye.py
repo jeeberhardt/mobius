@@ -103,7 +103,7 @@ class ExactGPModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchMode
         self.mean_module = gpytorch.means.ConstantMean()
 
         if kernel is not None:
-            self.covar_module = gpytorch.kernels.ScaleKernel(kernel())
+            self.covar_module = gpytorch.kernels.ScaleKernel(kernel)
         else:
             self.covar_module = gpytorch.kernels.ScaleKernel(TanimotoSimilarityKernel())
 

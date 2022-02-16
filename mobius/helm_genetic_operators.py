@@ -35,16 +35,13 @@ def constrained_sum_sample_nonneg(n, total):
     return np.array([x - 1 for x in constrained_sum_sample_pos(n, total + n)])
 
 
-def compute_probability_matrix(smiles, kernel=None):
+def compute_probability_matrix(smiles):
     probability_matrix = []
-    
-    if kernel is None:
-        kernel = TanimotoSimilarityKernel
 
     map4calc = Map4Fingerprint(input_type='smiles')
     fps = map4calc.transform(smiles)
     
-    t = kernel()
+    t = TanimotoSimilarityKernel()
     similarity_matrix = t.forward(fps, fps).numpy()
 
     for aa in similarity_matrix:
