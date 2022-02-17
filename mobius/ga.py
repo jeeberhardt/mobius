@@ -32,7 +32,7 @@ def _number_of_children_to_generate_per_parent(parent_scores, n_children, temper
     # In the case, none of the parents are producing children
     # The best parent generate all the children
     if current_n_children == 0:
-        i = np.argmax(parent_scores)
+        i = np.argmax(scaling_factor * parent_scores)
         children_per_parent[i] = n_children
 
         return children_per_parent
@@ -58,40 +58,66 @@ class _GeneticAlgorithm(ABC):
 
     @abstractmethod
     def run(self, scoring_function, sequences, scores=None):
-        all_sequences = []
-        all_sequence_scores = []
-        
+        attempts = 0
+        population_converged = False
+        best_sequence_seen = None
         self._scoring_function = scoring_function
-        
+        # Store all the sequences seen so far...
+        self._sequences_cache = {}
+
         # Evaluate the initial population
         if scores is None:
             scores = self._scoring_function.evaluate(sequences)
 
         for i in range(self._n_gen):
             # Generate new population
-            sequences, population_converged = self._generate_new_population(sequences, scores)
+            sequences = self._generate_new_population(sequences, scores)
 
-            if population_converged:
-                break
+            # Keep only unseen sequences. We don't want to reevaluate known sequences...
+            sequences_to_evaluate = list(set(sequences).difference(self._sequences_cache.keys()))
+            print('New sequences: %d' % len(sequences_to_evaluate))
 
-            # Remove duplicates
-            sequences = np.unique(sequences)
-            # Evaluate the population
-            scores = self._scoring_function.evaluate(sequences)
+            # If there is no new sequences, we skip the evaluation
+            if not sequences_to_evaluate:
+                print('Warning: no new sequences were generated. Skip evaluation.')
+                continue
+
+            # Evaluate new sequences
+            sequences_to_evaluate_scores = self._scoring_function.evaluate(sequences_to_evaluate)
+
+            # Get scores of known sequences
+            sequences_known = list(set(sequences).intersection(self._sequences_cache.keys()))
+            sequences_known_scores = [self._sequences_cache[s] for s in sequences_known]
+
+            # New population (known + unseen sequences)
+            sequences = sequences_known + sequences_to_evaluate
+            scores = np.concatenate([sequences_known_scores, sequences_to_evaluate_scores])
+
+            # Store new sequences and scores in the cache
+            self._sequences_cache.update(dict(zip(sequences_to_evaluate, sequences_to_evaluate_scores)))
 
             if self._scoring_function.greater_is_better:
                 idx = np.argmax(scores)
             else:
                 idx = np.argmin(scores)
-            print('N %03d sequence opt - Score: %5.3f - Seq: %d - %s' % (i + 1, scores[idx], sequences[idx].count('.'), sequences[idx]))
+            
+            current_best_sequence = sequences[idx]
 
-            all_sequences.extend(sequences)
-            all_sequence_scores.extend(np.ravel(scores))
+            # If the best score does not improve after N attempts, we stop.
+            if attempts < self._total_attempts:
+                if best_sequence_seen == current_best_sequence:
+                    attempts += 1
+                else:
+                    attempts = 0
+                    best_sequence_seen = current_best_sequence
+            else:
+                print('Reached maximum number of attempts (%d), no improvement observed!' % self._total_attempts)
+                break
 
+            print('N %03d sequence opt - Score: %5.3f - Seq: %d - %s (%03d/%03d)' % (i + 1, scores[idx], current_best_sequence.count('.'), current_best_sequence, attempts, self._total_attempts))
 
-        # Remove duplicates
-        all_sequences, unique_indices = np.unique(all_sequences, return_index=True)
-        all_sequence_scores = np.array(all_sequence_scores)[unique_indices]
+        all_sequences = np.array(list(self._sequences_cache.keys()))
+        all_sequence_scores = np.fromiter(self._sequences_cache.values(), dtype=float)
         
         # Sort sequences by scores in the decreasing order (best to worst)
         if self._scoring_function.greater_is_better:
@@ -113,56 +139,17 @@ class SequenceGA(_GeneticAlgorithm):
         self._n_children = parameters['n_children']
         self._temperature = parameters['temperature']
         self._elitism = parameters['elitism']
-        self._tolerance = parameters['tolerance']
         self._total_attempts = parameters['total_attempts']
+        self._minimum_mutations = parameters['minimum_mutations']
+        self._maximum_mutations = parameters['maximum_mutations']
         self._scoring_function = None
-        self._attempts = 0
-        self._score_avg_parents = 999
-        self._score_best_parent = 999
+        self._sequences_cache = {}
 
     def _generate_new_population(self, sequences, scores):
         new_pop = []
-        population_converged = False
 
         # Compute the number of children generated by each parent sequence based on their acquisition score
         children_per_parent = _number_of_children_to_generate_per_parent(scores, self._n_children, self._temperature, self._scoring_function.greater_is_better)
-
-        if self._scoring_function.greater_is_better:
-            score_best_parent = np.max(scores)
-        else:
-            score_best_parent = np.min(scores)
-
-        score_avg_parents = np.mean(scores[children_per_parent > 0])
-
-        #print('%.3f %.3f %.3f' % (self._score_avg_parents, score_avg_parents, np.abs(self._score_avg_parents - score_avg_parents)))
-
-        """ To check convergence, there are two criteria. One based on the score of the
-        best peptide and the second based on the average score of the parents population.
-        The first one is manly to avoid being stuck in an infinity loop.
-        """
-
-        # 1. If the score of the best does not improve after N attempts, it means that we are stuck!!
-        if self._attempts < self._total_attempts:
-            # Sometimes it is not exactly the exactly same number
-            if math.isclose(self._score_best_parent, score_best_parent, rel_tol=1e-04):
-                self._attempts += 1
-            else:
-                self._attempts = 0
-
-            #print('%.3f %.3f - %d/%d' % (self._score_best_parent, score_best_parent, self._attempts, self._total_attempts))
-            self._score_best_parent = score_best_parent
-        else:
-            print('Parents population converged! (optimization stuck)')
-            population_converged = True
-            return [], population_converged
-
-        # 2. Check if the parents population converged
-        if np.abs(self._score_avg_parents - score_avg_parents) < self._tolerance:
-            print('Parents population converged!')
-            population_converged = True
-            return [], population_converged
-        else:
-            self._score_avg_parents = score_avg_parents
 
         # Generate new population
         parent_indices = np.argwhere(children_per_parent > 0).flatten()
@@ -171,18 +158,13 @@ class SequenceGA(_GeneticAlgorithm):
             if self._elitism:
                 new_pop.append(sequences[i])
             
-            new_pop.extend(self._helmgo.mutate(sequences[i], n=children_per_parent[i], minimum_mutations=1, maximum_mutations=2))
+            new_pop.extend(self._helmgo.mutate(sequences[i], children_per_parent[i], self._minimum_mutations, self._maximum_mutations))
 
-        return new_pop, population_converged
+        return new_pop
 
     def run(self, scoring_function, sequences, scores=None):
         self.sequences, self.scores = super().run(scoring_function, sequences, scores)
         print('End sequence opt - Score: %9.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
-
-        # Reinitialize some variables...
-        self._attempts = 0
-        self._score_avg_parents = 999
-        self._score_best_parent = 999
 
         return self.sequences, self.scores
 
@@ -221,7 +203,7 @@ class ScaffoldGA(_GeneticAlgorithm):
             
             new_pop.extend(tmp)
 
-        return new_pop, False
+        return new_pop
 
     def run(self, scoring_function, sequences, scores=None):
         self.sequences, self.scores = super().run(scoring_function, sequences, scores)
