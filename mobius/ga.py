@@ -75,13 +75,12 @@ class _GeneticAlgorithm(ABC):
 
             # Keep only unseen sequences. We don't want to reevaluate known sequences...
             sequences_to_evaluate = list(set(sequences).difference(self._sequences_cache.keys()))
-            print('New sequences: %d' % len(sequences_to_evaluate))
 
             # If there is no new sequences, we skip the evaluation
             if not sequences_to_evaluate:
                 print('Warning: no new sequences were generated. Skip evaluation.')
                 # But we still need to retrieve the scores of all the known sequences
-                scores = [self._sequences_cache[s] for s in sequences]
+                scores = np.array([self._sequences_cache[s] for s in sequences])
                 continue
 
             # Evaluate new sequences
@@ -116,7 +115,9 @@ class _GeneticAlgorithm(ABC):
                 print('Reached maximum number of attempts (%d), no improvement observed!' % self._total_attempts)
                 break
 
-            print('N %03d sequence opt - Score: %5.3f - Seq: %d - %s (%03d/%03d)' % (i + 1, scores[idx], current_best_sequence.count('.'), current_best_sequence, attempts, self._total_attempts))
+            print('N %03d sequence opt - Score: %5.3f - Seq: %d - %s (%03d/%03d) - %d' % (i + 1, scores[idx], current_best_sequence.count('.'), 
+                                                                                          current_best_sequence, attempts, self._total_attempts, 
+                                                                                          len(sequences_to_evaluate)))
 
         all_sequences = np.array(list(self._sequences_cache.keys()))
         all_sequence_scores = np.fromiter(self._sequences_cache.values(), dtype=float)
