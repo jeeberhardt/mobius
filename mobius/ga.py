@@ -80,6 +80,8 @@ class _GeneticAlgorithm(ABC):
             # If there is no new sequences, we skip the evaluation
             if not sequences_to_evaluate:
                 print('Warning: no new sequences were generated. Skip evaluation.')
+                # But we still need to retrieve the scores of all the known sequences
+                scores = [self._sequences_cache[s] for s in sequences]
                 continue
 
             # Evaluate new sequences
