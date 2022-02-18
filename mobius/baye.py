@@ -12,87 +12,11 @@ import numpy as np
 import pandas as pd
 import torch
 from botorch.fit import fit_gpytorch_model
-from map4 import MAP4Calculator
-from rdkit import Chem
 from scipy.stats import norm
 
-
-class Map4Fingerprint:
-
-    def __init__(self, input_type='fasta', dimensions=4096, radius=2, is_counted=False, is_folded=True):
-        self._map4calc = MAP4Calculator(dimensions=dimensions, radius=radius, 
-                                        is_counted=is_counted, is_folded=is_folded)
-        f = {'fasta': Chem.rdmolfiles.MolFromFASTA,
-             'smiles': Chem.rdmolfiles.MolFromSmiles,
-             'helm': Chem.rdmolfiles.MolFromHELM}
-        self._f = f[input_type]
-
-    def transform(self, sequences):
-        try:
-            fps = self._map4calc.calculate_many([self._f(s) for s in sequences])
-        except AttributeError:
-            print('Error: there are issues with the input molecules')
-            print(sequences)
-
-        return torch.from_numpy(np.array(fps)).float()
+from .kernels import TanimotoSimilarityKernel
 
 
-class SequenceDescriptors:
-
-    def __init__(self, descriptors, input_type='helm'):
-        self._descriptors = descriptors
-        self._input_type = input_type
-
-    def transform(self, sequences):    
-        transformed = []
-
-        for seq in sequences:
-            tmp = []
-
-            # The other input type is FASTA
-            if self._input_type == 'helm':
-                seq = ''.join(seq.split('$')[0].split('{')[1].split('}')[0].split('.'))
-
-            for aa in seq:
-                tmp.extend(self._descriptors[self._descriptors['AA1'] == aa].values[0][2:])
-
-            transformed.append(tmp)
-
-        return torch.from_numpy(np.array(transformed)).float()
-
-
-class TanimotoSimilarityKernel(gpytorch.kernels.Kernel):
-    # the sequence kernel is stationary
-    is_stationary = True     
-
-    # this is the kernel function
-    def forward(self, x1, x2, diag=False, last_dim_is_batch=False, **params):
-        if last_dim_is_batch:
-            # Not tested
-            x1 = x1.transpose(-1, -2).unsqueeze(-1)
-            x2 = x2.transpose(-1, -2).unsqueeze(-1)
-
-        x1_eq_x2 = torch.equal(x1, x2)
-
-        x1s = torch.sum(torch.square(x1), dim=-1)
-        x2s = torch.sum(torch.square(x2), dim=-1)
-
-        if diag:
-            if x1_eq_x2:
-                res = torch.ones(*x1.shape[:-2], x1.shape[-2], dtype=x1.dtype, device=x1.device)
-                return res
-            else:
-                product = torch.mul(x1, x2).sum(dim=1)
-                denominator = torch.add(x2s, x1s) - product
-        else:
-            product = torch.mm(x1, x2.transpose(1, 0))
-            denominator = torch.add(x2s, x1s[:, None]) - product
-
-        res = product / denominator
-
-        return res
-
-    
 # We will use the simplest form of GP model, exact inference
 class ExactGPModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchModel):
     # to inform GPyTorchModel API
@@ -116,6 +40,24 @@ class ExactGPModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchMode
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
 
+def get_fitted_model(train_x, train_y, state_dict=None, kernel=None):
+    # initialize and fit model
+    likelihood = gpytorch.likelihoods.GaussianLikelihood()
+    model = ExactGPModel(train_x, train_y, likelihood, kernel)
+
+    if state_dict is not None:
+        model.load_state_dict(state_dict)
+
+    # "Loss" for GPs - the marginal log likelihood
+    mll = gpytorch.mlls.ExactMarginalLogLikelihood(model.likelihood, model)
+    mll.to(train_x)
+
+    # Train model!
+    fit_gpytorch_model(mll)
+
+    return model
+
+
 class AcqScoring:
     def __init__(self, gp_model, acq_function, seq_transformer, y_exp, greater_is_better=True):
         self._gp_model = gp_model
@@ -124,9 +66,105 @@ class AcqScoring:
         self._y_exp = y_exp
         self.greater_is_better = greater_is_better
 
-    def evaluate(self, sequences):
+    def score(self, sequences):
         seq_transformed = self._seq_transformer.transform(sequences)
         return self._acq_function(self._gp_model, self._y_exp, seq_transformed, self.greater_is_better)
+
+
+def predict(model, likelihood, test_x):
+    # Set model in evaluation mode
+    model.eval()
+    likelihood.eval()
+
+    # Make predictions by feeding model through likelihood
+    with torch.no_grad(), gpytorch.settings.fast_pred_var():
+        # Test points are regularly spaced along [0,1]
+        return likelihood(model(test_x))
+
+
+def greedy(model, Y_train, Xsamples, greater_is_better=False):
+    """ greedy acquisition function
+
+    Arguments:
+    ----------
+        model: Gaussian process model
+        Y_train: Array that contains all the observed energy interaction seed so far
+        X_samples: Samples we want to try out
+        greater_is_better: Indicates whether the loss function is to be maximised or minimised.
+
+    """
+    observed_pred = predict(model, model.likelihood, Xsamples)
+    mu = observed_pred.mean.detach().numpy()
+
+    return mu
+
+
+def expected_improvement(model, Y_train, Xsamples, greater_is_better=False, xi=0.00):
+    """ expected_improvement
+    Expected improvement acquisition function.
+    
+    Source: https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
+    
+    Arguments:
+    ----------
+        model: Gaussian process model
+        Y_train: Array that contains all the observed energy interaction seed so far
+        X_samples: Samples we want to try out
+        greater_is_better: Indicates whether the loss function is to be maximised or minimised.
+        xi: Exploitation-exploration trade-off parameter
+
+    """
+    # calculate mean and stdev via surrogate function*
+    observed_pred = predict(model, model.likelihood, Xsamples)
+    sigma = observed_pred.variance.sqrt().detach().numpy()
+    mu = observed_pred.mean.detach().numpy()
+
+    if greater_is_better:
+        loss_optimum = np.max(Y_train.numpy())
+    else:
+        loss_optimum = np.min(Y_train.numpy())
+
+    scaling_factor = (-1) ** (not greater_is_better)
+
+    # calculate the expected improvement
+    Z = scaling_factor * (mu - loss_optimum - xi) / (sigma + 1E-9)
+    ei = scaling_factor * (mu - loss_optimum) * norm.cdf(Z) + (sigma * norm.pdf(Z))
+    ei[sigma == 0.0] == 0.0
+
+    return -1 * ei
+
+
+# probability of improvement acquisition function
+def probability_of_improvement(model, Y_train, Xsamples, greater_is_better=False):
+    """ probability_of_improvement
+    Probability of improvement acquisition function.
+
+    Arguments:
+    ----------
+        model: Gaussian process model
+        Y_train: Array that contains all the observed energy interaction seed so far
+        X_samples: Samples we want to try out
+        greater_is_better: Indicates whether the loss function is to be maximised or minimised.
+
+    """
+    # calculate mean and stdev via surrogate function
+    observed_pred = predict(model, model.likelihood, Xsamples)
+    sigma = observed_pred.variance.sqrt().detach().numpy()
+    mu = observed_pred.mean.detach().numpy()
+
+    if greater_is_better:
+        loss_optimum = np.max(Y_train.numpy())
+    else:
+        loss_optimum = np.min(Y_train.numpy())
+
+    scaling_factor = (-1) ** (not greater_is_better)
+
+    # calculate the probability of improvement
+    Z = scaling_factor * (mu - loss_optimum) / (sigma + 1E-9)
+    pi = norm.cdf(Z)
+    pi[sigma == 0.0] == 0.0
+
+    return pi
 
 
 class DMTSimulation:
@@ -228,117 +266,3 @@ class DMTSimulation:
         df = pd.DataFrame(data=data, columns=columns)
 
         return df
-
-
-def get_fitted_model(train_x, train_y, state_dict=None, kernel=None):
-    # initialize and fit model
-    likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = ExactGPModel(train_x, train_y, likelihood, kernel)
-
-    if state_dict is not None:
-        model.load_state_dict(state_dict)
-
-    # "Loss" for GPs - the marginal log likelihood
-    mll = gpytorch.mlls.ExactMarginalLogLikelihood(model.likelihood, model)
-    mll.to(train_x)
-
-    # Train model!
-    fit_gpytorch_model(mll)
-
-    return model
-
-
-def predict(model, likelihood, test_x):
-    # Set model in evaluation mode
-    model.eval()
-    likelihood.eval()
-
-    # Make predictions by feeding model through likelihood
-    with torch.no_grad(), gpytorch.settings.fast_pred_var():
-        # Test points are regularly spaced along [0,1]
-        return likelihood(model(test_x))
-
-
-def greedy(model, Y_train, Xsamples, greater_is_better=False):
-    """ greedy acquisition function
-
-    Arguments:
-    ----------
-        model: Gaussian process model
-        Y_train: Array that contains all the observed energy interaction seed so far
-        X_samples: Samples we want to try out
-        greater_is_better: Indicates whether the loss function is to be maximised or minimised.
-
-    """
-    observed_pred = predict(model, model.likelihood, Xsamples)
-    mu = observed_pred.mean.detach().numpy()
-
-    return mu
-
-
-def expected_improvement(model, Y_train, Xsamples, greater_is_better=False, xi=0.00):
-    """ expected_improvement
-    Expected improvement acquisition function.
-    
-    Source: https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
-    
-    Arguments:
-    ----------
-        model: Gaussian process model
-        Y_train: Array that contains all the observed energy interaction seed so far
-        X_samples: Samples we want to try out
-        greater_is_better: Indicates whether the loss function is to be maximised or minimised.
-        xi: Exploitation-exploration trade-off parameter
-
-    """
-    # calculate mean and stdev via surrogate function*
-    observed_pred = predict(model, model.likelihood, Xsamples)
-    sigma = observed_pred.variance.sqrt().detach().numpy()
-    mu = observed_pred.mean.detach().numpy()
-
-    if greater_is_better:
-        loss_optimum = np.max(Y_train.numpy())
-    else:
-        loss_optimum = np.min(Y_train.numpy())
-
-    scaling_factor = (-1) ** (not greater_is_better)
-
-    # calculate the expected improvement
-    Z = scaling_factor * (mu - loss_optimum - xi) / (sigma + 1E-9)
-    ei = scaling_factor * (mu - loss_optimum) * norm.cdf(Z) + (sigma * norm.pdf(Z))
-    ei[sigma == 0.0] == 0.0
-
-    return -1 * ei
-
-
-# probability of improvement acquisition function
-def probability_of_improvement(model, Y_train, Xsamples, greater_is_better=False):
-    """ probability_of_improvement
-    Probability of improvement acquisition function.
-
-    Arguments:
-    ----------
-        model: Gaussian process model
-        Y_train: Array that contains all the observed energy interaction seed so far
-        X_samples: Samples we want to try out
-        greater_is_better: Indicates whether the loss function is to be maximised or minimised.
-
-    """
-    # calculate mean and stdev via surrogate function
-    observed_pred = predict(model, model.likelihood, Xsamples)
-    sigma = observed_pred.variance.sqrt().detach().numpy()
-    mu = observed_pred.mean.detach().numpy()
-
-    if greater_is_better:
-        loss_optimum = np.max(Y_train.numpy())
-    else:
-        loss_optimum = np.min(Y_train.numpy())
-
-    scaling_factor = (-1) ** (not greater_is_better)
-
-    # calculate the probability of improvement
-    Z = scaling_factor * (mu - loss_optimum) / (sigma + 1E-9)
-    pi = norm.cdf(Z)
-    pi[sigma == 0.0] == 0.0
-
-    return pi

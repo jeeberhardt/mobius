@@ -8,7 +8,8 @@ import random
 
 import numpy as np
 
-from .baye import TanimotoSimilarityKernel, Map4Fingerprint
+from .descriptors import Map4Fingerprint
+from .kernels import TanimotoSimilarityKernel
 from .helm import build_helm_string, parse_helm
 
 
