@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from .acquisition_functions import AcqScoring
+from .acquisition_functions import AcqScoring, greedy, expected_improvement
 from .gaussian_process import get_fitted_model
 
 
@@ -23,13 +23,15 @@ class DMTSimulation:
     def run(self, init_sequences, init_energies, **config):        
         data = []
 
-        helmgo = config['helmgo']
-        config.pop('helmgo')
+        print(greedy)
 
         if config['acq_function'] in [greedy, expected_improvement]:
             greater_is_better = False
         else:
             greater_is_better = True
+
+        helmgo = config['helmgo']
+        config.pop('helmgo')
 
         # Since the input scores are affinity binding energies, we need to inverse the sign 
         # depending on the acquisition function
