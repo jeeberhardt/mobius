@@ -113,7 +113,7 @@ class _GeneticAlgorithm(ABC):
                 print('Reached maximum number of attempts (%d), no improvement observed!' % self._total_attempts)
                 break
 
-            print('N %03d sequence opt - Score: %5.3f - Seq: %d - %s (%03d/%03d) - %d' % (i + 1, scores[idx], current_best_sequence.count('.'), 
+            print('N %03d - Score: %.6f - Seq: %d - %s (%03d/%03d) - %d' % (i + 1, scores[idx], current_best_sequence.count('.'), 
                                                                                           current_best_sequence, attempts, self._total_attempts, 
                                                                                           len(sequences_to_evaluate)))
 
@@ -164,7 +164,7 @@ class SequenceGA(_GeneticAlgorithm):
 
     def run(self, acquisition_function, sequences, scores=None):
         self.sequences, self.scores = super().run(acquisition_function, sequences, scores)
-        print('End sequence opt - Score: %9.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
+        print('End SequenceGA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
 
         return self.sequences, self.scores
 
@@ -204,7 +204,7 @@ class ScaffoldGA(_GeneticAlgorithm):
 
     def run(self, acquisition_function, sequences, scores=None):
         self.sequences, self.scores = super().run(acquisition_function, sequences, scores)
-        print('End scaffold opt - Score: %5.3f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
+        print('End Scaffold GA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
 
         return self.sequences, self.scores
 

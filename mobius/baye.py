@@ -23,8 +23,6 @@ class DMTSimulation:
     def run(self, init_sequences, init_energies, **config):        
         data = []
 
-        print(greedy)
-
         if config['acq_function'] in [greedy, expected_improvement]:
             greater_is_better = False
         else:
