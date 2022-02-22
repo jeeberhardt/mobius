@@ -5,6 +5,7 @@
 #
 
 import pickle
+import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from multiprocessing import Pool
@@ -226,7 +227,8 @@ class GA():
 
         # We need to pickle the acquidition function object before using it 
         # because apparently it has been changed after the first use in the ScaffoldGA
-        with open('save.pkl', 'wb') as w:
+        save_filename = 'gp_%s.pkl' % str(uuid.uuid4())[:8]
+        with open(save_filename, 'wb') as w:
             pickle.dump(acquisition_function, w)
 
         # Evaluate the initial population
@@ -243,7 +245,7 @@ class GA():
                 clusters[sequence.count('.')].append(i)
 
             # Load back the acquisition function object... *sigh*
-            with open('save.pkl', 'rb') as f:
+            with open(save_filename, 'rb') as f:
                 acquisition_function = pickle.load(f)
 
             # Run parallel Sequence GA opt.
@@ -270,5 +272,8 @@ class GA():
         self.scores = all_sequence_scores[sorted_indices]
 
         print('End GA opt - Score: %5.3f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
+
+        # Remove pickle file
+        os.remove(save_filename)
 
         return self.sequences, self.scores
