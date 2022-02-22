@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# MHC-I
+# Genetic algorithm
 #
 
-import math
 import pickle
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -53,57 +52,56 @@ class _GeneticAlgorithm(ABC):
     """Abstract class for genetic algorithm brick"""
 
     @abstractmethod
-    def _generate_new_population(self, sequences, scores):
-        pass
+    def _generate_new_population(self, sequences, scores, greater_is_better):
+        raise NotImplementedError()
 
     @abstractmethod
-    def run(self, scoring_function, sequences, scores=None):
+    def run(self, acquisition_function, sequences, scores=None):
         attempts = 0
-        population_converged = False
         best_sequence_seen = None
-        self._scoring_function = scoring_function
         # Store all the sequences seen so far...
-        self._sequences_cache = {}
+        sequences_cache = {}
 
         # Evaluate the initial population
         if scores is None:
-            scores = self._scoring_function.score(sequences)
+            scores = acquisition_function.score(sequences)
 
         for i in range(self._n_gen):
             # Generate new population
-            sequences = self._generate_new_population(sequences, scores)
+            sequences = self._generate_new_population(sequences, scores, acquisition_function.greater_is_better)
 
             # Keep only unseen sequences. We don't want to reevaluate known sequences...
-            sequences_to_evaluate = list(set(sequences).difference(self._sequences_cache.keys()))
+            sequences_to_evaluate = list(set(sequences).difference(sequences_cache.keys()))
 
             # If there is no new sequences, we skip the evaluation
             if not sequences_to_evaluate:
                 print('Warning: no new sequences were generated. Skip evaluation.')
                 # But we still need to retrieve the scores of all the known sequences
-                scores = np.array([self._sequences_cache[s] for s in sequences])
+                scores = np.array([sequences_cache[s] for s in sequences])
                 continue
 
             # Evaluate new sequences
-            sequences_to_evaluate_scores = self._scoring_function.score(sequences_to_evaluate)
+            sequences_to_evaluate_scores = acquisition_function.score(sequences_to_evaluate)
 
             # Get scores of known sequences
-            sequences_known = list(set(sequences).intersection(self._sequences_cache.keys()))
-            sequences_known_scores = [self._sequences_cache[s] for s in sequences_known]
+            sequences_known = list(set(sequences).intersection(sequences_cache.keys()))
+            sequences_known_scores = [sequences_cache[s] for s in sequences_known]
 
             # New population (known + unseen sequences)
             sequences = sequences_known + sequences_to_evaluate
             scores = np.concatenate([sequences_known_scores, sequences_to_evaluate_scores])
 
             # Store new sequences and scores in the cache
-            self._sequences_cache.update(dict(zip(sequences_to_evaluate, sequences_to_evaluate_scores)))
+            sequences_cache.update(dict(zip(sequences_to_evaluate, sequences_to_evaluate_scores)))
 
-            if self._scoring_function.greater_is_better:
+            if acquisition_function.greater_is_better:
                 idx = np.argmax(scores)
             else:
                 idx = np.argmin(scores)
 
             current_best_sequence = sequences[idx]
 
+            # Convergence criteria
             # If the best score does not improve after N attempts, we stop.
             if attempts < self._total_attempts:
                 if best_sequence_seen == current_best_sequence:
@@ -115,15 +113,15 @@ class _GeneticAlgorithm(ABC):
                 print('Reached maximum number of attempts (%d), no improvement observed!' % self._total_attempts)
                 break
 
-            print('N %03d sequence opt - Score: %5.3f - Seq: %d - %s (%03d/%03d) - %d' % (i + 1, scores[idx], current_best_sequence.count('.'), 
+            print('N %03d - Score: %.6f - Seq: %d - %s (%03d/%03d) - %d' % (i + 1, scores[idx], current_best_sequence.count('.'), 
                                                                                           current_best_sequence, attempts, self._total_attempts, 
                                                                                           len(sequences_to_evaluate)))
 
-        all_sequences = np.array(list(self._sequences_cache.keys()))
-        all_sequence_scores = np.fromiter(self._sequences_cache.values(), dtype=float)
+        all_sequences = np.array(list(sequences_cache.keys()))
+        all_sequence_scores = np.fromiter(sequences_cache.values(), dtype=float)
 
         # Sort sequences by scores in the decreasing order (best to worst)
-        if self._scoring_function.greater_is_better:
+        if acquisition_function.greater_is_better:
             sorted_indices = np.argsort(all_sequence_scores)[::-1]
         else:
             sorted_indices = np.argsort(all_sequence_scores)
@@ -143,16 +141,15 @@ class SequenceGA(_GeneticAlgorithm):
         self._temperature = parameters['temperature']
         self._elitism = parameters['elitism']
         self._total_attempts = parameters['total_attempts']
+        # Parameters specific to SequenceGA
         self._minimum_mutations = parameters['minimum_mutations']
         self._maximum_mutations = parameters['maximum_mutations']
-        self._scoring_function = None
-        self._sequences_cache = {}
 
-    def _generate_new_population(self, sequences, scores):
+    def _generate_new_population(self, sequences, scores, greater_is_better):
         new_pop = []
 
         # Compute the number of children generated by each parent sequence based on their acquisition score
-        children_per_parent = _number_of_children_to_generate_per_parent(scores, self._n_children, self._temperature, self._scoring_function.greater_is_better)
+        children_per_parent = _number_of_children_to_generate_per_parent(scores, self._n_children, self._temperature, greater_is_better)
 
         # Generate new population
         parent_indices = np.argwhere(children_per_parent > 0).flatten()
@@ -165,9 +162,9 @@ class SequenceGA(_GeneticAlgorithm):
 
         return new_pop
 
-    def run(self, scoring_function, sequences, scores=None):
-        self.sequences, self.scores = super().run(scoring_function, sequences, scores)
-        print('End sequence opt - Score: %9.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
+    def run(self, acquisition_function, sequences, scores=None):
+        self.sequences, self.scores = super().run(acquisition_function, sequences, scores)
+        print('End SequenceGA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
 
         return self.sequences, self.scores
 
@@ -181,37 +178,33 @@ class ScaffoldGA(_GeneticAlgorithm):
         self._temperature = parameters['temperature']
         self._elitism = parameters['elitism']
         self._total_attempts = parameters['total_attempts']
+        # Parameters specific to ScaffoldGA
         self._only_terminus = parameters['only_terminus']
         self._minimum_size = parameters['minimum_size']
         self._maximum_size = parameters['maximum_size']
-        self._scoring_function = None
 
-    def _generate_new_population(self, sequences, scores):
+    def _generate_new_population(self, sequences, scores, greater_is_better):
         new_pop = []
 
         # Compute the number of children generated by each parent sequence based on their acquisition score
-        children_per_parent = _number_of_children_to_generate_per_parent(scores, self._n_children, self._temperature, self._scoring_function.greater_is_better)
+        children_per_parent = _number_of_children_to_generate_per_parent(scores, self._n_children, self._temperature, greater_is_better)
 
+        # Generate new population
         parent_indices = np.argwhere(children_per_parent > 0).flatten()
 
         for i in parent_indices:
-            tmp = []
-
             if self._elitism:
                 new_pop.append(sequences[i])
 
             actions = np.random.choice(['insert', 'remove'], size=children_per_parent[i])
-
-            tmp.extend(self._helmgo.insert(sequences[i], np.sum(actions == "insert"), self._only_terminus, self._maximum_size))
-            tmp.extend(self._helmgo.delete(sequences[i], np.sum(actions == "remove"), self._only_terminus, self._minimum_size))
-
-            new_pop.extend(tmp)
+            new_pop.extend(self._helmgo.insert(sequences[i], np.sum(actions == "insert"), self._only_terminus, self._maximum_size))
+            new_pop.extend(self._helmgo.delete(sequences[i], np.sum(actions == "remove"), self._only_terminus, self._minimum_size))
 
         return new_pop
 
-    def run(self, scoring_function, sequences, scores=None):
-        self.sequences, self.scores = super().run(scoring_function, sequences, scores)
-        print('End scaffold opt - Score: %5.3f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
+    def run(self, acquisition_function, sequences, scores=None):
+        self.sequences, self.scores = super().run(acquisition_function, sequences, scores)
+        print('End Scaffold GA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
 
         return self.sequences, self.scores
 
@@ -223,9 +216,8 @@ class GA():
         self._n_gen = parameters['n_gen']
         self._seq_gao_parameters = {k.replace('sequence_', ''): v for k, v in parameters.items() if 'sequence' in k}
         self._sca_gao_parameters = {k.replace('scaffold_', ''): v for k, v in parameters.items() if 'scaffold' in k}
-        self._scoring_function = None
 
-    def run(self, scoring_function, sequences, scores=None):
+    def run(self, acquisition_function, sequences, scores=None):
         all_sequences = []
         all_sequence_scores = []
 
@@ -235,15 +227,15 @@ class GA():
         # We need to pickle the acquidition function object before using it 
         # because apparently it has been changed after the first use in the ScaffoldGA
         with open('save.pkl', 'wb') as w:
-            pickle.dump(scoring_function, w)
+            pickle.dump(acquisition_function, w)
 
         # Evaluate the initial population
         if scores is None:
-            scores = scoring_function.score(sequences)
+            scores = acquisition_function.score(sequences)
 
         for i in range(self._n_gen):
-            # Run scaffold GA first
-            sequences, scores = sca_gao.run(scoring_function, sequences, scores)
+            # Run scaffold GA opt. first
+            sequences, scores = sca_gao.run(acquisition_function, sequences, scores)
 
             # Clustering peptides based on the length
             clusters = defaultdict(list)
@@ -252,19 +244,12 @@ class GA():
 
             # Load back the acquisition function object... *sigh*
             with open('save.pkl', 'rb') as f:
-                scoring_function = pickle.load(f)
+                acquisition_function = pickle.load(f)
 
-            """
-            with parallel_backend('loky', n_jobs=self._seq_gao_parameters['n_process']):
-                results = Parallel()(delayed(seq_gao.run)(scoring_function, sequences[sequence_indices], scores[sequence_indices]) for _, sequence_indices in clusters.items())
-            """
-
-            #"""
-            # Dispatch peptides and run local GA opt.
-            pool = Pool(processes=self._seq_gao_parameters['n_process'])
-            results = pool.starmap(seq_gao.run, [(scoring_function, sequences[sequence_indices], scores[sequence_indices]) for _, sequence_indices in clusters.items()])
-            pool.close()
-            pool.join()
+            # Run parallel Sequence GA opt.
+            parameters = [(acquisition_function, sequences[seq_ids], scores[seq_ids]) for _, seq_ids in clusters.items()]
+            with Pool(processes=self._seq_gao_parameters['n_process']) as pool:
+                results = pool.starmap(seq_gao.run, parameters)
 
             sequences, scores = zip(*results)
 
@@ -276,7 +261,7 @@ class GA():
         all_sequence_scores = np.array(all_sequence_scores)[unique_indices]
 
         # Sort sequences by scores in the decreasing order (best to worst)
-        if scoring_function.greater_is_better:
+        if acquisition_function.greater_is_better:
             sorted_indices = np.argsort(all_sequence_scores)[::-1]
         else:
             sorted_indices = np.argsort(all_sequence_scores)

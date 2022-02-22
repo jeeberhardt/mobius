@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Bayesian optimization
+# Descriptors
 #
 
 import numpy as np
-import torch
 from map4 import MAP4Calculator
 from rdkit import Chem
 
@@ -32,7 +31,7 @@ class Map4Fingerprint:
 
         fps = self._map4calc.calculate_many(mols)
 
-        return torch.from_numpy(np.array(fps)).float()
+        return np.array(fps)
 
 
 class SequenceDescriptors:
@@ -56,4 +55,4 @@ class SequenceDescriptors:
 
             transformed.append(tmp)
 
-        return torch.from_numpy(np.array(transformed)).float()
+        return np.array(transformed)

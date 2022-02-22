@@ -4,20 +4,26 @@
 # Mobius
 #
 
-from .baye import expected_improvement, probability_of_improvement, greedy, DMTSimulation
-from .descriptors import Map4Fingerprint, SequenceDescriptors
 from .forcefield import ForceField
+from .virtual_target import VirtualTarget
+
+from .acquisition_functions import expected_improvement, probability_of_improvement, greedy
+from .baye import DMTSimulation
+from .descriptors import Map4Fingerprint, SequenceDescriptors
 from .ga import SequenceGA, ScaffoldGA, GA
+from .gaussian_process import get_fitted_model, predict
 from .helm_genetic_operators import HELMGeneticOperators, compute_probability_matrix
 from .kernels import TanimotoSimilarityKernel
 from .mhc import MHCIPeptideScorer
 from .utils import affinity_binding_to_energy, energy_to_affinity_binding, plot_results
-from .virtual_target import VirtualTarget
 
 __all__ = ['VirtualTarget', 'ForceField',
            'expected_improvement', 'probability_of_improvement', 'greedy',
-           'Map4Fingerprint', 'SequenceDescriptors',
            'DMTSimulation',
+           'Map4Fingerprint', 'SequenceDescriptors',
            'SequenceGA', 'ScaffoldGA', 'GA',
-           'HELMGeneticOperators',
-           'affinity_binding_to_energy', 'energy_to_affinity_binding', 'compute_probability_matrix', 'plot_results']
+           'get_fitted_model', 'predict',
+           'HELMGeneticOperators', 'compute_probability_matrix',
+           'TanimotoSimilarityKernel',
+           'MHCIPeptideScorer',
+           'affinity_binding_to_energy', 'energy_to_affinity_binding', 'plot_results']
