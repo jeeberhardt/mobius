@@ -4,6 +4,7 @@
 # Genetic algorithm
 #
 
+import os
 import pickle
 import uuid
 from abc import ABC, abstractmethod
