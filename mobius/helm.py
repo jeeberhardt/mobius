@@ -7,9 +7,9 @@
 import numpy as np
 
 
-def build_helm_string(polymers, connections):
+def build_helm_string(polymers, connections=None):
     sequences_str = '|'.join(['%s{%s}' % (p, '.'.join(s)) for p, s in polymers.items()])
-    if len(connections) > 0:
+    if connections is not None:
         connections_str = '|'.join(['%s,%s,%d:%s-%d:%s' % (c[0], c[1], c[2], c[3], c[4], c[5]) for c in connections])
     else:
         connections_str = ''

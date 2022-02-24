@@ -72,9 +72,6 @@ class HELMGeneticOperators:
         mutant_helm_strings = []
         
         polymers, connections, _, _ = parse_helm(helm_string)
-
-        if connections:
-            raise NotImplementedError('Does not handle peptides with connections.')
         
         # Generate mutants...
         for i in range(n):
@@ -125,21 +122,38 @@ class HELMGeneticOperators:
                 total_mutations += np.sum(mutations_per_position)
 
             if total_mutations > 0:
+                data = []
+
+                # Shift attachment positions
+                for i, connection in enumerate(connections):
+                    source_mutations = mutant_polymers[connection['SourcePolymerID']][1]
+                    target_mutations = mutant_polymers[connection['TargetPolymerID']][1]
+
+                    source_position = connection['SourceMonomerPosition'] \
+                                    + np.sum(source_mutations[1][source_mutations[0] < connection['SourceMonomerPosition']]) \
+
+                    target_position = connection['TargetMonomerPosition'] \
+                                    + np.sum(target_mutations[1][target_mutations[0] < connection['TargetMonomerPosition']])
+
+                    data.append((connection['SourcePolymerID'], connection['TargetPolymerID'], 
+                                 source_position, connection['SourceAttachment'],
+                                 target_position, connection['TargetAttachment']))
+
+                new_connections = np.array(data, dtype=self._connections_dtype)
+
                 # Reconstruct the HELM string
-                mutant_helm_string = build_helm_string({p: s[0] for p, s in mutant_polymers.items()})
+                mutant_helm_string = build_helm_string({p: s[0] for p, s in mutant_polymers.items()}, new_connections)
+
                 mutant_helm_strings.append(mutant_helm_string)
             else:
                 mutant_helm_strings.append(helm_string)
         
         return mutant_helm_strings
 
-    def delete(self, helm_string, n=10, only_terminus=False, minimum_size=None):
+    def delete(self, helm_string, n=10, only_terminus=False, minimum_size=None, keep_connections=True):
         mutant_helm_strings = []
         
         polymers, connections, _, _ = parse_helm(helm_string)
-
-        if connections:
-            raise NotImplementedError('Does not handle peptides with connections.')
         
         # Generate mutants...
         for i in range(n):
@@ -154,6 +168,14 @@ class HELMGeneticOperators:
                     mutation_positions = np.array([0, len(sequence) - 1])
                 else:
                     mutation_positions = np.array(range(len(sequence)))
+
+                # Residues involved in a connection within and between polymers won't be removed
+                if keep_connections and pid in polymers.keys():
+                    connection_resids = list(connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition'])
+                    connection_resids += list(connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition'])
+                    # Because positions are 1-based in HELM
+                    connection_resids = np.array(connection_resids) - 1
+                    mutation_positions = np.array(list(set(mutation_positions).difference(connection_resids)))
 
                 # Define the max number of mutations that will be inserted
                 if minimum_size is not None:
@@ -191,21 +213,46 @@ class HELMGeneticOperators:
                 total_mutations += np.sum(mutations_per_position)
 
             if total_mutations > 0:
+                connections_to_keep = []
+                data = []
+
+                # Check if we have to remove connections due to the monomers removed
+                for i, connection in enumerate(connections):
+                    # The connection positions must not be in the mutation lists
+                    # mutant_polymers[connection['XXXXXPolymerID']][1] + 1 because positions are 1-based in HELM
+                    if connection['SourceMonomerPosition'] not in mutant_polymers[connection['SourcePolymerID']][1][0] + 1 and \
+                       connection['TargetMonomerPosition'] not in mutant_polymers[connection['TargetPolymerID']][1][0] + 1:
+                        connections_to_keep.append(i)
+
+                # Shift attachment positions (only the connections to keep)
+                for i, connection in enumerate(connections[connections_to_keep]):
+                    source_mutations = mutant_polymers[connection['SourcePolymerID']][1]
+                    target_mutations = mutant_polymers[connection['TargetPolymerID']][1]
+
+                    source_position = connection['SourceMonomerPosition'] \
+                                    - np.sum(source_mutations[1][source_mutations[0] < connection['SourceMonomerPosition']])
+                    target_position = connection['TargetMonomerPosition'] \
+                                    - np.sum(target_mutations[1][target_mutations[0] < connection['TargetMonomerPosition']])
+
+                    data.append((connection['SourcePolymerID'], connection['TargetPolymerID'], 
+                                 source_position, connection['SourceAttachment'],
+                                 target_position, connection['TargetAttachment']))
+
+                new_connections = np.array(data, dtype=self._connections_dtype)
+
                 # Reconstruct the HELM string
-                mutant_helm_string = build_helm_string({p: s[0] for p, s in mutant_polymers.items()})
+                mutant_helm_string = build_helm_string({p: s[0] for p, s in mutant_polymers.items()}, new_connections)
+
                 mutant_helm_strings.append(mutant_helm_string)
             else:
                 mutant_helm_strings.append(helm_string)
         
         return mutant_helm_strings
 
-    def mutate(self, helm_string, n=10, minimum_mutations=1, maximum_mutations=None):
+    def mutate(self, helm_string, n=10, minimum_mutations=1, maximum_mutations=None, keep_connections=True):
         mutant_helm_strings = []
         
         polymers, connections, _, _ = parse_helm(helm_string)
-
-        if connections:
-            raise NotImplementedError('Does not handle peptides with connections.')
         
         # Generate mutants...
         for i in range(n):
@@ -214,7 +261,17 @@ class HELMGeneticOperators:
             
             for pid, sequence in polymers.items():
                 mutated_sequence = list(sequence)
-                possible_positions = list(range(len(sequence)))
+                
+                # Residues involved in a connection within and between peptides won't be mutated
+                if keep_connections and pid in polymers.keys():
+                    connection_resids = list(connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition'])
+                    connection_resids += list(connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition'])
+                    # Because positions are 1-based in HELM
+                    connection_resids = np.array(connection_resids) - 1
+                    
+                    possible_positions = list(set(range(len(sequence))).difference(connection_resids))
+                else:
+                    possible_positions = list(range(len(sequence)))
                 
                 # Choose a random number of mutations between min and max
                 if minimum_mutations == maximum_mutations:
@@ -248,47 +305,23 @@ class HELMGeneticOperators:
                 n_mutations += len(mutation_positions)
             
             if n_mutations > 0:
+                if not keep_connections:
+                    connections_to_keep = []
+
+                    # Check if we have to remove connections due to the mutations
+                    for i, connection in enumerate(connections):
+                        # The connection positions must not be in the mutation lists
+                        # mutant_polymers[connection['XXXXXPolymerID']][1] + 1 because positions are 1-based in HELM
+                        if connection['SourceMonomerPosition'] not in mutant_polymers[connection['SourcePolymerID']][1] + 1 and \
+                           connection['TargetMonomerPosition'] not in mutant_polymers[connection['TargetPolymerID']][1] + 1:
+                            connections_to_keep.append(i)
+                else:
+                    connections_to_keep = list(range(connections.shape[0]))
+
                 # Reconstruct the HELM string
-                mutant_helm_string = build_helm_string({p: s[0] for p, s in mutant_polymers.items()})
+                mutant_helm_string = build_helm_string({p: s[0] for p, s in mutant_polymers.items()}, connections[connections_to_keep])
                 mutant_helm_strings.append(mutant_helm_string)
             else:
                 mutant_helm_strings.append(helm_string)
-        
-        return mutant_helm_strings
-
-    def crossover(self, helm_string1, helm_string2, cx_points=2):
-        mutant1_polymers = {}
-        mutant2_polymers = {}
-        mutant_helm_strings = []
-            
-        polymers1, connections1, _, _ = parse_helm(helm_string1)
-        polymers2, connections2, _, _ = parse_helm(helm_string2)
-        
-        if connections1 or connections2:
-            raise NotImplementedError('Does not handle peptides with connections.')
-
-        if polymers1.keys() != polymers2.keys():
-            raise RuntimeError('Peptides does not contain the same polymer ids.')
-        
-        for pid in polymers1.keys():
-            if len(polymers1[pid]) != len(polymers2[pid]):
-                raise RuntimeError('Peptide sequence lengths are different.')
-            
-            # Copy parents since we are going to modify the children
-            ind1 = list(polymers1[pid])
-            ind2 = list(polymers2[pid])
-            
-            # Choose positions to crossover
-            possible_positions = list(range(len(polymers1[pid])))
-            cx_positions = self._rng.choice(possible_positions[1:-1], size=cx_points, replace=False)
-            cx_positions = np.sort(cx_positions)
-            
-            for cx_position in cx_positions:
-                ind1[cx_position:], ind2[cx_position:] = ind2[cx_position:], ind1[cx_position:]
-                
-            mutant1_polymers[pid] = ''.join(ind1)
-            mutant2_polymers[pid] = ''.join(ind2)
-            
-        mutant_helm_strings.extend([build_helm_string(mutant1_polymers), build_helm_string(mutant2_polymers)])
         
         return mutant_helm_strings

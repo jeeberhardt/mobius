@@ -4,11 +4,15 @@
 # Bayesian optimization
 #
 
+import time
 from collections import defaultdict
 
 import numpy as np
 import pandas as pd
 import torch
+import matplotlib.pyplot as plt
+from scipy import stats
+from scipy.spatial import distance
 
 from .acquisition_functions import AcqScoring, greedy, expected_improvement
 from .gaussian_process import get_fitted_model
@@ -56,6 +60,9 @@ class DMTSimulation:
             y_exp = torch.from_numpy(energies).float()
             print('Exp dataset size: (%d, %d)' % (X_exp.shape[0], X_exp.shape[1]))
 
+            d = distance.pdist(X_exp.detach().numpy(), 'jaccard')
+            print(np.mean(d), np.min(d), np.max(d))
+
             print('\n')
             print('Init.')
             print('N pep: ', X_exp.shape[0])
@@ -75,7 +82,9 @@ class DMTSimulation:
                 scoring_function = AcqScoring(gp_model, config['acq_function'], config['seq_transformer'], y_exp * scaling_factor, greater_is_better=greater_is_better)
 
                 # Find new candidates using GA optimization
+                start = time.time()
                 gao.run(scoring_function, sequences, y_exp.detach().numpy() * scaling_factor)
+                print('Time elapsed: %.3f min.' % ((time.time() - start) / 60.))
 
                 # Take N best candidates found
                 candidate_sequences = gao.sequences[:config['n_candidates']]
@@ -101,7 +110,17 @@ class DMTSimulation:
                 for n in [-14, -13, -12, -11, -10, -9, -8]:
                     print('N pep under %d kcal/mol: %03d' % (n, y_exp[y_exp < n].shape[0]))
                 print('Non binding pep        : %03d' % (y_exp[y_exp == 0.].shape[0]))
+                try:
+                    print('Correlation acq-function/energies: %.3f' % stats.pearsonr(candidates_scores[candidates_energies != 0], candidates_energies[candidates_energies != 0])[0])
+                except:
+                    pass
                 print('')
+
+                fig, ax = plt.subplots(figsize=(5, 5))
+                ax.scatter(candidates_scores[candidates_energies != 0], candidates_energies[candidates_energies != 0])
+                ax.set_xlabel('Acq function scores')
+                ax.set_ylabel('Exp affinity binding')
+                plt.show()
 
                 # Store data
                 for seq, score, energy in zip(candidate_sequences, candidates_scores, candidates_energies):
