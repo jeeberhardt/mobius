@@ -280,7 +280,7 @@ class HELMGeneticOperators:
             
             # Choose positions to crossover
             possible_positions = list(range(len(polymers1[pid])))
-            cx_positions = self._rng.choice(possible_positions[1:-1], size=cx_points, replace=False)
+            cx_positions = self._rng.choice(possible_positions, size=cx_points, replace=False)
             cx_positions = np.sort(cx_positions)
             
             for cx_position in cx_positions:

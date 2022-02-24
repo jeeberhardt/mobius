@@ -67,6 +67,7 @@ def _generate_mating_couples(parent_sequences, parent_scores, n_children, temper
     # In the case no parents really stood up from the rest, all
     # the <n_couples> best parents will be able to mate with someone
     if np.sum(mates_per_parent) == 0:
+        print('Warning: It seems that none of the parents are worth mating. You might want to decrease the temperature.')
         i = np.argsort(scaling_factor * parent_scores)[::-1]
         mates_per_parent[i[:n_couples]] = 1
 
@@ -190,11 +191,11 @@ class SequenceGA(_GeneticAlgorithm):
         self._total_attempts = parameters['total_attempts']
         # Parameters specific to SequenceGA
         self._cx_points = parameters['cx_points']
+        self._pm = parameters['pm']
         self._minimum_mutations = parameters['minimum_mutations']
         self._maximum_mutations = parameters['maximum_mutations']
 
     def _generate_new_population(self, sequences, scores, greater_is_better):
-        pm = 0.1
         new_pop = []
 
         mating_couples = _generate_mating_couples(sequences, scores, self._n_children, self._temperature, greater_is_better)
@@ -208,7 +209,7 @@ class SequenceGA(_GeneticAlgorithm):
             children = self._helmgo.crossover(mating_couple[0], mating_couple[1], self._cx_points)
 
             for child in children:
-                if pm <= np.random.uniform():
+                if self._pm <= np.random.uniform():
                     child = self._helmgo.mutate(child, 1, self._minimum_mutations, self._maximum_mutations)[0]
                 new_pop.append(child)
 
