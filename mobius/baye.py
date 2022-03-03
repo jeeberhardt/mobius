@@ -14,8 +14,9 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from scipy.spatial import distance
 
+from . import utils
 from .acquisition_functions import AcqScoring, greedy, expected_improvement
-from .gaussian_process import get_fitted_model
+from .gaussian_process import GPModel
 
 
 class DMTSimulation:
@@ -27,7 +28,7 @@ class DMTSimulation:
     def run(self, init_sequences, init_energies, **config):        
         data = []
 
-        if config['acq_function'] in [greedy, expected_improvement]:
+        if any(utils.function_equal(config['acq_function'], f) for f in [greedy, expected_improvement]):
             greater_is_better = False
         else:
             greater_is_better = True
@@ -51,17 +52,11 @@ class DMTSimulation:
             # Defined GA optimization
             gao = config['GA'](helmgo, **config)
 
-            # We want to keep a copy of the random peptides generated
-            sequences = init_sequences.copy()
-            energies = init_energies.copy()
-
             # Compute the MAP4 fingerprint for all the peptides
-            X_exp = torch.from_numpy(config['seq_transformer'].transform(sequences)).float()
-            y_exp = torch.from_numpy(energies).float()
+            sequences = init_sequences.copy()
+            X_exp = config['seq_transformer'].transform(init_sequences)
+            y_exp = init_energies.copy()
             print('Exp dataset size: (%d, %d)' % (X_exp.shape[0], X_exp.shape[1]))
-
-            d = distance.pdist(X_exp.detach().numpy(), 'jaccard')
-            print(np.mean(d), np.min(d), np.max(d))
 
             print('\n')
             print('Init.')
@@ -76,14 +71,15 @@ class DMTSimulation:
                 print('Generation: %d' % (j + 1))
 
                 # Fit GP model
-                gp_model = get_fitted_model(X_exp, y_exp * scaling_factor, kernel=config['kernel'])
+                gp_model = GPModel(kernel=config['kernel'])
+                gp_model.fit(X_exp, y_exp * scaling_factor)
 
                 # Initialize acquisition function
-                scoring_function = AcqScoring(gp_model, config['acq_function'], config['seq_transformer'], y_exp * scaling_factor, greater_is_better=greater_is_better)
+                scoring_function = AcqScoring(gp_model, config['acq_function'], y_exp * scaling_factor, config['seq_transformer'], greater_is_better=greater_is_better)
 
                 # Find new candidates using GA optimization
                 start = time.time()
-                gao.run(scoring_function, sequences, y_exp.detach().numpy() * scaling_factor)
+                gao.run(scoring_function, sequences, y_exp * scaling_factor)
                 print('Time elapsed: %.3f min.' % ((time.time() - start) / 60.))
 
                 # Take N best candidates found
@@ -101,8 +97,8 @@ class DMTSimulation:
 
                 # Add candidates to the training set
                 sequences = np.append(sequences, candidate_sequences)
-                X_exp = torch.cat([X_exp, torch.from_numpy(config['seq_transformer'].transform(candidate_sequences)).float()])
-                y_exp = torch.cat([y_exp, torch.from_numpy(candidates_energies)])
+                X_exp = np.concatenate([X_exp, config['seq_transformer'].transform(candidate_sequences)])
+                y_exp = np.concatenate([y_exp, candidates_energies])
 
                 print('')
                 print('N pep: ', X_exp.shape[0])

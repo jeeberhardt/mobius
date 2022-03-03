@@ -35,7 +35,7 @@ def read_pssm_file(pssm_file):
 
 class MHCIPeptideScorer:
     
-    def __init__(self, pssm_files, mhci_dataset, energy_cutoff=-5.0):
+    def __init__(self, pssm_files, mhci_dataset, energy_cutoff=None):
         self._pssm = {}
         self._reg = {}
         self._ref_global = None
@@ -89,8 +89,9 @@ class MHCIPeptideScorer:
         pssm_scores = self.score(sequences)
         pred_scores = self._reg.predict(pssm_scores[:, None])
 
-        # Apply cutoff condition
-        pred_scores[pred_scores > self._energy_cutoff] = 0.
+        if self._energy_cutoff is not None:
+            # Apply cutoff condition
+            pred_scores[pred_scores > self._energy_cutoff] = 0.
 
         return pred_scores
 

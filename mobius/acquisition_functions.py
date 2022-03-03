@@ -8,23 +8,22 @@ import numpy as np
 import torch
 from scipy.stats import norm
 
-from .gaussian_process import predict
-
 
 class AcqScoring:
-    def __init__(self, gp_model, acq_function, seq_transformer, y_exp, greater_is_better=True):
-        self._gp_model = gp_model
+    def __init__(self, model, acq_function, y_train, seq_transformer=None, greater_is_better=True):
+        self._model = model
         self._acq_function = acq_function
         self._seq_transformer = seq_transformer
-        self._y_exp = y_exp
+        self._y_train = y_train
         self.greater_is_better = greater_is_better
 
     def score(self, sequences):
-        seq_transformed = torch.from_numpy(self._seq_transformer.transform(sequences)).float()
-        return self._acq_function(self._gp_model, self._y_exp, seq_transformed, self.greater_is_better)
+        if self._seq_transformer is not None:
+            sequences = self._seq_transformer.transform(sequences)
+        return self._acq_function(self._model, self._y_train, sequences, self.greater_is_better)
 
 
-def greedy(model, Y_train, Xsamples, greater_is_better=False):
+def greedy(model, y_train, X_test, greater_is_better=False):
     """ greedy acquisition function
 
     Arguments:
@@ -35,13 +34,13 @@ def greedy(model, Y_train, Xsamples, greater_is_better=False):
         greater_is_better: Indicates whether the loss function is to be maximised or minimised.
 
     """
-    observed_pred = predict(model, model.likelihood, Xsamples)
-    mu = observed_pred.mean.detach().numpy()
+    predictions = model.transform(X_test)
+    mu = predictions.mean.detach().numpy()
 
     return mu
 
 
-def expected_improvement(model, Y_train, Xsamples, greater_is_better=False, xi=0.00):
+def expected_improvement(model, y_train, X_test, greater_is_better=False, xi=0.00):
     """ expected_improvement
     Expected improvement acquisition function.
     
@@ -57,14 +56,14 @@ def expected_improvement(model, Y_train, Xsamples, greater_is_better=False, xi=0
 
     """
     # calculate mean and stdev via surrogate function*
-    observed_pred = predict(model, model.likelihood, Xsamples)
-    sigma = observed_pred.variance.sqrt().detach().numpy()
-    mu = observed_pred.mean.detach().numpy()
+    predictions = model.transform(X_test)
+    mu = predictions.mean.detach().numpy()
+    sigma = predictions.stddev.detach().numpy()
 
     if greater_is_better:
-        loss_optimum = np.max(Y_train.numpy())
+        loss_optimum = np.max(y_train)
     else:
-        loss_optimum = np.min(Y_train.numpy())
+        loss_optimum = np.min(y_train)
 
     scaling_factor = (-1) ** (not greater_is_better)
 
@@ -76,7 +75,7 @@ def expected_improvement(model, Y_train, Xsamples, greater_is_better=False, xi=0
     return -1 * ei
 
 
-def probability_of_improvement(model, Y_train, Xsamples, greater_is_better=False):
+def probability_of_improvement(model, y_train, X_test, greater_is_better=False):
     """ probability_of_improvement
     Probability of improvement acquisition function.
 
@@ -89,14 +88,14 @@ def probability_of_improvement(model, Y_train, Xsamples, greater_is_better=False
 
     """
     # calculate mean and stdev via surrogate function
-    observed_pred = predict(model, model.likelihood, Xsamples)
-    sigma = observed_pred.variance.sqrt().detach().numpy()
-    mu = observed_pred.mean.detach().numpy()
+    predictions = model.transform(X_test)
+    mu = predictions.mean.detach().numpy()
+    sigma = predictions.stddev.detach().numpy()
 
     if greater_is_better:
-        loss_optimum = np.max(Y_train.numpy())
+        loss_optimum = np.max(y_train)
     else:
-        loss_optimum = np.min(Y_train.numpy())
+        loss_optimum = np.min(y_train)
 
     scaling_factor = (-1) ** (not greater_is_better)
 

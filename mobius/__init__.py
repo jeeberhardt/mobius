@@ -11,7 +11,7 @@ from .acquisition_functions import expected_improvement, probability_of_improvem
 from .baye import DMTSimulation
 from .descriptors import Map4Fingerprint, SequenceDescriptors
 from .ga import SequenceGA, ScaffoldGA, GA
-from .gaussian_process import get_fitted_model, predict
+from .gaussian_process import GPModel
 from .helm_genetic_operators import HELMGeneticOperators, compute_probability_matrix
 from .kernels import TanimotoSimilarityKernel
 from .mhc import MHCIPeptideScorer
@@ -22,7 +22,7 @@ __all__ = ['VirtualTarget', 'ForceField',
            'DMTSimulation',
            'Map4Fingerprint', 'SequenceDescriptors',
            'SequenceGA', 'ScaffoldGA', 'GA',
-           'get_fitted_model', 'predict',
+           'GPModel',
            'HELMGeneticOperators', 'compute_probability_matrix',
            'TanimotoSimilarityKernel',
            'MHCIPeptideScorer',

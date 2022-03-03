@@ -35,30 +35,47 @@ class ExactGPModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchMode
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
 
-def get_fitted_model(train_x, train_y, state_dict=None, kernel=None):
-    # initialize and fit model
-    likelihood = gpytorch.likelihoods.GaussianLikelihood()
-    model = ExactGPModel(train_x, train_y, likelihood, kernel)
+class GPModel:
 
-    if state_dict is not None:
-        model.load_state_dict(state_dict)
+    def __init__(self, kernel=None, scaler=None):
+        self._kernel = kernel
+        self._scaler = scaler
+        self._likelihood = None
+        self._model = None
 
-    # "Loss" for GPs - the marginal log likelihood
-    mll = gpytorch.mlls.ExactMarginalLogLikelihood(model.likelihood, model)
-    mll.to(train_x)
+    def fit(self, X_train, y_train):
+        if self._scaler is not None:
+            # Scale input y_train
+            y_train = self._scaler.fit_transform(y_train[:,None]).flatten()
 
-    # Train model!
-    fit_gpytorch_model(mll)
+        X_train = torch.from_numpy(X_train).float()
+        y_train = torch.from_numpy(y_train).float()
 
-    return model
+        # Set noise_prior to None, otherwise cannot pickle GPModel
+        noise_prior = None
+        #noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
+        self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
+        self._model = ExactGPModel(X_train, y_train, self._likelihood, self._kernel)
 
+        # "Loss" for GPs - the marginal log likelihood
+        mll = gpytorch.mlls.ExactMarginalLogLikelihood(self._likelihood, self._model)
+        mll.to(X_train)
 
-def predict(model, likelihood, test_x):
-    # Set model in evaluation mode
-    model.eval()
-    likelihood.eval()
+        # Set model in training mode
+        self._model.train()
+        self._likelihood.train()
 
-    # Make predictions by feeding model through likelihood
-    with torch.no_grad(), gpytorch.settings.fast_pred_var():
-        # Test points are regularly spaced along [0,1]
-        return likelihood(model(test_x))
+        # Train model!
+        fit_gpytorch_model(mll)
+
+    def transform(self, X_test):
+        # Set model in evaluation mode
+        self._model.eval()
+        self._likelihood.eval()
+
+        X_test = torch.from_numpy(X_test).float()
+
+        # Make predictions by feeding model through likelihood
+        # Set fast_pred_var state to False, otherwise cannot pickle GPModel
+        with torch.no_grad(), gpytorch.settings.fast_pred_var(state=False):
+            return self._likelihood(self._model(X_test))

@@ -298,8 +298,8 @@ class GA():
                 clusters[sequence.count('.')].append(i)
 
             # Load back the acquisition function object... *sigh*
-            with open(save_filename, 'rb') as f:
-                acquisition_function = pickle.load(f)
+            #with open(save_filename, 'rb') as f:
+            #    acquisition_function = pickle.load(f)
 
             # Run parallel Sequence GA opt.
             parameters = [(acquisition_function, sequences[seq_ids], scores[seq_ids]) for _, seq_ids in clusters.items()]

@@ -10,7 +10,7 @@ import gpytorch
 
 class TanimotoSimilarityKernel(gpytorch.kernels.Kernel):
     # the sequence kernel is stationary
-    is_stationary = True     
+    is_stationary = True
 
     # this is the kernel function
     def forward(self, x1, x2, diag=False, last_dim_is_batch=False, **params):

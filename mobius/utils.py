@@ -9,13 +9,17 @@ from importlib import util
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
+import seaborn as sns
 
 def path_module(module_name):
     specs = util.find_spec(module_name)
     if specs is not None:
         return specs.submodule_search_locations[0]
     return None
+
+
+def function_equal(func_1, func_2):
+    return func_1.__code__.co_code == func_2.__code__.co_code
 
 
 def opposite_signs(x, y):
@@ -47,26 +51,13 @@ def plot_results(df, run_name):
         axarr[i].text(-0.4, affinity_binding_to_energy(1, input_unit='nM'), 'nM')
 
     # Average
-    df.replace({'exp_score': 0.}, np.nan)\
-      .groupby(by=['gen'])['exp_score']\
-      .agg(['mean', 'std'])\
-      .reset_index()\
-      .plot(x='gen', y='mean', yerr='std', ax=axarr[0], capsize=4, rot=0, fontsize=10, color='tab:blue')
+    sns.violinplot(x='gen', y='exp_score', data=df[df['exp_score'] != 0.], bw=.2, scale='width', cut=1, linewidth=0.5, color="0.9", ax=axarr[0])
+    sns.boxplot(x='gen', y='exp_score', data=df[df['exp_score'] != 0.], width=.2, boxprops={'zorder': 2}, color='tab:blue', ax=axarr[0])
 
     # Min
-    y = df.groupby(by=['gen'])['exp_score']\
-      .agg(['min'])\
-      .reset_index()
-
-    errors = df.groupby(by=['sample', 'gen'])['exp_score']\
-      .agg(['min'])\
-      .reset_index()\
-      .groupby(by=['gen'])['min']\
-      .agg(['std'])\
-      .fillna(0)\
-      .reset_index()
-
-    y.plot(x='gen', yerr=errors['std'], ax=axarr[1], capsize=4, rot=0, fontsize=10, color='tab:blue')
+    mins = df.loc[df.groupby(by=['sample', 'gen'])['exp_score'].idxmin()][['gen', 'exp_score']]
+    sns.violinplot(x='gen', y='exp_score', data=mins, bw=.2, scale='width', cut=1, linewidth=0.5, color="0.9", ax=axarr[1])
+    sns.swarmplot(x='gen', y='exp_score', data=mins, color='tab:blue', size=7, alpha=0.8, ax=axarr[1])
 
     # Length
     y = df.groupby(by=['sample', 'gen', 'length'])\
@@ -88,7 +79,7 @@ def plot_results(df, run_name):
       .reset_index()\
       .fillna(0)
 
-    y.plot.bar(x='gen', yerr=errors, ax=axarr[2], capsize=4, rot=0, fontsize=10)
+    y.plot.bar(x='gen', yerr=errors, ax=axarr[2], capsize=4, rot=0, fontsize=10, stacked=True)
 
     # Binders and non binders
     data_mean = []
@@ -114,7 +105,7 @@ def plot_results(df, run_name):
 
     df_mean_binders = pd.DataFrame(data=data_mean, columns=('gen', 'binders', 'non_binders'))
     df_errors_binders = pd.DataFrame(data=data_errors, columns=('gen', 'binders', 'non_binders'))
-    df_mean_binders.plot.bar(x='gen', y=['binders', 'non_binders'], yerr=df_errors_binders, ax=axarr[3], capsize=4, rot=0, fontsize=10)
+    df_mean_binders.plot.bar(x='gen', y=['binders', 'non_binders'], yerr=df_errors_binders, ax=axarr[3], capsize=4, rot=0, fontsize=10, stacked=True)
 
 
     axarr[0].set_xlabel('Generations', fontsize=20)
