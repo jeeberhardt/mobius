@@ -6,9 +6,8 @@
 
 import numpy as np
 import pandas as pd
-from MDAnalysis.analysis.rms import rmsd
-from scipy.stats import pearsonr
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
 
 from .helm import build_helm_string
 
@@ -57,7 +56,7 @@ class Oracle:
             print('----- Peptide global -----')
             print('N peptide: %d' % len(exp_fasta_sequences))
             print('R2: %.3f' % reg.score(pssm_scores[:, None], exp_values))
-            print('RMSD : %.3f kcal/mol' % rmsd(reg.predict(pssm_scores[:, None]), exp_values))
+            print('RMSD : %.3f kcal/mol' % mean_squared_error(reg.predict(pssm_scores[:, None]), exp_values, squared=False))
             print('')
             self._reg = reg
 
