@@ -14,6 +14,8 @@ from multiprocessing import Pool
 
 import numpy as np
 
+from . import utils
+
 
 def _boltzmann_probability(values, temperature=300.):
     p = np.exp(-(np.max(values) - values) / temperature)
@@ -278,12 +280,6 @@ class GA():
         sca_gao = ScaffoldGA(self._helmgo, **self._sca_gao_parameters)
         seq_gao = SequenceGA(self._helmgo, **self._seq_gao_parameters)
 
-        # We need to pickle the acquidition function object before using it 
-        # because apparently it has been changed after the first use in the ScaffoldGA
-        save_filename = 'gp_%s.pkl' % str(uuid.uuid4())[:8]
-        with open(save_filename, 'wb') as w:
-            pickle.dump(acquisition_function, w)
-
         # Evaluate the initial population
         if scores is None:
             scores = acquisition_function.score(sequences)
@@ -292,17 +288,11 @@ class GA():
             # Run scaffold GA opt. first
             sequences, scores = sca_gao.run(acquisition_function, sequences, scores)
 
-            # Clustering peptides based on the length
-            clusters = defaultdict(list)
-            for i, sequence in enumerate(sequences):
-                clusters[sequence.count('.')].append(i)
-
-            # Load back the acquisition function object... *sigh*
-            #with open(save_filename, 'rb') as f:
-            #    acquisition_function = pickle.load(f)
+            # Group peptides based on their scaffold
+            _, group_indices = utils.group_by_scaffold(sequences, return_index=True)
 
             # Run parallel Sequence GA opt.
-            parameters = [(acquisition_function, sequences[seq_ids], scores[seq_ids]) for _, seq_ids in clusters.items()]
+            parameters = [(acquisition_function, sequences[seq_ids], scores[seq_ids]) for _, seq_ids in group_indices.items()]
             with Pool(processes=self._seq_gao_parameters['n_process']) as pool:
                 results = pool.starmap(seq_gao.run, parameters)
 
@@ -325,8 +315,5 @@ class GA():
         self.scores = all_sequence_scores[sorted_indices]
 
         print('End GA opt - Score: %5.3f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
-
-        # Remove pickle file
-        os.remove(save_filename)
 
         return self.sequences, self.scores

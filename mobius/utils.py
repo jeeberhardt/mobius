@@ -4,12 +4,15 @@
 # Mobius - utils
 #
 
+import re
+from collections import defaultdict
 from importlib import util
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+
 
 def path_module(module_name):
     specs = util.find_spec(module_name)
@@ -36,6 +39,37 @@ def energy_to_affinity_binding(value, output_unit='nM', temperature=300.):
     unit_converter = {'nM': 1e9, 'uM': 1e6, 'mM': 1e3, 'M': 1}
     RT = 0.001987 * temperature
     return np.exp(value / RT) * unit_converter[output_unit]
+
+
+def group_by_scaffold(helm_sequences, return_index=True):
+    """Group helm strings by scaffold.
+
+    Example:
+        helm_sequence : PEPTIDE1{A.A.A.A.A}|PEPTIDE2{A.A.A.A}$PEPTIDE1,PEPTIDE2,1:R1-1:R1$$$V2.0
+        scaffold      : PEPTIDE1{5}|PEPTIDE2{4}$PEPTIDE1,PEPTIDE2,1:R1-1:R1$$$V2.0
+
+    """
+    groups = defaultdict(list)
+    group_indices = defaultdict(list)
+
+    p = re.compile("PEPTIDE.*?{.*?}")
+
+    for i, helm_sequence in enumerate(helm_sequences):
+        scaffold = (helm_sequence + '.')[:-1]
+
+        # Get scaffold (replace peptide sequences by length)
+        for m in list(p.finditer(helm_sequence))[::-1]:
+            n = m.group().count('.') + 1
+            sub_string = re.sub('{.*?}', '{%d}' % n, m.group())
+            scaffold = scaffold[0:m.start()] + sub_string + scaffold[m.end():]
+
+        groups[scaffold].append(helm_sequence)
+        group_indices[scaffold].append(i)
+
+    if reset_index:
+        return groups, group_indices
+    else:
+        return groups
 
 
 def plot_results(df, run_name):

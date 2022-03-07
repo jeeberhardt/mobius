@@ -93,7 +93,7 @@ class DMTSimulation:
 
                 # Get affinitiy binding values (MAKE TEST)
                 candidate_sequences_fasta = [''.join(c.split('$')[0].split('{')[1].split('}')[0].split('.')) for c in candidate_sequences]
-                candidates_energies = config['oracle'].predict_energy(candidate_sequences_fasta)
+                candidates_energies = config['oracle'].score(candidate_sequences_fasta)
 
                 # Add candidates to the training set
                 sequences = np.append(sequences, candidate_sequences)

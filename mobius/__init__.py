@@ -14,7 +14,7 @@ from .ga import SequenceGA, ScaffoldGA, GA
 from .gaussian_process import GPModel
 from .helm_genetic_operators import HELMGeneticOperators, compute_probability_matrix
 from .kernels import TanimotoSimilarityKernel
-from .mhc import MHCIPeptideScorer
+from .oracle import Oracle
 from .utils import affinity_binding_to_energy, energy_to_affinity_binding, plot_results
 
 __all__ = ['VirtualTarget', 'ForceField',
@@ -25,5 +25,5 @@ __all__ = ['VirtualTarget', 'ForceField',
            'GPModel',
            'HELMGeneticOperators', 'compute_probability_matrix',
            'TanimotoSimilarityKernel',
-           'MHCIPeptideScorer',
+           'Oracle',
            'affinity_binding_to_energy', 'energy_to_affinity_binding', 'plot_results']

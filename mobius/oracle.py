@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# MHC-I
+# Oracle
 #
 
 import numpy as np
@@ -33,12 +33,11 @@ def read_pssm_file(pssm_file):
     return pssm
 
 
-class MHCIPeptideScorer:
+class Oracle:
     
-    def __init__(self, pssm_files, mhci_dataset, energy_cutoff=None):
+    def __init__(self, pssm_files, exp_fasta_sequences=None, exp_values=None, energy_cutoff=None):
         self._pssm = {}
-        self._reg = {}
-        self._ref_global = None
+        self._reg = None
         self._energy_cutoff = energy_cutoff
 
         # Read PSS matrices
@@ -46,24 +45,27 @@ class MHCIPeptideScorer:
             pssm = read_pssm_file(pssm_file)
             self._pssm[len(pssm.columns)] = pssm
 
-        # Score peptides using those PSSM
-        pssm_scores = self.score(mhci_dataset['sequence'])
+        if exp_fasta_sequences is not None and exp_values is not None:
+            assert len(exp_fasta_sequences) == len(exp_values), 'exp_fasta_sequences and exp_values must have the same size.'
 
-        # Fit PSSM scores to experimental values
-        reg = LinearRegression()
-        reg.fit(pssm_scores[:, None], mhci_dataset.energy)
-        print('----- Peptide global -----')
-        print('N peptide: %d' % mhci_dataset.shape[0])
-        print('R2: %.3f' % reg.score(pssm_scores[:, None], mhci_dataset.energy))
-        print('RMSD : %.3f kcal/mol' % rmsd(reg.predict(pssm_scores[:, None]), mhci_dataset.energy))
-        print('')
-        self._reg = reg 
+            # Score peptides using those PSSM
+            pssm_scores = self.score(exp_fasta_sequences, use_cutoff_energy=False)
 
-    def score(self, sequences):
+            # Fit PSSM scores to experimental values
+            reg = LinearRegression()
+            reg.fit(pssm_scores[:, None], exp_values)
+            print('----- Peptide global -----')
+            print('N peptide: %d' % len(exp_fasta_sequences))
+            print('R2: %.3f' % reg.score(pssm_scores[:, None], exp_values))
+            print('RMSD : %.3f kcal/mol' % rmsd(reg.predict(pssm_scores[:, None]), exp_values))
+            print('')
+            self._reg = reg
+
+    def score(self, fasta_sequences, use_cutoff_energy=True):
         # Score peptides using those PSSM
         scores = []
 
-        for sequence in sequences:
+        for sequence in fasta_sequences:
             score = 0
 
             try:
@@ -81,21 +83,15 @@ class MHCIPeptideScorer:
 
         scores = np.array(scores)
 
+        if self._reg is not None:
+            scores = self._reg.predict(scores[:, None])
+
+        if self._energy_cutoff is not None and use_cutoff_energy is True:
+            scores[scores > self._energy_cutoff] = 0.
+
         return scores
 
-    def predict_energy(self, sequences):
-        scores = []
-
-        pssm_scores = self.score(sequences)
-        pred_scores = self._reg.predict(pssm_scores[:, None])
-
-        if self._energy_cutoff is not None:
-            # Apply cutoff condition
-            pred_scores[pred_scores > self._energy_cutoff] = 0.
-
-        return pred_scores
-
-    def generate_random_peptides(self, n_peptides, peptide_lengths, energy_bounds, return_predicted_energy=True):
+    def generate_random_peptides(self, n_peptides, peptide_lengths, energy_bounds, use_cutoff_energy=True):
         random_peptides = []
         random_peptide_scores = []
 
@@ -111,10 +107,7 @@ class MHCIPeptideScorer:
 
             p = ''.join(np.random.choice(AA, peptide_length))
 
-            if return_predicted_energy:
-                s = self.predict_energy([p])[0]
-            else:
-                s = self.score([p])[0]
+            s = self.score([p], use_cutoff_energy=use_cutoff_energy)[0]
 
             if energy_bounds[0] <= s <= energy_bounds[1]:
                 helm_string = build_helm_string({'PEPTIDE1': p}, [])
