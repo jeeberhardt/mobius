@@ -107,7 +107,8 @@ class DMTSimulation:
                     print('N pep under %d kcal/mol: %03d' % (n, y_exp[y_exp < n].shape[0]))
                 print('Non binding pep        : %03d' % (y_exp[y_exp == 0.].shape[0]))
                 try:
-                    print('Correlation acq-function/energies: %.3f' % stats.pearsonr(candidates_scores[candidates_energies != 0], candidates_energies[candidates_energies != 0])[0])
+                    r = stats.pearsonr(candidates_scores[candidates_energies != 0], candidates_energies[candidates_energies != 0])[0]
+                    print('Correlation acq-function/energies: %.3f' % r)
                 except:
                     pass
                 print('')

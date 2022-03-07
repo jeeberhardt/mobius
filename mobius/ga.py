@@ -159,9 +159,9 @@ class _GeneticAlgorithm(ABC):
                 print('Reached maximum number of attempts (%d), no improvement observed!' % self._total_attempts)
                 break
 
-            print('N %03d - Score: %.6f - Seq: %d - %s (%03d/%03d) - New seq: %d' % (i + 1, scores[idx], current_best_sequence.count('.'), 
-                                                                                          current_best_sequence, attempts, self._total_attempts, 
-                                                                                          len(sequences_to_evaluate)))
+            print('N %03d - Score: %.6f - Seq: %d - %s (%03d/%03d) - New seq: %d' % (i + 1, scores[idx], current_best_sequence.count('.'),
+                                                                                     current_best_sequence, attempts, self._total_attempts,
+                                                                                     len(sequences_to_evaluate)))
 
         all_sequences = np.array(list(sequences_cache.keys()))
         all_sequence_scores = np.fromiter(sequences_cache.values(), dtype=float)
