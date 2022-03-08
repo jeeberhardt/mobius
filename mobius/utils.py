@@ -29,16 +29,16 @@ def opposite_signs(x, y):
     return ((x ^ y) < 0)
 
 
-def affinity_binding_to_energy(value, input_unit='nM', temperature=300.):
+def affinity_binding_to_energy(value, unit='nM', temperature=300.):
     unit_converter = {'nM': 1e-9, 'uM': 1e-6, 'mM': 1e-3, 'M': 1}
     RT = 0.001987 * temperature
-    return RT * np.log(value * unit_converter[input_unit])
+    return RT * np.log(value * unit_converter[unit])
 
 
-def energy_to_affinity_binding(value, output_unit='nM', temperature=300.):
+def energy_to_affinity_binding(value, unit='nM', temperature=300.):
     unit_converter = {'nM': 1e9, 'uM': 1e6, 'mM': 1e3, 'M': 1}
     RT = 0.001987 * temperature
-    return np.exp(value / RT) * unit_converter[output_unit]
+    return np.exp(value / RT) * unit_converter[unit]
 
 
 def group_by_scaffold(helm_sequences, return_index=True):
@@ -77,12 +77,12 @@ def plot_results(df, run_name):
 
     for i in range(2):
         x = [-1, 0, 1, 2, 3, 4, 5]
-        axarr[i].plot(x, [affinity_binding_to_energy(1, input_unit='mM')] * len(x), '--', linewidth=1, color='lightgray')
-        axarr[i].plot(x, [affinity_binding_to_energy(1, input_unit='uM')] * len(x), '--', linewidth=1, color='gray')
-        axarr[i].plot(x, [affinity_binding_to_energy(1, input_unit='nM')] * len(x), '--', linewidth=1, color='black')
-        axarr[i].text(-0.4, affinity_binding_to_energy(1, input_unit='mM'), 'mM')
-        axarr[i].text(-0.4, affinity_binding_to_energy(1, input_unit='uM'), 'uM')
-        axarr[i].text(-0.4, affinity_binding_to_energy(1, input_unit='nM'), 'nM')
+        axarr[i].plot(x, [affinity_binding_to_energy(1, unit='mM')] * len(x), '--', linewidth=1, color='lightgray')
+        axarr[i].plot(x, [affinity_binding_to_energy(1, unit='uM')] * len(x), '--', linewidth=1, color='gray')
+        axarr[i].plot(x, [affinity_binding_to_energy(1, unit='nM')] * len(x), '--', linewidth=1, color='black')
+        axarr[i].text(-0.4, affinity_binding_to_energy(1, unit='mM'), 'mM')
+        axarr[i].text(-0.4, affinity_binding_to_energy(1, unit='uM'), 'uM')
+        axarr[i].text(-0.4, affinity_binding_to_energy(1, unit='nM'), 'nM')
 
     # Average
     sns.violinplot(x='gen', y='exp_score', data=df[df['exp_score'] != 0.], bw=.2, scale='width', cut=1, linewidth=0.5, color="0.9", ax=axarr[0])
