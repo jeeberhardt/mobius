@@ -5,6 +5,7 @@
 #
 
 import itertools
+import random
 
 import numpy as np
 
@@ -83,3 +84,13 @@ def properties_scanning(fasta_sequence, properties, positions=None):
                 yield new_seq
             else:
                 pass
+
+
+def scrumbled_scanning(fasta_sequence):
+    while True:
+        new_seq = ''.join(np.random.choice(list(fasta_sequence), size=len(fasta_sequence), replace=False))
+
+        if new_seq != fasta_sequence:
+            yield new_seq
+        else:
+            pass
