@@ -12,7 +12,7 @@ from .baye import DMTSimulation
 from .descriptors import Map4Fingerprint, SequenceDescriptors
 from .ga import SequenceGA, ScaffoldGA, GA
 from .gaussian_process import GPModel
-from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning
+from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning
 from .helm_genetic_operators import HELMGeneticOperators, compute_probability_matrix
 from .kernels import TanimotoSimilarityKernel
 from .oracle import Oracle
@@ -24,7 +24,7 @@ __all__ = ['VirtualTarget', 'ForceField',
            'Map4Fingerprint', 'SequenceDescriptors',
            'SequenceGA', 'ScaffoldGA', 'GA',
            'GPModel',
-           'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning',
+           'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 'scrumbled_scanning',
            'HELMGeneticOperators', 'compute_probability_matrix',
            'TanimotoSimilarityKernel',
            'Oracle',
