@@ -66,7 +66,7 @@ def group_by_scaffold(helm_sequences, return_index=True):
         groups[scaffold].append(helm_sequence)
         group_indices[scaffold].append(i)
 
-    if reset_index:
+    if return_index:
         return groups, group_indices
     else:
         return groups
