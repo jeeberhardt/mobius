@@ -6,11 +6,51 @@
 
 import itertools
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from multiprocessing import Pool
 
 import numpy as np
 
-from . import utils
+
+def _group_by_scaffold(helm_sequences, return_index=False):
+    """Group helm strings by scaffold.
+
+    Example:
+        helm_sequence : PEPTIDE1{A.A.A.A.A}|PEPTIDE2{A.A.A.A}$PEPTIDE1,PEPTIDE2,1:R1-1:R1$$$V2.0
+        scaffold      : PEPTIDE1{X.A.X.X.X}|PEPTIDE2{X.A.X.X}$PEPTIDE1,PEPTIDE2,1:R1-1:R1$$$V2.0
+
+    """
+    groups = defaultdict(list)
+    group_indices = defaultdict(list)
+
+    for i, helm_sequence in enumerate(helm_sequences):
+        polymers, connections, _, _ = parse_helm(helm_sequence)
+        
+        for polymer_id in polymers.keys():
+            if connections.size > 0:
+                # Get all the connections in this polymer
+                attachment_positions1 = connections[connections['SourcePolymerID'] == polymer_id]['SourceMonomerPosition']
+                attachment_positions2 = connections[connections['TargetPolymerID'] == polymer_id]['TargetMonomerPosition']
+                attachment_positions = np.concatenate([attachment_positions1, attachment_positions2])
+                # Build scaffold polymer sequence (X represents an unknown monomer in the HELM notation)
+                scaffold_sequence = np.array(['X'] * len(polymers[polymer_id]))
+                scaffold_sequence[attachment_positions] = np.array(list(polymers[polymer_id]))[attachment_positions]
+                # Replace polymer sequence by scaffold sequence
+                polymers[polymer_id] = ''.join(scaffold_sequence)
+            else:
+                # Replace polymer sequence by scaffold sequence (but faster version since no connections)
+                # (X represents an unknown monomer in the HELM notation)
+                polymers[polymer_id] = 'X' * len(polymers[polymer_id])
+        
+        scaffold_sequence = build_helm_string(polymers, connections)
+
+        groups[scaffold_sequence].append(helm_sequence)
+        group_indices[scaffold_sequence].append(i)
+
+    if return_index:
+        return groups, group_indices
+    else:
+        return groups
 
 
 def _boltzmann_probability(values, temperature=300.):
@@ -285,7 +325,7 @@ class GA():
             sequences, scores = sca_gao.run(acquisition_function, sequences, scores)
 
             # Group peptides based on their scaffold
-            _, group_indices = utils.group_by_scaffold(sequences, return_index=True)
+            _, group_indices = _group_by_scaffold(sequences, return_index=True)
 
             # Run parallel Sequence GA opt.
             parameters = [(acquisition_function, sequences[seq_ids], scores[seq_ids]) for _, seq_ids in group_indices.items()]
