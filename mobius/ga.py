@@ -101,7 +101,12 @@ def _generate_mating_couples(parent_sequences, parent_scores, n_children, temper
 
     scaling_factor = (-1) ** (not greater_is_better)
 
-    p = _boltzmann_probability(scaling_factor * parent_scores, temperature)
+    try:
+        p = _boltzmann_probability(scaling_factor * parent_scores, temperature)
+    except ValueError:
+        error_msg = 'parent_sequences : %s/nparent_scores    : %s' % (parent_sequences, parent_scores)
+        raise ValueError(error_msg)
+
     mates_per_parent = np.floor(n_couples * p).astype(int)
 
     # In the case no parents really stood up from the rest, all
@@ -304,6 +309,59 @@ class ScaffoldGA(_GeneticAlgorithm):
     def run(self, acquisition_function, sequences, scores=None):
         self.sequences, self.scores = super().run(acquisition_function, sequences, scores)
         print('End Scaffold GA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
+
+        return self.sequences, self.scores
+
+
+class RandomGA():
+
+    def __init__(self, helmgo, **parameters):
+        self._helmgo = helmgo
+        self._n_gen = parameters['n_gen']
+        self._n_process = parameters['n_process']
+        self._seq_gao_parameters = {k.replace('sequence_', ''): v for k, v in parameters.items() if 'sequence' in k}
+        self._sca_gao_parameters = {k.replace('scaffold_', ''): v for k, v in parameters.items() if 'scaffold' in k}
+
+    def _generate_random_peptides(self, n_peptides, peptide_lengths):
+        random_peptides = []
+
+        if not isinstance(peptide_lengths, (list, tuple)):
+            peptide_lengths = [peptide_lengths]
+
+        AA = self._helmgo._monomer_symbols
+
+        while True:
+            peptide_length = np.random.choice(peptide_lengths)
+            p = ''.join(np.random.choice(AA, peptide_length))
+            helm_string = build_helm_string({'PEPTIDE1': p}, [])
+            random_peptides.append(helm_string)
+
+            if len(random_peptides) == n_peptides:
+                break
+
+        return random_peptides
+
+    def run(self, acquisition_function, sequences=None, scores=None):
+        n_peptides = self._seq_gao_parameters['n_gen'] * self._seq_gao_parameters['n_children']
+        peptide_lengths = list(range(self._sca_gao_parameters['minimum_size'], self._sca_gao_parameters['maximum_size'] + 1))
+
+        sequences = self._generate_random_peptides(n_peptides, peptide_lengths)
+        scores = acquisition_function.score(sequences)
+
+        # Remove duplicates
+        all_sequences, unique_indices = np.unique(sequences, return_index=True)
+        all_sequence_scores = np.array(sequence_scores)[unique_indices]
+
+        # Sort sequences by scores in the decreasing order (best to worst)
+        if acquisition_function.greater_is_better:
+            sorted_indices = np.argsort(all_sequence_scores)[::-1]
+        else:
+            sorted_indices = np.argsort(all_sequence_scores)
+
+        self.sequences = all_sequences[sorted_indices]
+        self.scores = all_sequence_scores[sorted_indices]
+
+        print('End GA opt - Score: %5.3f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
 
         return self.sequences, self.scores
 

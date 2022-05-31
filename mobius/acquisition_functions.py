@@ -23,6 +23,23 @@ class AcqScoring:
         return self._acq_function(self._model, self._y_train, sequences, self.greater_is_better)
 
 
+def random_improvement(model, y_train, X_test, greater_is_better=False):
+    """ random acquisition function
+
+    Arguments:
+    ----------
+        model: Gaussian process model (needed for API compatibility)
+        Y_train: Array that contains all the observed energy interaction seed so far (needed for API compatibility)
+        X_samples: Samples we want to try out
+        greater_is_better: Indicates whether the loss function is to be maximised or minimised.
+
+    """
+    scaling_factor = (-1) ** (not greater_is_better)
+    predictions = scaling_factor * np.random.uniform(low=0, high=1, size=X_test.shape[0])
+
+    return predictions
+
+
 def greedy(model, y_train, X_test, greater_is_better=False):
     """ greedy acquisition function
 
