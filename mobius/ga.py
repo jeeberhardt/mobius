@@ -318,9 +318,9 @@ class RandomGA():
     def __init__(self, helmgo, **parameters):
         self._helmgo = helmgo
         self._n_gen = parameters['n_gen']
-        self._n_process = parameters['n_process']
-        self._seq_gao_parameters = {k.replace('sequence_', ''): v for k, v in parameters.items() if 'sequence' in k}
-        self._sca_gao_parameters = {k.replace('scaffold_', ''): v for k, v in parameters.items() if 'scaffold' in k}
+        self._n_children = parameters['n_children']
+        self._minimum_size = parameters['minimum_size']
+        self._maximum_size = parameters['maximum_size']
 
     def _generate_random_peptides(self, n_peptides, peptide_lengths):
         random_peptides = []
@@ -342,26 +342,32 @@ class RandomGA():
         return random_peptides
 
     def run(self, acquisition_function, sequences=None, scores=None):
-        n_peptides = self._seq_gao_parameters['n_gen'] * self._seq_gao_parameters['n_children']
-        peptide_lengths = list(range(self._sca_gao_parameters['minimum_size'], self._sca_gao_parameters['maximum_size'] + 1))
+        all_sequences = []
+        all_scores = []
 
-        sequences = self._generate_random_peptides(n_peptides, peptide_lengths)
-        scores = acquisition_function.score(sequences)
+        peptide_lengths = list(range(self._minimum_size, self._maximum_size + 1))
+
+        for i in range(self._n_gen):
+            sequences = self._generate_random_peptides(self._n_children, peptide_lengths)
+            scores = acquisition_function.score(sequences)
+
+            all_sequences = np.append(all_sequences, sequences)
+            all_scores = np.append(all_scores, scores)
 
         # Remove duplicates
-        all_sequences, unique_indices = np.unique(sequences, return_index=True)
-        all_sequence_scores = np.array(sequence_scores)[unique_indices]
+        all_sequences, unique_indices = np.unique(all_sequences, return_index=True)
+        all_scores = np.array(all_scores)[unique_indices]
 
         # Sort sequences by scores in the decreasing order (best to worst)
         if acquisition_function.greater_is_better:
-            sorted_indices = np.argsort(all_sequence_scores)[::-1]
+            sorted_indices = np.argsort(all_scores)[::-1]
         else:
-            sorted_indices = np.argsort(all_sequence_scores)
+            sorted_indices = np.argsort(all_scores)
 
         self.sequences = all_sequences[sorted_indices]
-        self.scores = all_sequence_scores[sorted_indices]
+        self.scores = all_scores[sorted_indices]
 
-        print('End GA opt - Score: %5.3f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
+        print('End Random GA opt - Score: %5.3f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
 
         return self.sequences, self.scores
 
@@ -370,7 +376,6 @@ class GA():
 
     def __init__(self, helmgo, **parameters):
         self._helmgo = helmgo
-        self._n_gen = parameters['n_gen']
         self._n_process = parameters['n_process']
         self._seq_gao_parameters = {k.replace('sequence_', ''): v for k, v in parameters.items() if 'sequence' in k}
         self._sca_gao_parameters = {k.replace('scaffold_', ''): v for k, v in parameters.items() if 'scaffold' in k}
@@ -388,21 +393,20 @@ class GA():
         if scores is None:
             scores = acquisition_function.score(sequences)
 
-        for i in range(self._n_gen):
-            # Run scaffold GA opt. first
-            sequences, scores = sca_gao.run(acquisition_function, sequences, scores)
+        # Run scaffold GA opt. first
+        sequences, scores = sca_gao.run(acquisition_function, sequences, scores)
 
-            # Group peptides based on their scaffold
-            _, group_indices = _group_by_scaffold(sequences, return_index=True)
+        # Group peptides based on their scaffold
+        _, group_indices = _group_by_scaffold(sequences, return_index=True)
 
-            # Run parallel Sequence GA opt.
-            refs = [parallel_ga.remote(seq_gao, acquisition_function, sequences[seq_ids], scores[seq_ids]) for _, seq_ids in group_indices.items()]
-            results = ray.get(refs)
+        # Run parallel Sequence GA opt.
+        refs = [parallel_ga.remote(seq_gao, acquisition_function, sequences[seq_ids], scores[seq_ids]) for _, seq_ids in group_indices.items()]
+        results = ray.get(refs)
 
-            sequences, scores = zip(*results)
+        sequences, scores = zip(*results)
 
-            all_sequences = np.append(all_sequence_scores, np.concatenate(sequences))
-            all_sequence_scores = np.append(all_sequence_scores, np.concatenate(scores))
+        all_sequences = np.append(all_sequence_scores, np.concatenate(sequences))
+        all_sequence_scores = np.append(all_sequence_scores, np.concatenate(scores))
 
         # Remove duplicates
         all_sequences, unique_indices = np.unique(all_sequences, return_index=True)

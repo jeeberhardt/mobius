@@ -15,7 +15,7 @@ from scipy import stats
 from scipy.spatial import distance
 
 from . import utils
-from .acquisition_functions import AcqScoring, greedy, expected_improvement
+from .acquisition_functions import AcqScoring, greedy, expected_improvement, random_improvement
 from .gaussian_process import GPModel
 
 
@@ -28,7 +28,7 @@ class DMTSimulation:
     def run(self, init_sequences, init_energies, **config):        
         data = []
 
-        if any(utils.function_equal(config['acq_function'], f) for f in [greedy, expected_improvement]):
+        if any(utils.function_equal(config['acq_function'], f) for f in [greedy, expected_improvement, random_improvement]):
             greater_is_better = False
         else:
             greater_is_better = True
@@ -52,11 +52,15 @@ class DMTSimulation:
             # Defined GA optimization
             gao = config['GA'](helmgo, **config)
 
-            # Compute the MAP4 fingerprint for all the peptides
             sequences = init_sequences.copy()
-            X_exp = config['seq_transformer'].transform(init_sequences)
-            y_exp = init_energies.copy()
-            print('Exp dataset size: (%d, %d)' % (X_exp.shape[0], X_exp.shape[1]))
+
+            # Compute the MAP4 fingerprint for all the peptides (if not using random_improvement acquisition function)
+            if not utils.function_equal(config['acq_function'], random_improvement):
+                X_exp = config['seq_transformer'].transform(init_sequences)
+                y_exp = init_energies.copy()
+            else:
+                X_exp = np.array([])
+                y_exp = np.array([])
 
             print('\n')
             print('Init.')
@@ -70,9 +74,12 @@ class DMTSimulation:
             for j in range(self._n_step):
                 print('Generation: %d' % (j + 1))
 
-                # Fit GP model
-                gp_model = GPModel(kernel=config['kernel'])
-                gp_model.fit(X_exp, y_exp * scaling_factor)
+                # Fit GP model (if not using random_improvement acquisition function)
+                if not utils.function_equal(config['acq_function'], random_improvement):
+                    gp_model = GPModel(kernel=config['kernel'])
+                    gp_model.fit(X_exp, y_exp * scaling_factor)
+                else:
+                    gp_model = None
 
                 # Initialize acquisition function
                 scoring_function = AcqScoring(gp_model, config['acq_function'], y_exp * scaling_factor, config['seq_transformer'], greater_is_better=greater_is_better)

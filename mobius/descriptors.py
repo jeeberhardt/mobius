@@ -30,6 +30,7 @@ class Map4Fingerprint:
             print(sequences)
 
         fps = self._map4calc.calculate_many(mols)
+        fps = np.array(fps)
 
         return np.array(fps)
 

@@ -8,6 +8,7 @@ import numpy as np
 import torch
 from scipy.stats import norm
 
+from . import utils
 
 class AcqScoring:
     def __init__(self, model, acq_function, y_train, seq_transformer=None, greater_is_better=True):

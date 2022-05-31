@@ -7,10 +7,10 @@
 from .forcefield import ForceField
 from .virtual_target import VirtualTarget
 
-from .acquisition_functions import expected_improvement, probability_of_improvement, greedy
+from .acquisition_functions import expected_improvement, probability_of_improvement, greedy, random_improvement
 from .baye import DMTSimulation
 from .descriptors import Map4Fingerprint, SequenceDescriptors
-from .ga import SequenceGA, ScaffoldGA, GA
+from .ga import SequenceGA, ScaffoldGA, GA, RandomGA
 from .gaussian_process import GPModel
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning
 from .helm_genetic_operators import HELMGeneticOperators, compute_probability_matrix
@@ -19,10 +19,10 @@ from .oracle import Oracle
 from .utils import affinity_binding_to_energy, energy_to_affinity_binding, plot_results
 
 __all__ = ['VirtualTarget', 'ForceField',
-           'expected_improvement', 'probability_of_improvement', 'greedy',
+           'expected_improvement', 'probability_of_improvement', 'greedy', 'random_improvement',
            'DMTSimulation',
            'Map4Fingerprint', 'SequenceDescriptors',
-           'SequenceGA', 'ScaffoldGA', 'GA',
+           'SequenceGA', 'ScaffoldGA', 'GA', 'RandomGA',
            'GPModel',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 'scrumbled_scanning',
            'HELMGeneticOperators', 'compute_probability_matrix',
