@@ -7,9 +7,11 @@
 import itertools
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from multiprocessing import Pool
 
 import numpy as np
+import ray
+
+from .helm import parse_helm, build_helm_string
 
 
 def _group_by_scaffold(helm_sequences, return_index=False):
@@ -121,7 +123,6 @@ def _generate_mating_couples(parent_sequences, parent_scores, n_children, temper
                 break
 
     for idx in np.argwhere(mates_per_parent > 0).flatten():
-
         # Compute Boltzmann probabilities without the selected parent
         mask = np.ones(len(parent_sequences), dtype=bool)
         mask[idx] = False
@@ -132,6 +133,11 @@ def _generate_mating_couples(parent_sequences, parent_scores, n_children, temper
         mating_couples.extend([(parent_sequences[idx], m) for m in mates])
 
     return mating_couples
+
+
+@ray.remote
+def parallel_ga(gao, acquisition_function, sequences, scores):
+    return gao.run(acquisition_function, sequences, scores)
 
 
 class _GeneticAlgorithm(ABC):
@@ -254,6 +260,7 @@ class SequenceGA(_GeneticAlgorithm):
         return new_pop
 
     def run(self, acquisition_function, sequences, scores=None):
+        print(sequences[0], len(sequences[0]), len(sequences))
         self.sequences, self.scores = super().run(acquisition_function, sequences, scores)
         print('End SequenceGA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
 
@@ -306,12 +313,15 @@ class GA():
     def __init__(self, helmgo, **parameters):
         self._helmgo = helmgo
         self._n_gen = parameters['n_gen']
+        self._n_process = parameters['n_process']
         self._seq_gao_parameters = {k.replace('sequence_', ''): v for k, v in parameters.items() if 'sequence' in k}
         self._sca_gao_parameters = {k.replace('scaffold_', ''): v for k, v in parameters.items() if 'scaffold' in k}
 
     def run(self, acquisition_function, sequences, scores=None):
         all_sequences = []
         all_sequence_scores = []
+
+        ray.init(num_cpus=self._n_process)
 
         sca_gao = ScaffoldGA(self._helmgo, **self._sca_gao_parameters)
         seq_gao = SequenceGA(self._helmgo, **self._seq_gao_parameters)
@@ -328,9 +338,8 @@ class GA():
             _, group_indices = _group_by_scaffold(sequences, return_index=True)
 
             # Run parallel Sequence GA opt.
-            parameters = [(acquisition_function, sequences[seq_ids], scores[seq_ids]) for _, seq_ids in group_indices.items()]
-            with Pool(processes=self._seq_gao_parameters['n_process']) as pool:
-                results = pool.starmap(seq_gao.run, parameters)
+            refs = [parallel_ga.remote(seq_gao, acquisition_function, sequences[seq_ids], scores[seq_ids]) for _, seq_ids in group_indices.items()]
+            results = ray.get(refs)
 
             sequences, scores = zip(*results)
 
@@ -351,5 +360,7 @@ class GA():
         self.scores = all_sequence_scores[sorted_indices]
 
         print('End GA opt - Score: %5.3f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
+
+        ray.shutdown()
 
         return self.sequences, self.scores
