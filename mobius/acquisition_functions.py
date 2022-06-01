@@ -35,6 +35,7 @@ def random_improvement(model, y_train, X_test, greater_is_better=False):
         greater_is_better: Indicates whether the loss function is to be maximised or minimised.
 
     """
+    X_test = np.array(X_test)
     scaling_factor = (-1) ** (not greater_is_better)
     predictions = scaling_factor * np.random.uniform(low=0, high=1, size=X_test.shape[0])
 
