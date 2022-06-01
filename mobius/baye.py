@@ -33,6 +33,12 @@ class DMTSimulation:
         else:
             greater_is_better = True
 
+        if utils.function_equal(config['acq_function'], random_improvement):
+            benchmark_mode = True
+            config['seq_transformer'] = None
+        else:
+            benchmark_mode = False
+
         helmgo = config['helmgo']
         config.pop('helmgo')
 
@@ -54,21 +60,27 @@ class DMTSimulation:
 
             sequences = init_sequences.copy()
 
-            # Compute the MAP4 fingerprint for all the peptides (if not using random_improvement acquisition function)
-            if not utils.function_equal(config['acq_function'], random_improvement):
+            print('Init.')
+            print('\n')
+
+            # Check if we are in benchmark mode
+            if not benchmark_mode:
+                # Compute the MAP4 fingerprint for all the peptides
                 X_exp = config['seq_transformer'].transform(init_sequences)
                 y_exp = init_energies.copy()
+
+                print('N pep: ', X_exp.shape[0])
+                print('Best peptide: %.3f' % y_exp.min())
+                for n in [-14, -13, -12, -11, -10, -9, -8]:
+                    print('N pep under %d kcal/mol: %03d' % (n, y_exp[y_exp < n].shape[0]))
+                print('Non binding pep        : %03d' % (y_exp[y_exp == 0.].shape[0]))
             else:
                 X_exp = np.array([])
                 y_exp = np.array([])
 
-            print('\n')
-            print('Init.')
-            print('N pep: ', X_exp.shape[0])
-            print('Best peptide: %.3f' % y_exp.min())
-            for n in [-14, -13, -12, -11, -10, -9, -8]:
-                print('N pep under %d kcal/mol: %03d' % (n, y_exp[y_exp < n].shape[0]))
-            print('Non binding pep        : %03d' % (y_exp[y_exp == 0.].shape[0]))
+                print('Warning: We are in (random) benchmark mode! No input data will be used.')
+                print('The random_improvement acquisition function is used.')
+
             print('\n')
 
             for j in range(self._n_step):
@@ -104,7 +116,10 @@ class DMTSimulation:
 
                 # Add candidates to the training set
                 sequences = np.append(sequences, candidate_sequences)
-                X_exp = np.concatenate([X_exp, config['seq_transformer'].transform(candidate_sequences)])
+                if not benchmark_mode:
+                    X_exp = np.concatenate([X_exp, config['seq_transformer'].transform(candidate_sequences)])
+                else:
+                    X_exp = np.concatenate([X_exp, candidate_sequences])
                 y_exp = np.concatenate([y_exp, candidates_energies])
 
                 print('')
