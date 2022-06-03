@@ -30,13 +30,13 @@ def opposite_signs(x, y):
 
 
 def affinity_binding_to_energy(value, unit='nM', temperature=300.):
-    unit_converter = {'nM': 1e-9, 'uM': 1e-6, 'mM': 1e-3, 'M': 1}
+    unit_converter = {'pM': 1e-12, 'nM': 1e-9, 'uM': 1e-6, 'mM': 1e-3, 'M': 1}
     RT = 0.001987 * temperature
     return RT * np.log(value * unit_converter[unit])
 
 
 def energy_to_affinity_binding(value, unit='nM', temperature=300.):
-    unit_converter = {'nM': 1e9, 'uM': 1e6, 'mM': 1e3, 'M': 1}
+    unit_converter = {'pM': 1e-12, 'nM': 1e9, 'uM': 1e6, 'mM': 1e3, 'M': 1}
     RT = 0.001987 * temperature
     return np.exp(value / RT) * unit_converter[unit]
 
