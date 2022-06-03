@@ -11,7 +11,9 @@ from collections import defaultdict
 import numpy as np
 import ray
 
+from .acquisition_functions import parallel_acq
 from .helm import parse_helm, build_helm_string
+from .utils import generate_random_peptides, split_list_in_chunks
 
 
 def _group_by_scaffold(helm_sequences, return_index=False):
@@ -317,29 +319,11 @@ class RandomGA():
 
     def __init__(self, helmgo, **parameters):
         self._helmgo = helmgo
+        self._n_process = parameters['n_process']
         self._n_gen = parameters['n_gen']
         self._n_children = parameters['n_children']
         self._minimum_size = parameters['minimum_size']
         self._maximum_size = parameters['maximum_size']
-
-    def _generate_random_peptides(self, n_peptides, peptide_lengths):
-        random_peptides = []
-
-        if not isinstance(peptide_lengths, (list, tuple)):
-            peptide_lengths = [peptide_lengths]
-
-        AA = self._helmgo._monomer_symbols
-
-        while True:
-            peptide_length = np.random.choice(peptide_lengths)
-            p = ''.join(np.random.choice(AA, peptide_length))
-            helm_string = build_helm_string({'PEPTIDE1': p}, [])
-            random_peptides.append(helm_string)
-
-            if len(random_peptides) == n_peptides:
-                break
-
-        return random_peptides
 
     def run(self, acquisition_function, sequences=None, scores=None):
         all_sequences = []
@@ -347,9 +331,12 @@ class RandomGA():
 
         peptide_lengths = list(range(self._minimum_size, self._maximum_size + 1))
 
+        chunks = split_list_in_chunks(self._n_children, self._n_process)
+
         for i in range(self._n_gen):
-            sequences = self._generate_random_peptides(self._n_children, peptide_lengths)
-            scores = acquisition_function.score(sequences)
+            sequences = generate_random_peptides(self._n_children, peptide_lengths, self._helmgo._monomer_symbols)
+            refs = [parallel_acq.remote(acquisition_function, sequences[chunk[0]:chunk[1] + 1]) for chunk in chunks]
+            scores = np.concatenate(ray.get(refs))
 
             all_sequences = np.append(all_sequences, sequences)
             all_scores = np.append(all_scores, scores)

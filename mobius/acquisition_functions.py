@@ -6,9 +6,16 @@
 
 import numpy as np
 import torch
+import ray
 from scipy.stats import norm
 
 from . import utils
+
+
+@ray.remote
+def parallel_acq(acquisition_function, sequences):
+    return acquisition_function.score(sequences)
+
 
 class AcqScoring:
     def __init__(self, model, acq_function, y_train, seq_transformer=None, greater_is_better=True):
