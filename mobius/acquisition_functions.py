@@ -18,17 +18,14 @@ def parallel_acq(acquisition_function, sequences):
 
 
 class AcqScoring:
-    def __init__(self, model, acq_function, y_train, seq_transformer=None, greater_is_better=True):
+    def __init__(self, model, acq_function, y_train, greater_is_better=True):
         self._model = model
         self._acq_function = acq_function
-        self._seq_transformer = seq_transformer
         self._y_train = y_train
         self.greater_is_better = greater_is_better
 
-    def score(self, sequences):
-        if self._seq_transformer is not None:
-            sequences = self._seq_transformer.transform(sequences)
-        return self._acq_function(self._model, self._y_train, sequences, self.greater_is_better)
+    def score(self, X_test):
+        return self._acq_function(self._model, self._y_train, X_test, self.greater_is_better)
 
 
 def random_improvement(model, y_train, X_test, greater_is_better=False):
@@ -44,9 +41,9 @@ def random_improvement(model, y_train, X_test, greater_is_better=False):
     """
     X_test = np.array(X_test)
     scaling_factor = (-1) ** (not greater_is_better)
-    predictions = scaling_factor * np.random.uniform(low=0, high=1, size=X_test.shape[0])
+    mu = scaling_factor * np.random.uniform(low=0, high=1, size=X_test.shape[0])
 
-    return predictions
+    return mu
 
 
 def greedy(model, y_train, X_test, greater_is_better=False):
@@ -60,8 +57,7 @@ def greedy(model, y_train, X_test, greater_is_better=False):
         greater_is_better: Indicates whether the loss function is to be maximised or minimised.
 
     """
-    predictions = model.transform(X_test)
-    mu = predictions.mean.detach().numpy()
+    mu, _ = model.transform(X_test)
 
     return mu
 
@@ -82,9 +78,7 @@ def expected_improvement(model, y_train, X_test, greater_is_better=False, xi=0.0
 
     """
     # calculate mean and stdev via surrogate function*
-    predictions = model.transform(X_test)
-    mu = predictions.mean.detach().numpy()
-    sigma = predictions.stddev.detach().numpy()
+    mu, sigma = model.transform(X_test)
 
     if greater_is_better:
         loss_optimum = np.max(y_train)
@@ -114,9 +108,7 @@ def probability_of_improvement(model, y_train, X_test, greater_is_better=False):
 
     """
     # calculate mean and stdev via surrogate function
-    predictions = model.transform(X_test)
-    mu = predictions.mean.detach().numpy()
-    sigma = predictions.stddev.detach().numpy()
+    mu, sigma = model.transform(X_test)
 
     if greater_is_better:
         loss_optimum = np.max(y_train)

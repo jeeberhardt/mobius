@@ -8,10 +8,10 @@ from .forcefield import ForceField
 from .virtual_target import VirtualTarget
 
 from .acquisition_functions import expected_improvement, probability_of_improvement, greedy, random_improvement, parallel_acq
-from .baye import DMTSimulation
+from .mobius import Mobius
 from .descriptors import Map4Fingerprint, SequenceDescriptors
 from .ga import SequenceGA, ScaffoldGA, GA, RandomGA
-from .gaussian_process import GPModel
+from .surrogate_model import GPModel
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning
 from .helm_genetic_operators import HELMGeneticOperators, compute_probability_matrix
 from .kernels import TanimotoSimilarityKernel
@@ -20,7 +20,7 @@ from .utils import affinity_binding_to_energy, energy_to_affinity_binding, plot_
 
 __all__ = ['VirtualTarget', 'ForceField',
            'expected_improvement', 'probability_of_improvement', 'greedy', 'random_improvement', 'parallel_acq',
-           'DMTSimulation',
+           'Mobius',
            'Map4Fingerprint', 'SequenceDescriptors',
            'SequenceGA', 'ScaffoldGA', 'GA', 'RandomGA',
            'GPModel',

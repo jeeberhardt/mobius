@@ -17,7 +17,7 @@ class Map4Fingerprint:
         self._map4calc = MAP4Calculator(dimensions=dimensions, radius=radius, is_counted=is_counted, is_folded=is_folded)
         self._input_type = input_type.lower()
 
-    def transform(self, sequences):
+    def fit_transform(self, sequences):
         try:
             if self._input_type == 'fasta':
                 mols = [Chem.rdmolfiles.MolFromFASTA(s) for s in sequences]
@@ -41,7 +41,7 @@ class SequenceDescriptors:
         self._descriptors = descriptors
         self._input_type = input_type
 
-    def transform(self, sequences):    
+    def fit_transform(self, sequences):    
         transformed = []
 
         for seq in sequences:
