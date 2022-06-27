@@ -40,13 +40,13 @@ class RandomImprovement(_AcquisitionFunction):
         assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
 
         if goal == 'minimize':
-            greater_is_better = False
+            self.greater_is_better = False
         else:
-            greater_is_better = True
+            self.greater_is_better = True
 
         # goal = maximize // greater_is_better = True -> scaling_factor = -1
         # goal = minimize // greater_is_better = False -> scaling_factor = 1
-        self._scaling_factor = (-1) ** (greater_is_better)
+        self._scaling_factor = (-1) ** (self.greater_is_better)
 
     def forward(self, X_test):
         X_test = np.array(X_test)
@@ -74,15 +74,15 @@ class Greedy(_AcquisitionFunction):
         self._xi = xi
 
         if goal == 'minimize':
-            greater_is_better = False
+            self.greater_is_better = False
             self._best_f = np.min(y_train)
         else:
-            greater_is_better = True
+            self.greater_is_better = True
             self._best_f = np.max(y_train)
 
         # goal = maximize // greater_is_better = True -> scaling_factor = -1
         # goal = minimize // greater_is_better = False -> scaling_factor = 1
-        self._scaling_factor = (-1) ** (greater_is_better)
+        self._scaling_factor = (-1) ** (self.greater_is_better)
 
     def forward(self, X_test):
         mu, _ = model.predict(X_test)
@@ -112,15 +112,15 @@ class ExpectedImprovement(_AcquisitionFunction):
         self._xi = xi
 
         if goal == 'minimize':
-            greater_is_better = False
+            self.greater_is_better = False
             self._best_f = np.min(y_train)
         else:
-            greater_is_better = True
+            self.greater_is_better = True
             self._best_f = np.max(y_train)
 
         # goal = maximize // greater_is_better = True -> scaling_factor = -1
         # goal = minimize // greater_is_better = False -> scaling_factor = 1
-        self._scaling_factor = (-1) ** (greater_is_better)
+        self._scaling_factor = (-1) ** (self.greater_is_better)
 
     def forward(self, X_test):
         # calculate mean and stdev via surrogate function*
@@ -155,15 +155,15 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
         self._xi = xi
 
         if goal == 'minimize':
-            greater_is_better = False
+            self.greater_is_better = False
             self._best_f = np.min(y_train)
         else:
-            greater_is_better = True
+            self.greater_is_better = True
             self._best_f = np.max(y_train)
 
         # goal = maximize // greater_is_better = True -> scaling_factor = -1
         # goal = minimize // greater_is_better = False -> scaling_factor = 1
-        self._scaling_factor = (-1) ** (greater_is_better)
+        self._scaling_factor = (-1) ** (self.greater_is_better)
 
     def forward(self, X_test):
         # calculate mean and stdev via surrogate function
