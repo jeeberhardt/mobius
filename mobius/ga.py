@@ -13,6 +13,7 @@ import ray
 
 from .acquisition_functions import parallel_acq
 from .helm import parse_helm, build_helm_string
+from .helm_genetic_operators import HELMGeneticOperators
 from .utils import generate_random_peptides, split_list_in_chunks
 
 
@@ -163,7 +164,7 @@ class _GeneticAlgorithm(ABC):
 
         # Evaluate the initial population
         if scores is None:
-            scores = acquisition_function.score(sequences)
+            scores = acquisition_function.forward(sequences)
 
         for i in range(self._n_gen):
             # Generate new population
@@ -180,7 +181,7 @@ class _GeneticAlgorithm(ABC):
                 continue
 
             # Evaluate new sequences
-            sequences_to_evaluate_scores = acquisition_function.score(sequences_to_evaluate)
+            sequences_to_evaluate_scores = acquisition_function.forward(sequences_to_evaluate)
 
             # Get scores of known sequences
             sequences_known = list(set(sequences).intersection(sequences_cache.keys()))
@@ -378,7 +379,7 @@ class GA():
 
         # Evaluate the initial population
         if scores is None:
-            scores = acquisition_function.score(sequences)
+            scores = acquisition_function.forward(sequences)
 
         # Run scaffold GA opt. first
         sequences, scores = sca_gao.run(acquisition_function, sequences, scores)
