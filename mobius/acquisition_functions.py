@@ -85,7 +85,7 @@ class Greedy(_AcquisitionFunction):
         self._scaling_factor = (-1) ** (self.greater_is_better)
 
     def forward(self, X_test):
-        mu, _ = model.predict(X_test)
+        mu, _ = self._model.predict(X_test)
 
         return mu
 
@@ -167,7 +167,7 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
 
     def forward(self, X_test):
         # calculate mean and stdev via surrogate function
-        mu, sigma = model.predict(X_test)
+        mu, sigma = self._model.predict(X_test)
 
         # calculate the probability of improvement
         Z = scaling_factor * (mu - self._best_f) / (sigma + 1E-9)
