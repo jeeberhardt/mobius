@@ -4,11 +4,14 @@
 # HELM
 #
 
+import json
+import os
 import random
 
 import numpy as np
 import torch
 
+from . import utils
 from .descriptors import Map4Fingerprint
 from .kernels import TanimotoSimilarityKernel
 from .helm import build_helm_string, parse_helm
@@ -58,9 +61,29 @@ def compute_probability_matrix(smiles):
 
 class HELMGeneticOperators:
     
-    def __init__(self, monomer_symbols, probability_matrix=None, seed=None):
-        self._monomer_symbols = monomer_symbols
-        self._probability_matrix = probability_matrix
+    def __init__(self, monomer_symbols=None, HELMCoreLibrary=None, seed=None):
+        if monomer_symbols is None:
+            # If we do not provide any monomer symbols, the 20 canonical amino acids will be used
+            self._monomer_symbols = ["A", "R", "N", "D", "C", "E", "Q", "G", "H", "I", 
+                                     "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
+        else:
+            self._monomer_symbols = monomer_symbols
+
+        # Load HELMCore library
+        if HELMCoreLibrary is None:
+            d = utils.path_module("mobius")
+            helmcorelibrary_filename = os.path.join(d, "data/HELMCoreLibrary.json")
+        else:
+            helmcorelibrary_filename = HELMCoreLibrary
+
+        with open(helmcorelibrary_filename) as f:
+            helm_core_library = json.load(f)
+
+        # Get SMILES from all monomers, only peptide
+        smiles = [x['smiles'] for x in helm_core_library if x['symbol'] in self._monomer_symbols and x['polymerType'] == 'PEPTIDE']
+
+        # Compute probability matrix
+        self._probability_matrix = compute_probability_matrix(smiles)
         
         self._random_seed = seed
         self._rng = np.random.default_rng(self._random_seed)
