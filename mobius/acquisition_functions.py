@@ -4,122 +4,174 @@
 # Acquisition function
 #
 
+from abc import ABC, abstractmethod
+
 import numpy as np
 import torch
 import ray
 from scipy.stats import norm
 
-from . import utils
-
 
 @ray.remote
-def parallel_acq(acquisition_function, sequences):
-    return acquisition_function.score(sequences)
+def parallel_acq(acquisition_function, X_test):
+    return acquisition_function.forward(X_test)
 
 
-class AcqScoring:
-    def __init__(self, model, acq_function, y_train, greater_is_better=True):
+class _AcquisitionFunction(ABC):
+
+    @abstractmethod
+    def forward(self):
+        raise NotImplementedError()
+
+
+class RandomImprovement(_AcquisitionFunction):
+
+    def __init__(self, model, y_train, goal='maximize'):
+        """
+        Random acquisition function
+
+        Arguments:
+        ----------
+            model: Gaussian process model (needed for API compatibility)
+            y_train: Array that contains all the observed energy interaction seed so far (needed for API compatibility)
+            goal: Indicates whether the function is to be maximised or minimised.
+
+        """
+        assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
+
+        if goal == 'minimize':
+            greater_is_better = False
+        else:
+            greater_is_better = True
+
+        # goal = maximize // greater_is_better = True -> scaling_factor = -1
+        # goal = minimize // greater_is_better = False -> scaling_factor = 1
+        self._scaling_factor = (-1) ** (greater_is_better)
+
+    def forward(self, X_test):
+        X_test = np.array(X_test)
+        mu = self._scaling_factor * np.random.uniform(low=0, high=1, size=X_test.shape[0])
+
+        return mu
+
+
+class Greedy(_AcquisitionFunction):
+
+    def __init__(self, model, y_train, goal='maximize', xi=0.00):
+        """
+        Greedy acquisition function
+
+        Arguments:
+        ----------
+            model: Gaussian process model
+            y_train: Array that contains all the observed energy interaction seed so far (needed for API compatibility).
+            goal: Indicates whether the function is to be maximised or minimised (needed for API compatibility).
+
+        """
+        assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
+
         self._model = model
-        self._acq_function = acq_function
-        self._y_train = y_train
-        self.greater_is_better = greater_is_better
+        self._xi = xi
 
-    def score(self, X_test):
-        return self._acq_function(self._model, self._y_train, X_test, self.greater_is_better)
+        if goal == 'minimize':
+            greater_is_better = False
+            self._best_f = np.min(y_train)
+        else:
+            greater_is_better = True
+            self._best_f = np.max(y_train)
 
+        # goal = maximize // greater_is_better = True -> scaling_factor = -1
+        # goal = minimize // greater_is_better = False -> scaling_factor = 1
+        self._scaling_factor = (-1) ** (greater_is_better)
 
-def random_improvement(model, y_train, X_test, greater_is_better=False):
-    """ random acquisition function
+    def forward(self, X_test):
+        mu, _ = model.predict(X_test)
 
-    Arguments:
-    ----------
-        model: Gaussian process model (needed for API compatibility)
-        Y_train: Array that contains all the observed energy interaction seed so far (needed for API compatibility)
-        X_samples: Samples we want to try out
-        greater_is_better: Indicates whether the loss function is to be maximised or minimised.
-
-    """
-    X_test = np.array(X_test)
-    scaling_factor = (-1) ** (not greater_is_better)
-    mu = scaling_factor * np.random.uniform(low=0, high=1, size=X_test.shape[0])
-
-    return mu
+        return mu
 
 
-def greedy(model, y_train, X_test, greater_is_better=False):
-    """ greedy acquisition function
+class ExpectedImprovement(_AcquisitionFunction):
 
-    Arguments:
-    ----------
-        model: Gaussian process model
-        Y_train: Array that contains all the observed energy interaction seed so far
-        X_samples: Samples we want to try out
-        greater_is_better: Indicates whether the loss function is to be maximised or minimised.
-
-    """
-    mu, _ = model.transform(X_test)
-
-    return mu
-
-
-def expected_improvement(model, y_train, X_test, greater_is_better=False, xi=0.00):
-    """ expected_improvement
-    Expected improvement acquisition function.
+    def __init__(self, model, y_train, goal='maximize', xi=0.00):
+        """
+        Expected improvement acquisition function.
     
-    Source: https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
+        Source: https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
+        
+        Arguments:
+        ----------
+            model: Surrogate model
+            y_train: Array that contains all the observed energy interaction seed so far
+            goal: Indicates whether the function is to be maximised or minimised.
+            xi: Exploitation-exploration trade-off parameter
+
+        """
+        assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
+
+        self._model = model
+        self._xi = xi
+
+        if goal == 'minimize':
+            greater_is_better = False
+            self._best_f = np.min(y_train)
+        else:
+            greater_is_better = True
+            self._best_f = np.max(y_train)
+
+        # goal = maximize // greater_is_better = True -> scaling_factor = -1
+        # goal = minimize // greater_is_better = False -> scaling_factor = 1
+        self._scaling_factor = (-1) ** (greater_is_better)
+
+    def forward(self, X_test):
+        # calculate mean and stdev via surrogate function*
+        mu, sigma = self._model.predict(X_test)
+
+        # calculate the expected improvement
+        Z = self._scaling_factor * (mu - self._best_f - self._xi) / (sigma + 1E-9)
+        ei = self._scaling_factor * (mu - self._best_f) * norm.cdf(Z) + (sigma * norm.pdf(Z))
+        ei[sigma == 0.0] == 0.0
+
+        return -1 * ei
+
+
+class ProbabilityOfImprovement(_AcquisitionFunction):
+
+    def __init__(self, model, y_train, goal='maximize'):
+        """
+        Expected improvement acquisition function.
     
-    Arguments:
-    ----------
-        model: Gaussian process model
-        Y_train: Array that contains all the observed energy interaction seed so far
-        X_samples: Samples we want to try out
-        greater_is_better: Indicates whether the loss function is to be maximised or minimised.
-        xi: Exploitation-exploration trade-off parameter
+        Source: https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
+        
+        Arguments:
+        ----------
+            model: Surrogate model
+            y_train: Array that contains all the observed energy interaction seed so far
+            goal: Indicates whether the function is to be maximised or minimised.
 
-    """
-    # calculate mean and stdev via surrogate function*
-    mu, sigma = model.transform(X_test)
+        """
+        assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
 
-    if greater_is_better:
-        loss_optimum = np.max(y_train)
-    else:
-        loss_optimum = np.min(y_train)
+        self._model = model
+        self._xi = xi
 
-    scaling_factor = (-1) ** (not greater_is_better)
+        if goal == 'minimize':
+            greater_is_better = False
+            self._best_f = np.min(y_train)
+        else:
+            greater_is_better = True
+            self._best_f = np.max(y_train)
 
-    # calculate the expected improvement
-    Z = scaling_factor * (mu - loss_optimum - xi) / (sigma + 1E-9)
-    ei = scaling_factor * (mu - loss_optimum) * norm.cdf(Z) + (sigma * norm.pdf(Z))
-    ei[sigma == 0.0] == 0.0
+        # goal = maximize // greater_is_better = True -> scaling_factor = -1
+        # goal = minimize // greater_is_better = False -> scaling_factor = 1
+        self._scaling_factor = (-1) ** (greater_is_better)
 
-    return -1 * ei
+    def forward(self, X_test):
+        # calculate mean and stdev via surrogate function
+        mu, sigma = model.predict(X_test)
 
+        # calculate the probability of improvement
+        Z = scaling_factor * (mu - self._best_f) / (sigma + 1E-9)
+        pi = norm.cdf(Z)
+        pi[sigma == 0.0] == 0.0
 
-def probability_of_improvement(model, y_train, X_test, greater_is_better=False):
-    """ probability_of_improvement
-    Probability of improvement acquisition function.
-
-    Arguments:
-    ----------
-        model: Gaussian process model
-        Y_train: Array that contains all the observed energy interaction seed so far
-        X_samples: Samples we want to try out
-        greater_is_better: Indicates whether the loss function is to be maximised or minimised.
-
-    """
-    # calculate mean and stdev via surrogate function
-    mu, sigma = model.transform(X_test)
-
-    if greater_is_better:
-        loss_optimum = np.max(y_train)
-    else:
-        loss_optimum = np.min(y_train)
-
-    scaling_factor = (-1) ** (not greater_is_better)
-
-    # calculate the probability of improvement
-    Z = scaling_factor * (mu - loss_optimum) / (sigma + 1E-9)
-    pi = norm.cdf(Z)
-    pi[sigma == 0.0] == 0.0
-
-    return pi
+        return pi
