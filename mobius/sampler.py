@@ -6,6 +6,10 @@
 
 from abc import ABC, abstractmethod
 
+import numpy as np
+
+from .helm_genetic_operators import HELMGeneticOperators
+
 
 class _Sampler(ABC):
 
@@ -26,22 +30,45 @@ class _Sampler(ABC):
         raise NotImplementedError()
 
 
-def PolymerSampler(_Sampler):
+class PolymerSampler(_Sampler):
 
-    def __init__(self, surrogate_model, search_protocol, acquisition_function, goal='minimize'):
+    def __init__(self, surrogate_model, acquisition_function, search_protocol, goal='minimize'):
+        assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
+
         self._surrogate_model = surrogate_model
         self._search_protocol = search_protocol
         self._acquisition_function = acquisition_function
         self._goal = goal
 
-    def ask(self, batch_size=None):
-        pass
+    def ask(self, polymers, values, batch_size=None):
+        helmgo = HELMGeneticOperators()
+        samplers = [s['function'](helmgo, **s['parameters']) for name_sampler, s in self._search_protocol.items()]
+        AcqFun = self._acquisition_function(self._surrogate_model, values, self._goal)
 
-    def tell(self, data, value):
-        pass
+        # 
+        suggested_polymers = polymers.copy()
+        predicted_values = values.copy()
+        
+        for sampler in samplers:
+            suggested_polymers, predicted_values = sampler.run(AcqFun, suggested_polymers, predicted_values)
 
-    def recommand(self, data, value, batch_size=None):
-        pass
+        # Sort sequences by scores in the decreasing order (best to worst)
+        if self._goal == 'minimize':
+            sorted_indices = np.argsort(predicted_values)
+        else:
+            sorted_indices = np.argsort(predicted_values)[::-1]
+
+        suggested_polymers = suggested_polymers[sorted_indices]
+        predicted_values = predicted_values[sorted_indices]
+
+        return suggested_polymers[:batch_size], predicted_values[:batch_size]
+
+    def tell(self, polymers, values):
+        self._surrogate_model.fit(polymers, values)
+
+    def recommand(self, polymers, values, batch_size=None):
+        self.tell(polymers, values)
+        suggested_polymers = self.ask(polymers, values, batch_size)
 
     def optimize(self, emulator, num_iter, batch_size):
         pass
