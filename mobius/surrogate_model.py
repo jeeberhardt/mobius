@@ -10,6 +10,7 @@ import botorch
 import gpytorch
 import torch
 from botorch.fit import fit_gpytorch_model
+from sklearn.metrics import r2_score
 
 from .kernels import TanimotoSimilarityKernel
 
@@ -21,7 +22,11 @@ class _SurrogateModel(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def transform(self):
+    def predict(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def score(self):
         raise NotImplementedError()
 
 
@@ -81,7 +86,11 @@ class GPModel(_SurrogateModel):
         # Train model!
         fit_gpytorch_model(mll)
 
-    def transform(self, X_test):
+    def predict(self, X_test):
+        if self._model is None:
+            msg = 'This Gaussian Process instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise RuntimeError(msg)
+
         # Set model in evaluation mode
         self._model.eval()
         self._likelihood.eval()
@@ -101,3 +110,7 @@ class GPModel(_SurrogateModel):
         sigma = predictions.stddev.detach().numpy()
 
         return mu, sigma
+
+    def score(self, X_test, y_test):
+        mu, _ = self.predict(X_test)
+        return r2_score(y_test, mu)
