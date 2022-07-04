@@ -7,11 +7,11 @@
 from .forcefield import ForceField
 from .virtual_target import VirtualTarget
 
-from .acquisition_functions import ExpectedImprovement, ProbabilityOfImprovement, Greedy, RandomImprovement, parallel_acq
+from .acquisition_functions import ExpectedImprovement, ProbabilityOfImprovement, Greedy, RandomImprovement
 from .mobius import Mobius
 from .sampler import PolymerSampler
 from .descriptors import Map4Fingerprint, SequenceDescriptors
-from .ga import SequenceGA, ScaffoldGA, RandomGA
+from .ga import SequenceGA, ParallelSequenceGA, ScaffoldGA, RandomGA
 from .surrogate_model import GPModel
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning
 from .helm_genetic_operators import HELMGeneticOperators
@@ -25,8 +25,8 @@ __all__ = ['VirtualTarget', 'ForceField',
            'PolymerSampler',
            'GPModel',
            'TanimotoSimilarityKernel',
-           'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement', 'parallel_acq',
+           'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement',
            'Map4Fingerprint', 'SequenceDescriptors',
-           'HELMGeneticOperators', 'SequenceGA', 'ScaffoldGA', 'RandomGA',
+           'HELMGeneticOperators', 'SequenceGA', 'ScaffoldGA', 'RandomGA', 'ParallelSequenceGA',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 'scrumbled_scanning',
            'affinity_binding_to_energy', 'energy_to_affinity_binding', 'plot_results', 'split_list_in_chunks', 'generate_random_peptides']
