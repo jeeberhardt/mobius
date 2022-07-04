@@ -45,10 +45,10 @@ class PolymerSampler(_Sampler):
         samplers = [s['function'](helmgo, **s['parameters']) for name_sampler, s in self._search_protocol.items()]
         AcqFun = self._acquisition_function(self._surrogate_model, values, self._goal)
 
-        # 
-        suggested_polymers = polymers.copy()
-        predicted_values = values.copy()
-        
+        # Copy the input polymers
+        suggested_polymers = np.array(polymers).copy()
+        predicted_values = np.array(values).copy()
+
         for sampler in samplers:
             suggested_polymers, predicted_values = sampler.run(AcqFun, suggested_polymers, predicted_values)
 
