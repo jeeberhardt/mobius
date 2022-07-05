@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 
 import botorch
 import gpytorch
+import numpy as np
 import torch
 from botorch.fit import fit_gpytorch_model
 from sklearn.metrics import r2_score
@@ -60,14 +61,24 @@ class GPModel(_SurrogateModel):
         self._data_transformer = data_transformer
         self._likelihood = None
         self._model = None
+        self.X_train = None
+        self.X_train_original = None
+        self.y_train = None
 
     def fit(self, X_train, y_train):
+        # Make sure that inputs are numpy arrays, keep a persistant copy
+        self.X_train_original = np.asarray(X_train).copy()
+        self.y_train = np.asarray(y_train).copy()
+
         if self._data_transformer is not None:
             # Transform input data
-            X_train = self._data_transformer.transform(X_train)
+            self.X_train = self._data_transformer.transform(self.X_train_original)
+        else:
+            self.X_train = self.X_train_original
 
-        X_train = torch.from_numpy(X_train).float()
-        y_train = torch.from_numpy(y_train).float()
+        # Convert to torch tensors
+        X_train = torch.from_numpy(self.X_train).float()
+        y_train = torch.from_numpy(self.y_train).float()
 
         # Set noise_prior to None, otherwise cannot pickle GPModel
         noise_prior = None
