@@ -41,16 +41,15 @@ class PolymerSampler(_Sampler):
         self._goal = goal
 
     def ask(self, polymers, values, batch_size=None):
-        helmgo = HELMGeneticOperators()
-        samplers = [s['function'](helmgo, **s['parameters']) for name_sampler, s in self._search_protocol.items()]
-        AcqFun = self._acquisition_function(self._surrogate_model, values, self._goal)
+        samplers = [s['function'](**s['parameters']) for name_sampler, s in self._search_protocol.items()]
+        acq_fun = self._acquisition_function(self._surrogate_model, values, self._goal)
 
         # Copy the input polymers
         suggested_polymers = np.array(polymers).copy()
         predicted_values = np.array(values).copy()
 
         for sampler in samplers:
-            suggested_polymers, predicted_values = sampler.run(AcqFun, suggested_polymers, predicted_values)
+            suggested_polymers, predicted_values = sampler.run(acq_fun, suggested_polymers, predicted_values)
 
         # Sort sequences by scores in the decreasing order (best to worst)
         if self._goal == 'minimize':

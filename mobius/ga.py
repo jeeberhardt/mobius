@@ -237,18 +237,23 @@ class _GeneticAlgorithm(ABC):
 
 class SequenceGA(_GeneticAlgorithm):
 
-    def __init__(self, helmgo, **parameters):
-        self._helmgo = helmgo
-        self._n_gen = parameters['n_gen']
-        self._n_children = parameters['n_children']
-        self._temperature = parameters['temperature']
-        self._elitism = parameters['elitism']
-        self._total_attempts = parameters['total_attempts']
+    def __init__(self, n_gen=1000, n_children=500, temperature=0.01, elitism=True, total_attempts=50,
+                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=1, monomer_symbols=None,
+                 **kwargs):
+        self.sequences = None
+        self.scores = None
+        # Parameters
+        self._n_gen = n_gen
+        self._n_children = n_children
+        self._temperature = temperature
+        self._elitism = elitism
+        self._total_attempts = total_attempts
+        self._helmgo = HELMGeneticOperators(monomer_symbols=monomer_symbols)
         # Parameters specific to SequenceGA
-        self._cx_points = parameters['cx_points']
-        self._pm = parameters['pm']
-        self._minimum_mutations = parameters['minimum_mutations']
-        self._maximum_mutations = parameters['maximum_mutations']
+        self._cx_points = cx_points
+        self._pm = pm
+        self._minimum_mutations = minimum_mutations
+        self._maximum_mutations = maximum_mutations
 
     def _generate_new_population(self, sequences, scores, greater_is_better):
         new_pop = []
@@ -286,10 +291,19 @@ class SequenceGA(_GeneticAlgorithm):
 
 class ParallelSequenceGA(_GeneticAlgorithm):
 
-    def __init__(self, helmgo, **parameters):
-        self._helmgo = helmgo
-        self._n_process = parameters['n_process']
-        self._parameters = parameters
+    def __init__(self, n_gen=1000, n_children=500, temperature=0.01, elitism=True, total_attempts=50,
+                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=1, monomer_symbols=None, 
+                 n_process=-1, **kwargs):
+        self.sequences = None
+        self.scores = None
+        # Parameters
+        self._n_process = n_process
+        self._parameters = {'n_gen': n_gen, 'n_children': n_children, 
+                            'temperature': temperature, 'elitism': elitism,
+                            'total_attempts': total_attempts, 
+                            'cx_points': cx_points, 'pm': pm,
+                            'minimum_mutations': minimum_mutations, 
+                            'maximum_mutations': maximum_mutations}
 
     def _generate_new_population(self, sequences, scores, greater_is_better):
         pass
@@ -312,13 +326,14 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         # Group/cluster peptides by scaffold
         _, group_indices = _group_by_scaffold(sequences, return_index=True)
 
+        # Take the minimal amount of CPUs needed or available
         if self._n_process == -1:
             self._n_process = min([os.cpu_count(), len(group_indices)])
 
+        # Dispatch all the scaffold accross different independent Sequence GA opt.
         ray.init(num_cpus=self._n_process, ignore_reinit_error=True)
 
-        # Dispatch all the scaffold accross different independent Sequence GA opt.
-        seq_gao = SequenceGA(self._helmgo, **self._parameters)
+        seq_gao = SequenceGA(**self._parameters)
         refs = [parallel_ga.remote(seq_gao, acquisition_function, sequences[seq_ids], scores[seq_ids]) for _, seq_ids in group_indices.items()]
 
         try:
@@ -350,17 +365,22 @@ class ParallelSequenceGA(_GeneticAlgorithm):
 
 class ScaffoldGA(_GeneticAlgorithm):
 
-    def __init__(self, helmgo, **parameters):
-        self._helmgo = helmgo
-        self._n_gen = parameters['n_gen']
-        self._n_children = parameters['n_children']
-        self._temperature = parameters['temperature']
-        self._elitism = parameters['elitism']
-        self._total_attempts = parameters['total_attempts']
+    def __init__(self, n_gen=1, n_children=1000, temperature=0.1, elitism=True, total_attempts=50,
+                 only_terminus=True, minimum_size=None, maximum_size=None, monomer_symbols=None,
+                 **kwargs):
+        self.sequences = None
+        self.scores = None
+        # Parameters
+        self._n_gen = n_gen
+        self._n_children = n_children
+        self._temperature = temperature
+        self._elitism = elitism
+        self._total_attempts = total_attempts
+        self._helmgo = HELMGeneticOperators(monomer_symbols=monomer_symbols)
         # Parameters specific to ScaffoldGA
-        self._only_terminus = parameters['only_terminus']
-        self._minimum_size = parameters['minimum_size']
-        self._maximum_size = parameters['maximum_size']
+        self._only_terminus = only_terminus
+        self._minimum_size = minimum_size
+        self._maximum_size = maximum_size
 
     def _generate_new_population(self, sequences, scores, greater_is_better):
         new_pop = []
@@ -392,13 +412,17 @@ class ScaffoldGA(_GeneticAlgorithm):
 
 class RandomGA():
 
-    def __init__(self, helmgo, **parameters):
-        self._helmgo = helmgo
-        self._n_process = parameters['n_process']
-        self._n_gen = parameters['n_gen']
-        self._n_children = parameters['n_children']
-        self._minimum_size = parameters['minimum_size']
-        self._maximum_size = parameters['maximum_size']
+    def __init__(self, n_process=-1, n_gen=1000, n_children=500, minimum_size=1, maximum_size=1, 
+                 monomer_symbols=None, **kwargs):
+        self.sequences = None
+        self.scores = None
+        # Parameters
+        self._n_process = n_process
+        self._n_gen = n_gen
+        self._n_children = n_children
+        self._minimum_size = minimum_size
+        self._maximum_size = maximum_size
+        self._helmgo = HELMGeneticOperators(monomer_symbols=monomer_symbols)
 
     def run(self, acquisition_function, sequences=None, scores=None):
         all_sequences = []
