@@ -103,9 +103,13 @@ def _generate_mating_couples(parent_sequences, parent_scores, n_children, temper
     """
     mating_couples = []
     n_couples = int(n_children / 2)
-    parent_sequences = np.array(parent_sequences)
-
+    parent_sequences = np.asarray(parent_sequences)
     scaling_factor = (-1) ** (not greater_is_better)
+
+    # If there is only one parent, automatically it is going to mate with itself...
+    if len(parent_sequences) == 1:
+        mating_couples = [(parent_sequences[0], parent_sequences[0])] * n_couples
+        return mating_couples
 
     try:
         p = _boltzmann_probability(scaling_factor * parent_scores, temperature)
@@ -337,7 +341,7 @@ class ParallelSequenceGA(_GeneticAlgorithm):
 
         try:
             results = ray.get(refs)
-        except KeyboardInterrupt:
+        except:
             ray.shutdown()
             sys.exit(0)
 
@@ -345,17 +349,17 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         ray.shutdown()
 
         # Remove duplicates
-        all_sequences, unique_indices = np.unique(all_sequences, return_index=True)
-        all_sequence_scores = np.array(all_sequence_scores)[unique_indices]
+        sequences, unique_indices = np.unique(np.concatenate(sequences), return_index=True)
+        scores = np.concatenate(scores)[unique_indices]
 
         # Sort sequences by scores in the decreasing order (best to worst)
         if acquisition_function.greater_is_better:
-            sorted_indices = np.argsort(all_sequence_scores)[::-1]
+            sorted_indices = np.argsort(scores)[::-1]
         else:
-            sorted_indices = np.argsort(all_sequence_scores)
+            sorted_indices = np.argsort(scores)
 
-        self.sequences = all_sequences[sorted_indices]
-        self.scores = all_sequence_scores[sorted_indices]
+        self.sequences = sequences[sorted_indices]
+        self.scores = scores[sorted_indices]
 
         print('End SequenceGA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
 

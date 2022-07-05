@@ -41,12 +41,12 @@ class PolymerSampler(_Sampler):
         self._goal = goal
 
     def ask(self, batch_size=None):
-        samplers = [s['function'](**s['parameters']) for name_sampler, s in self._search_protocol.items()]
-        acq_fun = self._acquisition_function(self._surrogate_model, values, self._goal)
-
         # Use the training set from the surrogate model as inputs for sampling
         suggested_polymers = self._surrogate_model.X_train_original.copy()
         predicted_values = self._surrogate_model.y_train.copy()
+
+        samplers = [s['function'](**s['parameters']) for name_sampler, s in self._search_protocol.items()]
+        acq_fun = self._acquisition_function(self._surrogate_model, predicted_values, self._goal)
 
         for sampler in samplers:
             suggested_polymers, predicted_values = sampler.run(acq_fun, suggested_polymers, predicted_values)
@@ -67,7 +67,9 @@ class PolymerSampler(_Sampler):
 
     def recommand(self, polymers, values, batch_size=None):
         self.tell(polymers, values)
-        suggested_polymers = self.ask(batch_size)
+        suggested_polymers, predicted_values = self.ask(batch_size)
+
+        return suggested_polymers, predicted_values
 
     def optimize(self, emulator, num_iter, batch_size):
         pass
