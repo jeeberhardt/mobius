@@ -303,10 +303,12 @@ class ParallelSequenceGA(_GeneticAlgorithm):
                             'total_attempts': total_attempts, 
                             'cx_points': cx_points, 'pm': pm,
                             'minimum_mutations': minimum_mutations, 
-                            'maximum_mutations': maximum_mutations}
+                            'maximum_mutations': maximum_mutations,
+                            'monomer_symbols': monomer_symbols}
+        self._parameters.update(kwargs)
 
     def _generate_new_population(self, sequences, scores, greater_is_better):
-        pass
+        raise NotImplementedError()
 
     def run(self, acquisition_function, sequences, scores=None):
         all_sequences = []
