@@ -318,12 +318,9 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         if scores is None:
             scores = acquisition_function.forward(sequences)
         
-        # Check that inputs are numpy arrays
-        if not isinstance(sequences, np.ndarray):
-            sequences = np.array(sequences)
-
-        if not isinstance(scores, np.ndarray):
-            scores = np.array(scores)
+        # Make sure that inputs are numpy arrays
+        sequences = np.asarray(sequences)
+        scores = np.asarray(scores)
 
         # Group/cluster peptides by scaffold
         _, group_indices = _group_by_scaffold(sequences, return_index=True)
