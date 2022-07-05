@@ -61,24 +61,48 @@ class GPModel(_SurrogateModel):
         self._data_transformer = data_transformer
         self._likelihood = None
         self._model = None
-        self.X_train = None
-        self.X_train_original = None
-        self.y_train = None
+        self._X_train = None
+        self._X_train_original = None
+        self._y_train = None
+
+    @property
+    def X_train(self):
+        if self._X_train is None:
+            msg = 'This Gaussian Process instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise RuntimeError(msg)
+
+        return self._X_train
+
+    @property
+    def X_train_original(self):
+        if self._X_train_original is None:
+            msg = 'This Gaussian Process instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise RuntimeError(msg)
+
+        return self._X_train_original
+
+    @property
+    def y_train(self):
+        if self._y_train is None:
+            msg = 'This Gaussian Process instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise RuntimeError(msg)
+
+        return self._y_train
 
     def fit(self, X_train, y_train):
         # Make sure that inputs are numpy arrays, keep a persistant copy
-        self.X_train_original = np.asarray(X_train).copy()
-        self.y_train = np.asarray(y_train).copy()
+        self._X_train_original = np.asarray(X_train).copy()
+        self._y_train = np.asarray(y_train).copy()
 
         if self._data_transformer is not None:
             # Transform input data
-            self.X_train = self._data_transformer.transform(self.X_train_original)
+            self._X_train = self._data_transformer.transform(self._X_train_original)
         else:
-            self.X_train = self.X_train_original
+            self._X_train = self._X_train_original
 
         # Convert to torch tensors
-        X_train = torch.from_numpy(self.X_train).float()
-        y_train = torch.from_numpy(self.y_train).float()
+        X_train = torch.from_numpy(self._X_train).float()
+        y_train = torch.from_numpy(self._y_train).float()
 
         # Set noise_prior to None, otherwise cannot pickle GPModel
         noise_prior = None
