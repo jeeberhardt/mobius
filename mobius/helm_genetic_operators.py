@@ -44,7 +44,7 @@ def compute_probability_matrix(smiles):
     probability_matrix = []
 
     map4calc = Map4Fingerprint(input_type='smiles')
-    fps = torch.from_numpy(map4calc.fit_transform(smiles)).float()
+    fps = torch.from_numpy(map4calc.transform(smiles)).float()
     
     t = TanimotoSimilarityKernel()
     similarity_matrix = t.forward(fps, fps).numpy()

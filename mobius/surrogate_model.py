@@ -64,7 +64,7 @@ class GPModel(_SurrogateModel):
     def fit(self, X_train, y_train):
         if self._data_transformer is not None:
             # Transform input data
-            X_train = self._data_transformer.fit_transform(X_train)
+            X_train = self._data_transformer.transform(X_train)
 
         X_train = torch.from_numpy(X_train).float()
         y_train = torch.from_numpy(y_train).float()
@@ -97,7 +97,7 @@ class GPModel(_SurrogateModel):
 
         if self._data_transformer is not None:
             # Transform input data
-            X_test = self._data_transformer.fit_transform(X_test)
+            X_test = self._data_transformer.transform(X_test)
 
         X_test = torch.from_numpy(X_test).float()
 
