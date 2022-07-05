@@ -16,11 +16,11 @@ from .surrogate_model import GPModel
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning
 from .helm_genetic_operators import HELMGeneticOperators
 from .kernels import TanimotoSimilarityKernel
-from .oracle import Oracle
-from .utils import affinity_binding_to_energy, energy_to_affinity_binding, plot_results, split_list_in_chunks, generate_random_peptides
+from .emulator import LinearPeptideEmulator
+from .utils import affinity_binding_to_energy, energy_to_affinity_binding, plot_results, split_list_in_chunks, generate_random_linear_peptides
 
 __all__ = ['VirtualTarget', 'ForceField',
-           'Oracle',
+           'LinearPeptideEmulator',
            'Mobius',
            'PolymerSampler',
            'GPModel',
@@ -29,4 +29,4 @@ __all__ = ['VirtualTarget', 'ForceField',
            'Map4Fingerprint', 'SequenceDescriptors',
            'HELMGeneticOperators', 'SequenceGA', 'ScaffoldGA', 'RandomGA', 'ParallelSequenceGA',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 'scrumbled_scanning',
-           'affinity_binding_to_energy', 'energy_to_affinity_binding', 'plot_results', 'split_list_in_chunks', 'generate_random_peptides']
+           'affinity_binding_to_energy', 'energy_to_affinity_binding', 'plot_results', 'split_list_in_chunks', 'generate_random_linear_peptides']

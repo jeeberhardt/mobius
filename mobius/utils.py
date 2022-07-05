@@ -45,7 +45,7 @@ def split_list_in_chunks(size, n):
     return [(l[0], l[-1]) for l in np.array_split(range(size), n)]
 
 
-def generate_random_peptides(n_peptides, peptide_lengths, monomer_symbols, output_format='helm'):
+def generate_random_linear_peptides(n_peptides, peptide_lengths, monomer_symbols, output_format='helm'):
     random_peptides = []
 
     assert output_format.lower() in ['fasta', 'helm'], 'Format (%s) not handled. Please use FASTA or HELM format.'

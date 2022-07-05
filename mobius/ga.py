@@ -17,7 +17,7 @@ import ray
 from .acquisition_functions import parallel_acq
 from .helm import parse_helm, build_helm_string
 from .helm_genetic_operators import HELMGeneticOperators
-from .utils import generate_random_peptides, split_list_in_chunks
+from .utils import generate_random_linear_peptides, split_list_in_chunks
 
 
 def _group_by_scaffold(helm_sequences, return_index=False):
@@ -436,7 +436,7 @@ class RandomGA():
         chunks = split_list_in_chunks(self._n_children, self._n_process)
 
         for i in range(self._n_gen):
-            sequences = generate_random_peptides(self._n_children, peptide_lengths, self._helmgo._monomer_symbols)
+            sequences = generate_random_linear_peptides(self._n_children, peptide_lengths, monomer_symbols=self._helmgo._monomer_symbols)
             refs = [parallel_acq.remote(acquisition_function, sequences[chunk[0]:chunk[1] + 1]) for chunk in chunks]
             scores = np.concatenate(ray.get(refs))
 

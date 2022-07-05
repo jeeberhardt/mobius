@@ -41,7 +41,7 @@ class PolymerSampler(_Sampler):
         self._goal = goal
 
     def ask(self, batch_size=None):
-        # Use the training set from the surrogate model as inputs for sampling
+        # Use the training set from the surrogate model as inputs for the optimization
         suggested_polymers = self._surrogate_model.X_train_original.copy()
         predicted_values = self._surrogate_model.y_train.copy()
 
@@ -72,4 +72,26 @@ class PolymerSampler(_Sampler):
         return suggested_polymers, predicted_values
 
     def optimize(self, emulator, num_iter, batch_size):
-        pass
+        # Use the training set from the surrogate model as inputs for the optimization
+        all_suggested_polymers = self._surrogate_model.X_train_original.copy()
+        all_exp_values = self._surrogate_model.y_train.copy()
+
+        for i in range(num_iter):
+            suggested_polymers, predicted_values = self.recommand(all_suggested_polymers, all_exp_values, batch_size)
+
+            suggested_polymers_fasta = [''.join(c.split('$')[0].split('{')[1].split('}')[0].split('.')) for c in suggested_polymers]
+            exp_values = emulator.predict(suggested_polymers_fasta)
+            
+            all_suggested_polymers = np.concatenate([all_suggested_polymers, suggested_polymers])
+            all_exp_values = np.concatenate([all_exp_values, exp_values])
+
+        # Sort sequences by scores in the decreasing order (best to worst)
+        if self._goal == 'minimize':
+            sorted_indices = np.argsort(all_exp_values)
+        else:
+            sorted_indices = np.argsort(all_exp_values)[::-1]
+
+        all_suggested_polymers = all_suggested_polymers[sorted_indices]
+        all_exp_values = all_exp_values[sorted_indices]
+
+        return all_suggested_polymers, all_exp_values
