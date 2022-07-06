@@ -32,27 +32,22 @@ class _Sampler(ABC):
 
 class PolymerSampler(_Sampler):
 
-    def __init__(self, surrogate_model, acquisition_function, search_protocol, goal='minimize'):
-        assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
-
-        self._surrogate_model = surrogate_model
+    def __init__(self, acquisition_function, search_protocol):
+        self._acq_fun = acquisition_function
         self._search_protocol = search_protocol
-        self._acquisition_function = acquisition_function
-        self._goal = goal
 
     def ask(self, batch_size=None):
         # Use the training set from the surrogate model as inputs for the optimization
-        suggested_polymers = self._surrogate_model.X_train_original.copy()
-        predicted_values = self._surrogate_model.y_train.copy()
+        suggested_polymers = self._acq_fun.surrogate_model.X_train_original.copy()
+        predicted_values = self._acq_fun.surrogate_model.y_train.copy()
 
         samplers = [s['function'](**s['parameters']) for name_sampler, s in self._search_protocol.items()]
-        acq_fun = self._acquisition_function(self._surrogate_model, predicted_values, self._goal)
 
         for sampler in samplers:
-            suggested_polymers, predicted_values = sampler.run(acq_fun, suggested_polymers, predicted_values)
+            suggested_polymers, predicted_values = sampler.run(self._acq_fun, suggested_polymers, predicted_values)
 
         # Sort sequences by scores in the decreasing order (best to worst)
-        if self._goal == 'minimize':
+        if self._acq_fun.goal == 'minimize':
             sorted_indices = np.argsort(predicted_values)
         else:
             sorted_indices = np.argsort(predicted_values)[::-1]
@@ -63,7 +58,7 @@ class PolymerSampler(_Sampler):
         return suggested_polymers[:batch_size], predicted_values[:batch_size]
 
     def tell(self, polymers, values):
-        self._surrogate_model.fit(polymers, values)
+        self._acq_fun.surrogate_model.fit(polymers, values)
 
     def recommand(self, polymers, values, batch_size=None):
         self.tell(polymers, values)
@@ -73,8 +68,8 @@ class PolymerSampler(_Sampler):
 
     def optimize(self, emulator, num_iter, batch_size):
         # Use the training set from the surrogate model as inputs for the optimization
-        all_suggested_polymers = self._surrogate_model.X_train_original.copy()
-        all_exp_values = self._surrogate_model.y_train.copy()
+        all_suggested_polymers = self._acq_fun.surrogate_model.X_train_original.copy()
+        all_exp_values = self._acq_fun.surrogate_model.y_train.copy()
 
         for i in range(num_iter):
             suggested_polymers, predicted_values = self.recommand(all_suggested_polymers, all_exp_values, batch_size)
@@ -86,7 +81,7 @@ class PolymerSampler(_Sampler):
             all_exp_values = np.concatenate([all_exp_values, exp_values])
 
         # Sort sequences by scores in the decreasing order (best to worst)
-        if self._goal == 'minimize':
+        if self._acq_fun.goal == 'minimize':
             sorted_indices = np.argsort(all_exp_values)
         else:
             sorted_indices = np.argsort(all_exp_values)[::-1]

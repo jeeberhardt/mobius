@@ -18,6 +18,21 @@ from .kernels import TanimotoSimilarityKernel
 
 class _SurrogateModel(ABC):
 
+    @property
+    @abstractmethod
+    def X_train(self):
+        pass
+
+    @property
+    @abstractmethod
+    def X_train_original(self):
+        pass
+
+    @property
+    @abstractmethod
+    def y_train(self):
+        pass
+
     @abstractmethod
     def fit(self):
         raise NotImplementedError()

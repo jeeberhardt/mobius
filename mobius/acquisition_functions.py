@@ -19,6 +19,21 @@ def parallel_acq(acquisition_function, X_test):
 
 class _AcquisitionFunction(ABC):
 
+    @property
+    @abstractmethod
+    def surrogate_model(self):
+        pass
+
+    @property
+    @abstractmethod
+    def goal(self):
+        pass
+
+    @property
+    @abstractmethod
+    def greater_is_better(self):
+        pass
+
     @abstractmethod
     def forward(self):
         raise NotImplementedError()
@@ -26,73 +41,86 @@ class _AcquisitionFunction(ABC):
 
 class RandomImprovement(_AcquisitionFunction):
 
-    def __init__(self, model, y_train, goal='maximize'):
+    def __init__(self, goal='maximize'):
         """
         Random acquisition function
 
         Arguments:
         ----------
-            model: Gaussian process model (needed for API compatibility)
-            y_train: Array that contains all the observed energy interaction seed so far (needed for API compatibility)
             goal: Indicates whether the function is to be maximised or minimised.
 
         """
         assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
+        
+        self._goal = goal
 
-        if goal == 'minimize':
-            self.greater_is_better = False
+        if self._goal == 'minimize':
+            self._greater_is_better = False
         else:
-            self.greater_is_better = True
+            self._greater_is_better = True
 
-        # goal = maximize // greater_is_better = True -> scaling_factor = -1
-        # goal = minimize // greater_is_better = False -> scaling_factor = 1
-        self._scaling_factor = (-1) ** (self.greater_is_better)
+    @property
+    def surrogate_model(self):
+        raise NotImplementedError()
+
+    @property
+    def goal(self):
+        return self._goal
+
+    @property
+    def greater_is_better(self):
+        return self._greater_is_better
 
     def forward(self, X_test):
-        X_test = np.array(X_test)
-        mu = self._scaling_factor * np.random.uniform(low=0, high=1, size=X_test.shape[0])
+        X_test = np.asarray(X_test)
+        mu = np.random.uniform(low=0, high=1, size=X_test.shape[0])
 
         return mu
 
 
 class Greedy(_AcquisitionFunction):
 
-    def __init__(self, model, y_train, goal='maximize', xi=0.00):
+    def __init__(self, surrogate_model, goal='maximize'):
         """
         Greedy acquisition function
 
         Arguments:
         ----------
-            model: Gaussian process model
-            y_train: Array that contains all the observed energy interaction seed so far (needed for API compatibility).
+            surrogate_model: Surrogate model
             goal: Indicates whether the function is to be maximised or minimised (needed for API compatibility).
 
         """
         assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
 
-        self._model = model
-        self._xi = xi
+        self._goal = goal
+        self._surrogate_model = surrogate_model
 
-        if goal == 'minimize':
-            self.greater_is_better = False
-            self._best_f = np.min(y_train)
+        if self._goal == 'minimize':
+            self._greater_is_better = False
         else:
-            self.greater_is_better = True
-            self._best_f = np.max(y_train)
+            self._greater_is_better = True
 
-        # goal = maximize // greater_is_better = True -> scaling_factor = -1
-        # goal = minimize // greater_is_better = False -> scaling_factor = 1
-        self._scaling_factor = (-1) ** (self.greater_is_better)
+    @property
+    def surrogate_model(self):
+        return self._surrogate_model
+
+    @property
+    def goal(self):
+        return self._goal
+
+    @property
+    def greater_is_better(self):
+        return self._greater_is_better
 
     def forward(self, X_test):
-        mu, _ = self._model.predict(X_test)
+        mu, _ = self._surrogate_model.predict(X_test)
 
         return mu
 
 
 class ExpectedImprovement(_AcquisitionFunction):
 
-    def __init__(self, model, y_train, goal='maximize', xi=0.00):
+    def __init__(self, surrogate_model, goal='maximize', xi=0.00):
         """
         Expected improvement acquisition function.
     
@@ -100,35 +128,50 @@ class ExpectedImprovement(_AcquisitionFunction):
         
         Arguments:
         ----------
-            model: Surrogate model
-            y_train: Array that contains all the observed energy interaction seed so far
+            surrogate_model: Surrogate model
             goal: Indicates whether the function is to be maximised or minimised.
             xi: Exploitation-exploration trade-off parameter
 
         """
         assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
 
-        self._model = model
+        self._goal = goal
+        self._surrogate_model = surrogate_model
         self._xi = xi
 
-        if goal == 'minimize':
-            self.greater_is_better = False
-            self._best_f = np.min(y_train)
+        if self._goal == 'minimize':
+            self._greater_is_better = False
         else:
-            self.greater_is_better = True
-            self._best_f = np.max(y_train)
+            self._greater_is_better = True
 
         # goal = maximize // greater_is_better = True -> scaling_factor = -1
         # goal = minimize // greater_is_better = False -> scaling_factor = 1
-        self._scaling_factor = (-1) ** (self.greater_is_better)
+        self._scaling_factor = (-1) ** (self._greater_is_better)
+
+    @property
+    def surrogate_model(self):
+        return self._surrogate_model
+
+    @property
+    def goal(self):
+        return self._goal
+
+    @property
+    def greater_is_better(self):
+        return self._greater_is_better
 
     def forward(self, X_test):
+        if self._greater_is_better:
+            best_f = np.max(self._surrogate_model.y_train)
+        else:
+            best_f = np.min(self._surrogate_model.y_train)
+
         # calculate mean and stdev via surrogate function*
-        mu, sigma = self._model.predict(X_test)
+        mu, sigma = self._surrogate_model.predict(X_test)
 
         # calculate the expected improvement
-        Z = self._scaling_factor * (mu - self._best_f - self._xi) / (sigma + 1E-9)
-        ei = self._scaling_factor * (mu - self._best_f) * norm.cdf(Z) + (sigma * norm.pdf(Z))
+        Z = self._scaling_factor * (mu - best_f - self._xi) / (sigma + 1E-9)
+        ei = self._scaling_factor * (mu - best_f) * norm.cdf(Z) + (sigma * norm.pdf(Z))
         ei[sigma == 0.0] == 0.0
 
         return -1 * ei
@@ -136,7 +179,7 @@ class ExpectedImprovement(_AcquisitionFunction):
 
 class ProbabilityOfImprovement(_AcquisitionFunction):
 
-    def __init__(self, model, y_train, goal='maximize'):
+    def __init__(self, surrogate_model, goal='maximize'):
         """
         Expected improvement acquisition function.
     
@@ -144,33 +187,47 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
         
         Arguments:
         ----------
-            model: Surrogate model
-            y_train: Array that contains all the observed energy interaction seed so far
+            surrogate_model: Surrogate model
             goal: Indicates whether the function is to be maximised or minimised.
 
         """
         assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
 
-        self._model = model
-        self._xi = xi
+        self._goal = goal
+        self._surrogate_model = surrogate_model
 
-        if goal == 'minimize':
-            self.greater_is_better = False
-            self._best_f = np.min(y_train)
+        if self._goal == 'minimize':
+            self._greater_is_better = False
         else:
-            self.greater_is_better = True
-            self._best_f = np.max(y_train)
+            self._greater_is_better = True
 
         # goal = maximize // greater_is_better = True -> scaling_factor = -1
         # goal = minimize // greater_is_better = False -> scaling_factor = 1
-        self._scaling_factor = (-1) ** (self.greater_is_better)
+        self._scaling_factor = (-1) ** (self._greater_is_better)
+
+    @property
+    def surrogate_model(self):
+        return self._surrogate_model
+
+    @property
+    def goal(self):
+        return self._goal
+
+    @property
+    def greater_is_better(self):
+        return self._greater_is_better
 
     def forward(self, X_test):
+        if self._greater_is_better:
+            best_f = np.max(self._surrogate_model.y_train)
+        else:
+            best_f = np.min(self._surrogate_model.y_train)
+
         # calculate mean and stdev via surrogate function
-        mu, sigma = self._model.predict(X_test)
+        mu, sigma = self._surrogate_model.predict(X_test)
 
         # calculate the probability of improvement
-        Z = scaling_factor * (mu - self._best_f) / (sigma + 1E-9)
+        Z = self._scaling_factor * (mu - best_f) / (sigma + 1E-9)
         pi = norm.cdf(Z)
         pi[sigma == 0.0] == 0.0
 
