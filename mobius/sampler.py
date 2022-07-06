@@ -39,23 +39,23 @@ class PolymerSampler(_Sampler):
     def ask(self, batch_size=None):
         # Use the training set from the surrogate model as inputs for the optimization
         suggested_polymers = self._acq_fun.surrogate_model.X_train_original.copy()
-        predicted_values = self._acq_fun.surrogate_model.y_train.copy()
+        values = self._acq_fun.surrogate_model.y_train.copy()
 
         samplers = [s['function'](**s['parameters']) for name_sampler, s in self._search_protocol.items()]
 
         for sampler in samplers:
-            suggested_polymers, predicted_values = sampler.run(self._acq_fun, suggested_polymers, predicted_values)
+            suggested_polymers, values = sampler.run(self._acq_fun, suggested_polymers, values)
 
         # Sort sequences by scores in the decreasing order (best to worst)
         if self._acq_fun.goal == 'minimize':
-            sorted_indices = np.argsort(predicted_values)
+            sorted_indices = np.argsort(values)
         else:
-            sorted_indices = np.argsort(predicted_values)[::-1]
+            sorted_indices = np.argsort(values)[::-1]
 
         suggested_polymers = suggested_polymers[sorted_indices]
-        predicted_values = predicted_values[sorted_indices]
+        values = values[sorted_indices]
 
-        return suggested_polymers[:batch_size], predicted_values[:batch_size]
+        return suggested_polymers[:batch_size], values[:batch_size]
 
     def tell(self, polymers, values):
         self._acq_fun.surrogate_model.fit(polymers, values)
@@ -76,7 +76,7 @@ class PolymerSampler(_Sampler):
 
             suggested_polymers_fasta = [''.join(c.split('$')[0].split('{')[1].split('}')[0].split('.')) for c in suggested_polymers]
             exp_values = emulator.predict(suggested_polymers_fasta)
-            
+
             all_suggested_polymers = np.concatenate([all_suggested_polymers, suggested_polymers])
             all_exp_values = np.concatenate([all_exp_values, exp_values])
 

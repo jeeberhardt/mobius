@@ -41,13 +41,13 @@ class _AcquisitionFunction(ABC):
 
 class RandomImprovement(_AcquisitionFunction):
 
-    def __init__(self, goal='maximize'):
+    def __init__(self, goal='minimize'):
         """
         Random acquisition function
 
         Arguments:
         ----------
-            goal: Indicates whether the function is to be maximised or minimised.
+            goal: Indicates whether the function is to be maximised or minimised (default: minimize).
 
         """
         assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
@@ -80,14 +80,14 @@ class RandomImprovement(_AcquisitionFunction):
 
 class Greedy(_AcquisitionFunction):
 
-    def __init__(self, surrogate_model, goal='maximize'):
+    def __init__(self, surrogate_model, goal='minimize'):
         """
         Greedy acquisition function
 
         Arguments:
         ----------
             surrogate_model: Surrogate model
-            goal: Indicates whether the function is to be maximised or minimised (needed for API compatibility).
+            goal: Indicates whether the function is to be maximised or minimised (default: minimize).
 
         """
         assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
@@ -120,17 +120,17 @@ class Greedy(_AcquisitionFunction):
 
 class ExpectedImprovement(_AcquisitionFunction):
 
-    def __init__(self, surrogate_model, goal='maximize', xi=0.00):
+    def __init__(self, surrogate_model, goal='minimize', xi=0.00):
         """
         Expected improvement acquisition function.
-    
+
         Source: https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
-        
+
         Arguments:
         ----------
             surrogate_model: Surrogate model
-            goal: Indicates whether the function is to be maximised or minimised.
-            xi: Exploitation-exploration trade-off parameter
+            goal: Indicates whether the function is to be maximised or minimised (default: minimize).
+            xi: Exploitation-exploration trade-off parameter (default: 0.0)
 
         """
         assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
@@ -144,9 +144,9 @@ class ExpectedImprovement(_AcquisitionFunction):
         else:
             self._greater_is_better = True
 
-        # goal = maximize // greater_is_better = True -> scaling_factor = -1
-        # goal = minimize // greater_is_better = False -> scaling_factor = 1
-        self._scaling_factor = (-1) ** (self._greater_is_better)
+        # goal = maximize // greater_is_better = True -> scaling_factor = 1
+        # goal = minimize // greater_is_better = False -> scaling_factor = -1
+        self._scaling_factor = (-1) ** (not self._greater_is_better)
 
     @property
     def surrogate_model(self):
@@ -179,16 +179,16 @@ class ExpectedImprovement(_AcquisitionFunction):
 
 class ProbabilityOfImprovement(_AcquisitionFunction):
 
-    def __init__(self, surrogate_model, goal='maximize'):
+    def __init__(self, surrogate_model, goal='minimize'):
         """
         Expected improvement acquisition function.
-    
+
         Source: https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
-        
+
         Arguments:
         ----------
             surrogate_model: Surrogate model
-            goal: Indicates whether the function is to be maximised or minimised.
+            goal: Indicates whether the function is to be maximised or minimised (default: minimize).
 
         """
         assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
@@ -201,9 +201,9 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
         else:
             self._greater_is_better = True
 
-        # goal = maximize // greater_is_better = True -> scaling_factor = -1
-        # goal = minimize // greater_is_better = False -> scaling_factor = 1
-        self._scaling_factor = (-1) ** (self._greater_is_better)
+        # goal = maximize // greater_is_better = True -> scaling_factor = 1
+        # goal = minimize // greater_is_better = False -> scaling_factor = -1
+        self._scaling_factor = (-1) ** (not self._greater_is_better)
 
     @property
     def surrogate_model(self):
