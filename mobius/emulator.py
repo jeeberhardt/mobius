@@ -11,7 +11,7 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 
-from .helm import build_helm_string
+from .utils import build_helm_string
 
 
 def read_pssm_file(pssm_file):

@@ -15,9 +15,9 @@ import numpy as np
 import ray
 
 from .acquisition_functions import parallel_acq
-from .helm import parse_helm, build_helm_string
 from .helm_genetic_operators import HELMGeneticOperators
-from .utils import generate_random_linear_peptides, split_list_in_chunks
+from .utils import parse_helm, build_helm_string
+from .utils import generate_random_linear_peptides
 
 
 def _group_by_scaffold(helm_sequences, return_index=False):

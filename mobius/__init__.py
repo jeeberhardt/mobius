@@ -18,7 +18,8 @@ from .helm_genetic_operators import HELMGeneticOperators
 from .kernels import TanimotoSimilarityKernel
 from .emulator import LinearPeptideEmulator
 from .plotting import plot_results
-from .utils import affinity_binding_to_energy, energy_to_affinity_binding, split_list_in_chunks, generate_random_linear_peptides
+from .utils import parse_helm, build_helm_string
+from .utils import affinity_binding_to_energy, energy_to_affinity_binding, generate_random_linear_peptides
 
 __all__ = ['VirtualTarget', 'ForceField',
            'LinearPeptideEmulator',
@@ -31,4 +32,5 @@ __all__ = ['VirtualTarget', 'ForceField',
            'HELMGeneticOperators', 'SequenceGA', 'ScaffoldGA', 'RandomGA', 'ParallelSequenceGA',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 'scrumbled_scanning',
            'plot_results',
-           'affinity_binding_to_energy', 'energy_to_affinity_binding', 'split_list_in_chunks', 'generate_random_linear_peptides']
+           'parse_helm', 'build_helm_string',
+           'affinity_binding_to_energy', 'energy_to_affinity_binding', 'generate_random_linear_peptides']

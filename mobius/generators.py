@@ -9,7 +9,7 @@ import random
 
 import numpy as np
 
-from .helm import build_helm_string, parse_helm
+from .utils import build_helm_string, parse_helm
 
 
 def monomers_scanning(fasta_sequence, monomers, positions=None):

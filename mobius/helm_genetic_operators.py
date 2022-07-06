@@ -14,7 +14,7 @@ import torch
 from . import utils
 from .descriptors import Map4Fingerprint
 from .kernels import TanimotoSimilarityKernel
-from .helm import build_helm_string, parse_helm
+from .utils import build_helm_string, parse_helm
 
 
 def constrained_sum_sample_pos(n, total):
