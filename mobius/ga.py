@@ -288,7 +288,7 @@ class SequenceGA(_GeneticAlgorithm):
 
         self.sequences, self.scores = super().run(acquisition_function, sequences, scores)
 
-        print('End Scaffold GA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
+        print('End Sequence GA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
 
         return self.sequences, self.scores
 
