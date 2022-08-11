@@ -18,6 +18,7 @@ from .acquisition_functions import parallel_acq
 from .helm_genetic_operators import HELMGeneticOperators
 from .utils import parse_helm, build_helm_string
 from .utils import generate_random_linear_peptides
+from .utils import split_list_in_chunks
 
 
 def _group_by_scaffold(helm_sequences, return_index=False):
@@ -420,7 +421,6 @@ class RandomGA():
         self.sequences = None
         self.scores = None
         # Parameters
-        self._n_process = n_process
         self._n_gen = n_gen
         self._n_children = n_children
         self._minimum_size = minimum_size
@@ -428,24 +428,14 @@ class RandomGA():
         self._helmgo = HELMGeneticOperators(monomer_symbols=monomer_symbols)
 
     def run(self, acquisition_function, sequences=None, scores=None):
-        all_sequences = []
-        all_scores = []
-
         peptide_lengths = list(range(self._minimum_size, self._maximum_size + 1))
 
-        chunks = split_list_in_chunks(self._n_children, self._n_process)
+        # Generate (n_children * n_gen) sequences and random score them!
+        all_sequences = generate_random_linear_peptides(self._n_children * self._n_gen, peptide_lengths, monomer_symbols=self._helmgo._monomer_symbols)
+        all_scores = acquisition_function.forward(all_sequences)
 
-        for i in range(self._n_gen):
-            sequences = generate_random_linear_peptides(self._n_children, peptide_lengths, monomer_symbols=self._helmgo._monomer_symbols)
-            refs = [parallel_acq.remote(acquisition_function, sequences[chunk[0]:chunk[1] + 1]) for chunk in chunks]
-            scores = np.concatenate(ray.get(refs))
-
-            all_sequences = np.append(all_sequences, sequences)
-            all_scores = np.append(all_scores, scores)
-
-        # Remove duplicates
-        all_sequences, unique_indices = np.unique(all_sequences, return_index=True)
-        all_scores = np.array(all_scores)[unique_indices]
+        all_sequences = np.asarray(all_sequences)
+        all_scores = np.asarray(all_scores)
 
         # Sort sequences by scores in the decreasing order (best to worst)
         if acquisition_function.greater_is_better:
