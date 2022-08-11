@@ -11,6 +11,8 @@ import torch
 import ray
 from scipy.stats import norm
 
+from .surrogate_model import DummyModel
+
 
 @ray.remote
 def parallel_acq(acquisition_function, X_test):
@@ -53,6 +55,7 @@ class RandomImprovement(_AcquisitionFunction):
         assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
         
         self._goal = goal
+        self._surrogate_model = DummyModel()
 
         if self._goal == 'minimize':
             self._greater_is_better = False
@@ -61,7 +64,7 @@ class RandomImprovement(_AcquisitionFunction):
 
     @property
     def surrogate_model(self):
-        raise NotImplementedError()
+        return self._surrogate_model
 
     @property
     def goal(self):

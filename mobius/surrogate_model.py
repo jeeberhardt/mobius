@@ -46,6 +46,39 @@ class _SurrogateModel(ABC):
         raise NotImplementedError()
 
 
+class DummyModel(_SurrogateModel):
+
+    def __init__(self):
+        self._kernel = None
+        self._data_transformer = None
+        self._likelihood = None
+        self._model = None
+        self._X_train = np.array([])
+        self._X_train_original = np.array([])
+        self._y_train = np.array([])
+
+    @property
+    def X_train(self):
+        return self._X_train
+
+    @property
+    def X_train_original(self):
+        return self._X_train_original
+
+    @property
+    def y_train(self):
+        return self._y_train
+
+    def fit(self, X_train, y_train):
+        pass
+
+    def predict(self, X_test):
+        return None, None
+
+    def score(self, X_test, y_test):
+        return None
+
+
 # We will use the simplest form of GP model, exact inference
 class ExactGPModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchModel):
     # to inform GPyTorchModel API
