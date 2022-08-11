@@ -18,7 +18,6 @@ from .acquisition_functions import parallel_acq
 from .helm_genetic_operators import HELMGeneticOperators
 from .utils import parse_helm, build_helm_string
 from .utils import generate_random_linear_peptides
-from .utils import split_list_in_chunks
 
 
 def _group_by_scaffold(helm_sequences, return_index=False):
