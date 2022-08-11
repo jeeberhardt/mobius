@@ -76,9 +76,9 @@ class Mobius:
             for i in range(num_independent_run):
                 df = self.run(polymers, values, emulator, sampler, num_iter, batch_size)
 
-                df['ind_run'] = i + 1
+                df['run'] = i + 1
                 df['sampler'] = sampler_name
-                df = df[['sampler', 'ind_run', 'iter', 'polymer', 'exp_value', 'pred_value']]
+                df = df[['sampler', 'run', 'iter', 'polymer', 'exp_value', 'pred_value']]
 
                 dfs.append(df)
 
