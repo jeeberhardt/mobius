@@ -16,22 +16,27 @@ from .utils import build_helm_string
 
 def read_pssm_file(pssm_file):
     data = []
+    intercept = np.nan
     AA = []
 
     with open(pssm_file) as f:
         lines = f.readlines()
-        
+
         n_columns = int(lines[0].split('\t')[1])
 
-        for line in lines[1:-1]:
+        for line in lines[1:]:
             sline = line.strip().split('\t')
-            AA.append(sline[0])
-            data.append([float(v) for v in sline[1:]])
+
+            if len(sline) == n_columns + 1:
+                AA.append(sline[0])
+                data.append([float(v) for v in sline[1:]])
+            elif line.strip():
+                intercept = float(sline[-1])
 
     columns = list(range(1, n_columns + 1))
     pssm = pd.DataFrame(data=data, columns=columns, index=AA)
 
-    return pssm
+    return pssm, intercept
 
 
 class _Emulator(ABC):
@@ -46,13 +51,15 @@ class LinearPeptideEmulator(_Emulator):
     
     def __init__(self, pssm_files, exp_fasta_sequences=None, exp_values=None, score_cutoff=None):
         self._pssm = {}
+        self._intercept = {}
         self._reg = None
         self._score_cutoff = score_cutoff
 
         # Read PSS matrices
         for pssm_file in pssm_files:
-            pssm = read_pssm_file(pssm_file)
+            pssm, intercept = read_pssm_file(pssm_file)
             self._pssm[len(pssm.columns)] = pssm
+            self._intercept[len(pssm.columns)] = intercept
 
         if exp_fasta_sequences is not None and exp_values is not None:
             assert len(exp_fasta_sequences) == len(exp_values), 'exp_fasta_sequences and exp_values must have the same size.'
@@ -79,6 +86,7 @@ class LinearPeptideEmulator(_Emulator):
 
             try:
                 pssm = self._pssm[len(sequence)]
+                intercept = self._intercept[len(sequence)]
             except:
                 # We cannot score that peptide, so default score is 999
                 score = 999
@@ -88,6 +96,7 @@ class LinearPeptideEmulator(_Emulator):
             for i, aa in enumerate(sequence):
                 score += pssm.loc[aa][i + 1]
 
+            score += intercept
             scores.append(score)
 
         scores = np.array(scores)
@@ -139,5 +148,5 @@ class LinearPeptideEmulator(_Emulator):
         sorted_index = np.argsort(random_peptide_scores)
         random_peptides = np.asarray(random_peptides)[sorted_index]
         random_peptide_scores = np.asarray(random_peptide_scores)[sorted_index]
-        
+
         return random_peptides, random_peptide_scores
