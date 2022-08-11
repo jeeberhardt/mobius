@@ -39,6 +39,16 @@ def energy_to_affinity_binding(value, unit='nM', temperature=300.):
     return np.exp(value / RT) * unit_converter[unit]
 
 
+def ic50_to_pic50(value, unit=None):
+    unit_converter = {'pM': 1e-12, 'nM': 1e-9, 'uM': 1e-6, 'mM': 1e-3, 'M': 1, None: 1}
+    return np.log10(value * unit_converter[unit])
+
+
+def pic50_to_ic50(value, unit=None):
+    unit_converter = {'pM': 1e12, 'nM': 1e9, 'uM': 1e6, 'mM': 1e3, 'M': 1, None: 1}
+    return 10**value * unit_converter[unit]
+
+
 def split_list_in_chunks(size, n):
     return [(l[0], l[-1]) for l in np.array_split(range(size), n)]
 
