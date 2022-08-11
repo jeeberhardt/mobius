@@ -9,7 +9,35 @@ import random
 
 import numpy as np
 
-from .utils import build_helm_string, parse_helm
+from .descriptors import SubstitutionMatrix
+
+
+def homolog_scanning(fasta_sequence, substitution_matrix=None, positions=None):
+    i = 0
+    
+    if positions is None:
+        positions = np.arange(len(fasta_sequence))
+    else:
+        positions = np.sort(np.unique(positions))
+        
+    if substitution_matrix is None:
+        d = utils.path_module("mobius")
+        substitution_matrix_filename = os.path.join(d, "data/VTML20.out")
+        substitution_matrix = SubstitutionMatrix(substitution_matrix_filename)
+    
+    for position in itertools.cycle(positions):
+        try:
+            monomer = substitution_matrix.substitutes(fasta_sequence[position])[i]
+        except IndexError:
+            # It means we reach the end of all the possible substitutions
+            break
+            
+        new_seq = fasta_sequence[:position] + monomer + fasta_sequence[position + 1:]
+        
+        if position == positions[-1]:
+            i += 1
+        
+        yield new_seq
 
 
 def monomers_scanning(fasta_sequence, monomers, positions=None):
