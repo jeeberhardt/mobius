@@ -49,6 +49,13 @@ def pic50_to_ic50(value, unit=None):
     return 10**value * unit_converter[unit]
 
 
+def split(n, k):
+    d, r = divmod(n, k)
+    s = [d + 1] * r + [d] * (k - r)
+    np.random.shuffle(s)
+    return s
+
+
 def split_list_in_chunks(size, n):
     return [(l[0], l[-1]) for l in np.array_split(range(size), n)]
 
