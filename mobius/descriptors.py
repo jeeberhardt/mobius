@@ -7,6 +7,7 @@
 import numpy as np
 from map4 import MAP4Calculator
 from rdkit import Chem
+from rdkit.Chem import AllChem
 
 
 class Map4Fingerprint:
@@ -30,9 +31,37 @@ class Map4Fingerprint:
             print(sequences)
 
         fps = self._map4calc.calculate_many(mols)
-        fps = np.array(fps)
+        fps = np.asarray(fps)
 
-        return np.array(fps)
+        return fps
+
+
+class MorganFingerprint:
+
+    def __init__(self, input_type='fasta', dimensions=4096, radius=2):
+        assert input_type.lower() in ['fasta', 'helm', 'smiles'], 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
+
+        self._radius = radius
+        self._dimensions = dimensions
+        self._input_type = input_type.lower()
+
+    def transform(self, sequences):
+        try:
+            if self._input_type == 'fasta':
+                mols = [Chem.rdmolfiles.MolFromFASTA(s) for s in sequences]
+            elif self._input_type == 'helm':
+                mols = [Chem.rdmolfiles.MolFromHELM(s) for s in sequences]
+            else:
+                mols = [Chem.rdmolfiles.MolFromSmiles(s) for s in sequences]
+        except AttributeError:
+            print('Error: there are issues with the input molecules')
+            print(sequences)
+
+        GMFABV = AllChem.GetMorganFingerprintAsBitVect
+        fps = [GMFABV(m, useChirality=True, useFeatures=True, radius=self._radius, nBits=self._dimensions) for m in mols]
+        fps = np.asarray(fps)
+
+        return fps
 
 
 class SequenceDescriptors:
@@ -56,4 +85,4 @@ class SequenceDescriptors:
 
             transformed.append(tmp)
 
-        return np.array(transformed)
+        return np.asarray(transformed)
