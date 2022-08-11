@@ -83,7 +83,7 @@ class GPModel(_SurrogateModel):
     @property
     def X_train(self):
         if self._X_train is None:
-            msg = 'This Gaussian Process instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
 
         return self._X_train
@@ -91,7 +91,7 @@ class GPModel(_SurrogateModel):
     @property
     def X_train_original(self):
         if self._X_train_original is None:
-            msg = 'This Gaussian Process instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
 
         return self._X_train_original
@@ -99,7 +99,7 @@ class GPModel(_SurrogateModel):
     @property
     def y_train(self):
         if self._y_train is None:
-            msg = 'This Gaussian Process instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
 
         return self._y_train
@@ -138,7 +138,7 @@ class GPModel(_SurrogateModel):
 
     def predict(self, X_test):
         if self._model is None:
-            msg = 'This Gaussian Process instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
 
         # Set model in evaluation mode
