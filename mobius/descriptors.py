@@ -5,6 +5,7 @@
 #
 
 import numpy as np
+import pandas as pd
 from map4 import MAP4Calculator
 from rdkit import Chem
 from rdkit.Chem import AllChem
