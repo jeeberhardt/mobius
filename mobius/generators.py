@@ -10,6 +10,7 @@ import random
 import numpy as np
 
 from .descriptors import SubstitutionMatrix
+from . import utils
 
 
 def homolog_scanning(fasta_sequence, substitution_matrix=None, positions=None):
