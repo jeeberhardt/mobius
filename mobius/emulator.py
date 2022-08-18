@@ -12,31 +12,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 
 from .utils import build_helm_string
-
-
-def read_pssm_file(pssm_file):
-    data = []
-    intercept = np.nan
-    AA = []
-
-    with open(pssm_file) as f:
-        lines = f.readlines()
-
-        n_columns = int(lines[0].split('\t')[1])
-
-        for line in lines[1:]:
-            sline = line.strip().split('\t')
-
-            if len(sline) == n_columns + 1:
-                AA.append(sline[0])
-                data.append([float(v) for v in sline[1:]])
-            elif line.strip():
-                intercept = float(sline[-1])
-
-    columns = list(range(1, n_columns + 1))
-    pssm = pd.DataFrame(data=data, columns=columns, index=AA)
-
-    return pssm, intercept
+from .utils import read_pssm_file
 
 
 class _Emulator(ABC):
