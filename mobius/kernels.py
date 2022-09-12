@@ -13,7 +13,7 @@ class TanimotoSimilarityKernel(gpytorch.kernels.Kernel):
     is_stationary = True
 
     # this is the kernel function
-    def forward(self, x1, x2, diag=False, last_dim_is_batch=False, **params):
+    def forward(self, x1, x2, diag=False, last_dim_is_batch=False, eps=1e-6, **params):
         if last_dim_is_batch:
             # Not tested
             x1 = x1.transpose(-1, -2).unsqueeze(-1)
@@ -35,6 +35,6 @@ class TanimotoSimilarityKernel(gpytorch.kernels.Kernel):
             product = torch.mm(x1, x2.transpose(1, 0))
             denominator = torch.add(x2s, x1s[:, None]) - product
 
-        res = product / denominator
+        res = (product + eps) / (denominator + eps)
 
         return res
