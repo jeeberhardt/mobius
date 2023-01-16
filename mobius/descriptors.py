@@ -10,6 +10,8 @@ from map4 import MAP4Calculator
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
+from .utils import convert_HELM_to_FASTA
+
 
 class Map4Fingerprint:
 
@@ -76,16 +78,12 @@ class SequenceDescriptors:
     def transform(self, sequences):    
         transformed = []
 
-        for seq in sequences:
-            tmp = []
+        # The other input type is FASTA
+        if self._input_type == 'helm':
+            sequences = convert_HELM_to_FASTA(sequences)
 
-            # The other input type is FASTA
-            if self._input_type == 'helm':
-                seq = ''.join(seq.split('$')[0].split('{')[1].split('}')[0].split('.'))
-
-            for aa in seq:
-                tmp.extend(self._descriptors[self._descriptors['AA1'] == aa].values[0][2:])
-
+        for sequence in sequences:
+            tmp = [self._descriptors[self._descriptors['AA1'] == aa].values[0][2:] for aa in sequence]
             transformed.append(tmp)
 
         return np.asarray(transformed)
