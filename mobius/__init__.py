@@ -20,6 +20,7 @@ from .emulator import LinearPeptideEmulator
 from .plotting import plot_results
 from .utils import parse_helm, build_helm_string, read_pssm_file
 from .utils import affinity_binding_to_energy, energy_to_affinity_binding, generate_random_linear_peptides, ic50_to_pic50, pic50_to_ic50
+from .utils import convert_FASTA_to_HELM, convert_HELM_to_FASTA
 
 __all__ = ['VirtualTarget', 'ForceField',
            'LinearPeptideEmulator',
@@ -33,4 +34,5 @@ __all__ = ['VirtualTarget', 'ForceField',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 'scrumbled_scanning', 'homolog_scanning',
            'plot_results',
            'parse_helm', 'build_helm_string', 'read_pssm_file', 
-           'affinity_binding_to_energy', 'energy_to_affinity_binding', 'generate_random_linear_peptides', 'ic50_to_pic50', 'pic50_to_ic50']
+           'affinity_binding_to_energy', 'energy_to_affinity_binding', 'generate_random_linear_peptides', 'ic50_to_pic50', 'pic50_to_ic50',
+           'onvert_FASTA_to_HELM', 'convert_HELM_to_FASTA']

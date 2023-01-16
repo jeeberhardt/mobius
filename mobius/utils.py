@@ -65,7 +65,7 @@ def generate_random_linear_peptides(n_peptides, peptide_lengths, monomer_symbols
 
     assert output_format.lower() in ['fasta', 'helm'], 'Format (%s) not handled. Please use FASTA or HELM format.'
 
-    if not isinstance(peptide_lengths, (list, tuple)):
+    if not isinstance(peptide_lengths, (list, tuple, np.ndarray)):
         peptide_lengths = [peptide_lengths]
 
     while True:
@@ -82,6 +82,20 @@ def generate_random_linear_peptides(n_peptides, peptide_lengths, monomer_symbols
             break
 
     return random_peptides
+
+
+def convert_FASTA_to_HELM(fasta_sequences):
+    if not isinstance(fasta_sequences, (list, tuple, np.ndarray)):
+        fasta_sequences = [fasta_sequences]
+
+    return [build_helm_string({'PEPTIDE1': f}) for f in fasta_sequences]
+
+
+def convert_HELM_to_FASTA(helm_sequences):
+    if not isinstance(helm_sequences, (list, tuple, np.ndarray)):
+        helm_sequences = [helm_sequences]
+
+    return [''.join(h.split('$')[0].split('{')[1].split('}')[0].split('.')) for h in helm_sequences]
 
 
 def build_helm_string(polymers, connections=None):
