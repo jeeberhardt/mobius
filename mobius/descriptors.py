@@ -13,7 +13,7 @@ from rdkit.Chem import AllChem
 
 class Map4Fingerprint:
 
-    def __init__(self, input_type='fasta', dimensions=4096, radius=2, is_counted=False, is_folded=True):
+    def __init__(self, input_type='helm', dimensions=4096, radius=2, is_counted=False, is_folded=True):
         assert input_type.lower() in ['fasta', 'helm', 'smiles'], 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
 
         self._map4calc = MAP4Calculator(dimensions=dimensions, radius=radius, is_counted=is_counted, is_folded=is_folded)
@@ -39,7 +39,7 @@ class Map4Fingerprint:
 
 class MorganFingerprint:
 
-    def __init__(self, input_type='fasta', dimensions=4096, radius=2):
+    def __init__(self, input_type='helm', dimensions=4096, radius=2):
         assert input_type.lower() in ['fasta', 'helm', 'smiles'], 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
 
         self._radius = radius
@@ -68,7 +68,7 @@ class MorganFingerprint:
 class SequenceDescriptors:
 
     def __init__(self, descriptors, input_type='helm'):
-        assert input_type.lower() in ['fasta', 'helm', 'smiles'], 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
+        assert input_type.lower() in ['fasta', 'helm'], 'Format (%s) not handled. Please use FASTA or HELM format.'
 
         self._descriptors = descriptors
         self._input_type = input_type
@@ -93,10 +93,7 @@ class SequenceDescriptors:
 
 class SubstitutionMatrix:
 
-    def __init__(self, matrix_filename, input_type='helm'):
-        assert input_type.lower() in ['fasta', 'helm', 'smiles'], 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
-
-        self._input_type = input_type
+    def __init__(self, matrix_filename):
         self._matrix = self._read_matrix(matrix_filename)
 
     def _read_matrix(self, matrix_filename):
