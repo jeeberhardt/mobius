@@ -8,11 +8,10 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
 
 from .utils import build_helm_string
 from .utils import read_pssm_file
+from .utils import convert_HELM_to_FASTA
 
 
 class _Emulator(ABC):
@@ -25,39 +24,27 @@ class _Emulator(ABC):
 
 class LinearPeptideEmulator(_Emulator):
     
-    def __init__(self, pssm_files, exp_fasta_sequences=None, exp_values=None, score_cutoff=None):
+    def __init__(self, pssm_files, score_cutoff=None):
         self._pssm = {}
         self._intercept = {}
-        self._reg = None
         self._score_cutoff = score_cutoff
 
-        # Read PSS matrices
+        # Read PSS Matrices
         for pssm_file in pssm_files:
             pssm, intercept = read_pssm_file(pssm_file)
             self._pssm[len(pssm.columns)] = pssm
             self._intercept[len(pssm.columns)] = intercept
 
-        if exp_fasta_sequences is not None and exp_values is not None:
-            assert len(exp_fasta_sequences) == len(exp_values), 'exp_fasta_sequences and exp_values must have the same size.'
+    def predict(self, sequences, use_cutoff_score=True, input_type='helm'):
+        assert input_type.lower() in ['fasta', 'helm'], 'Format (%s) not handled. Please use FASTA or HELM format.'
 
-            # Score peptides using those PSSM
-            pssm_scores = self.predict(exp_fasta_sequences, use_cutoff_score=False)
-
-            # Fit PSSM scores to experimental values
-            reg = LinearRegression()
-            reg.fit(pssm_scores[:, None], exp_values)
-            print('----- Peptide global -----')
-            print('N peptide: %d' % len(exp_fasta_sequences))
-            print('R2: %.3f' % reg.score(pssm_scores[:, None], exp_values))
-            print('RMSD : %.3f kcal/mol' % mean_squared_error(reg.predict(pssm_scores[:, None]), exp_values, squared=False))
-            print('')
-            self._reg = reg
-
-    def predict(self, fasta_sequences, use_cutoff_score=True):
         # Score peptides using those PSSM
         scores = []
 
-        for sequence in fasta_sequences:
+        if input_type == 'helm':
+            sequences = convert_HELM_to_FASTA(sequences)
+
+        for sequence in sequences:
             score = 0
 
             try:
@@ -76,9 +63,6 @@ class LinearPeptideEmulator(_Emulator):
             scores.append(score)
 
         scores = np.array(scores)
-
-        if self._reg is not None:
-            scores = self._reg.predict(scores[:, None])
 
         if self._score_cutoff is not None and use_cutoff_score is True:
             scores[scores > self._energy_score] = 0.
@@ -105,7 +89,7 @@ class LinearPeptideEmulator(_Emulator):
         while True:
             peptide_length = np.random.choice(peptide_lengths)
             p = ''.join(np.random.choice(monomer_symbols, peptide_length))
-            s = self.predict([p], use_cutoff_score=use_cutoff_score)[0]
+            s = self.predict([p], use_cutoff_score=use_cutoff_score, input_type='FASTA')[0]
 
             if score_bounds is not None:
                 if score_bounds[0] <= s <= score_bounds[1]:
