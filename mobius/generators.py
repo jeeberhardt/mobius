@@ -4,6 +4,7 @@
 # Peptide generators
 #
 
+import copy
 import itertools
 import os
 import random
@@ -20,7 +21,7 @@ def homolog_scanning(input_sequence, substitution_matrix=None, input_type='helm'
     i = 0
 
     if input_type.lower() == 'helm':
-        polymers, connections, _, _ = parse_helm(input_sequence)
+        polymers, connections, _, _ = utils.parse_helm(input_sequence)
     else:
         polymers = {'PEPTIDE1': list(input_sequence)}
         connections = None
@@ -38,7 +39,7 @@ def homolog_scanning(input_sequence, substitution_matrix=None, input_type='helm'
         except:
             allowed_positions[pid] = list(range(0, len(sequence)))
 
-        if not connections is None: 
+        if connections is not None:
             # Ignore positions involved into connections
             connection_resids = list(connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition'])
             connection_resids += list(connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition'])
@@ -56,7 +57,7 @@ def homolog_scanning(input_sequence, substitution_matrix=None, input_type='helm'
 
             new_polymers = copy.deepcopy(polymers)
             new_polymers[pid][position] = monomer
-            new_sequence = build_helm_string(new_polymers, connections)
+            new_sequence = utils.build_helm_string(new_polymers, connections)
 
             if position == allowed_positions[pid][-1]:
                 i += 1
@@ -77,7 +78,7 @@ def monomers_scanning(input_sequence, monomers=None, input_type='helm', position
                     "T", "W", "Y", "V"]
 
     if input_type.lower() == 'helm':
-        polymers, connections, _, _ = parse_helm(input_sequence)
+        polymers, connections, _, _ = utils.parse_helm(input_sequence)
     else:
         polymers = {'PEPTIDE1': list(input_sequence)}
         connections = None
@@ -90,7 +91,7 @@ def monomers_scanning(input_sequence, monomers=None, input_type='helm', position
         except:
             allowed_positions[pid] = list(range(0, len(sequence)))
 
-        if not connections is None: 
+        if connections is not None:
             # Ignore positions involved into connections
             connection_resids = list(connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition'])
             connection_resids += list(connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition'])
@@ -104,7 +105,7 @@ def monomers_scanning(input_sequence, monomers=None, input_type='helm', position
                 if polymers[pid][position] != monomer:
                     new_polymers = copy.deepcopy(polymers)
                     new_polymers[pid][position] = monomer
-                    new_sequence = build_helm_string(new_polymers, connections)
+                    new_sequence = utils.build_helm_string(new_polymers, connections)
 
                     yield new_sequence
 
@@ -117,9 +118,11 @@ def alanine_scanning(input_sequence, input_type='helm', positions=None, repeats=
     if repeats is not None:
         if not isinstance(repeats, (list, tuple, np.ndarray)):
             repeats = [repeats]
+    else:
+        repeats = []
 
     if input_type.lower() == 'helm':
-        polymers, connections, _, _ = parse_helm(input_sequence)
+        polymers, connections, _, _ = utils.parse_helm(input_sequence)
     else:
         polymers = {'PEPTIDE1': list(input_sequence)}
         connections = None
@@ -132,7 +135,7 @@ def alanine_scanning(input_sequence, input_type='helm', positions=None, repeats=
         except:
             allowed_positions[pid] = list(range(0, len(sequence)))
 
-        if not connections is None: 
+        if connections is not None:
             # Ignore positions involved into connections
             connection_resids = list(connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition'])
             connection_resids += list(connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition'])
@@ -146,7 +149,7 @@ def alanine_scanning(input_sequence, input_type='helm', positions=None, repeats=
             if polymers[pid][position] != monomer:
                 new_polymers = copy.deepcopy(polymers)
                 new_polymers[pid][position] = monomer
-                new_sequence = build_helm_string(new_polymers, connections)
+                new_sequence = utils.build_helm_string(new_polymers, connections)
 
                 yield new_sequence
 
@@ -163,7 +166,7 @@ def alanine_scanning(input_sequence, input_type='helm', positions=None, repeats=
                 if polymers[pid][i] != monomer:
                     new_polymers[pid][i] = monomer
 
-            new_sequence = build_helm_string(new_polymers, connections)
+            new_sequence = utils.build_helm_string(new_polymers, connections)
 
             if new_sequence != input_sequence:
                 yield new_sequence
@@ -178,7 +181,7 @@ def random_monomers_scanning(input_sequence, monomers=None, input_type='helm', p
                     "T", "W", "Y", "V"]
 
     if input_type.lower() == 'helm':
-        polymers, connections, _, _ = parse_helm(input_sequence)
+        polymers, connections, _, _ = utils.parse_helm(input_sequence)
     else:
         polymers = {'PEPTIDE1': list(input_sequence)}
         connections = None
@@ -191,7 +194,7 @@ def random_monomers_scanning(input_sequence, monomers=None, input_type='helm', p
         except:
             allowed_positions[pid] = list(range(0, len(sequence)))
 
-        if not connections is None: 
+        if connections is not None:
             # Ignore positions involved into connections
             connection_resids = list(connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition'])
             connection_resids += list(connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition'])
@@ -206,7 +209,7 @@ def random_monomers_scanning(input_sequence, monomers=None, input_type='helm', p
             if polymers[pid][position] != monomer:
                 new_polymers = copy.deepcopy(polymers)
                 new_polymers[pid][position] = monomer
-                new_sequence = build_helm_string(new_polymers, connections)
+                new_sequence = utils.build_helm_string(new_polymers, connections)
 
                 yield new_sequence
 
@@ -222,7 +225,7 @@ def properties_scanning(input_sequence, properties=None, input_type='helm', posi
                       'polar_nonaro': ['I', 'A', 'L', 'P', 'V', 'M']}
 
     if input_type.lower() == 'helm':
-        polymers, connections, _, _ = parse_helm(input_sequence)
+        polymers, connections, _, _ = utils.parse_helm(input_sequence)
     else:
         polymers = {'PEPTIDE1': list(input_sequence)}
         connections = None
@@ -235,7 +238,7 @@ def properties_scanning(input_sequence, properties=None, input_type='helm', posi
         except:
             allowed_positions[pid] = list(range(0, len(sequence)))
 
-        if not connections is None:
+        if connections is not None:
             # Ignore positions involved into connections
             connection_resids = list(connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition'])
             connection_resids += list(connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition'])
@@ -251,7 +254,7 @@ def properties_scanning(input_sequence, properties=None, input_type='helm', posi
                 if polymers[pid][position] != monomer:
                     new_polymers = copy.deepcopy(polymers)
                     new_polymers[pid][position] = monomer
-                    new_sequence = build_helm_string(new_polymers, connections)
+                    new_sequence = utils.build_helm_string(new_polymers, connections)
 
                     yield new_sequence
 
@@ -260,7 +263,7 @@ def scrumbled_scanning(input_sequence, input_type='helm'):
     assert input_type.lower() in ['fasta', 'helm'], 'Format (%s) not handled. Please use FASTA or HELM format.'
 
     if input_type.lower() == 'helm':
-        polymers, connections, _, _ = parse_helm(input_sequence)
+        polymers, connections, _, _ = utils.parse_helm(input_sequence)
     else:
         polymers = {'PEPTIDE1': list(input_sequence)}
         connections = None
@@ -273,7 +276,7 @@ def scrumbled_scanning(input_sequence, input_type='helm'):
         except:
             allowed_positions[pid] = list(range(0, len(sequence)))
 
-        if not connections is None:
+        if connections is not None:
             # Ignore positions involved into connections
             connection_resids = list(connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition'])
             connection_resids += list(connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition'])
@@ -290,6 +293,6 @@ def scrumbled_scanning(input_sequence, input_type='helm'):
         for new_position, old_position in zip(new_positions, old_positions):
             new_polymers[new_position[0]][new_position[1]] = polymers[old_position[0]][old_position[1]]
 
-        new_sequence = build_helm_string(new_polymers, connections)
+        new_sequence = utils.build_helm_string(new_polymers, connections)
 
         yield new_sequence
