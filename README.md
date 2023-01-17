@@ -58,7 +58,7 @@ pssm_files = ['data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-0
 mps = LinearPeptideEmulator(pssm_files)
 
 # Now we define a peptide sequence we want to optimize
-lead_peptide = 'HMTEVVRRC'
+lead_peptide = convert_FASTA_to_HELM('HMTEVVRRC')[0]
 
 # Then we generate the first seed library of 96 peptides 
 # using a combination of both alanine scanning and homolog 
@@ -74,8 +74,6 @@ for seq in homolog_scanning(lead_peptide):
     if len(seed_library) >= 96:
         print('Reach max. number of peptides allowed.')
         break
-        
-seed_library = convert_FASTA_to_HELM(seed_library)
 
 # The seed library is then virtually tested (Make/Test)
 # using the linear peptide emulator we defined earlier.
