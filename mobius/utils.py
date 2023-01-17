@@ -120,7 +120,7 @@ def parse_helm(helm_string):
     data = {}
     for polymer in polymers.split('|'):
         pid = polymer.split('{')[0]
-        sequence = polymer[len(pid) + 1:-1].replace('.', '')
+        sequence = polymer[len(pid) + 1:-1].split('.')
         data[pid] = sequence
         
     polymers = data
