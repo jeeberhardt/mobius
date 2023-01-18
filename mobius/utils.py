@@ -91,11 +91,24 @@ def convert_FASTA_to_HELM(fasta_sequences):
     return [build_helm_string({'PEPTIDE1': f}) for f in fasta_sequences]
 
 
-def convert_HELM_to_FASTA(helm_sequences):
+def convert_HELM_to_FASTA(helm_sequences, ignore_connections=False):
     if not isinstance(helm_sequences, (list, tuple, np.ndarray)):
         helm_sequences = [helm_sequences]
 
-    return [''.join(h.split('$')[0].split('{')[1].split('}')[0].split('.')) for h in helm_sequences]
+    fasta_sequences = []
+
+    for helm_sequence in helm_sequences:
+        polymers, connections, _, _ = parse_helm(helm_sequence)
+
+        if ignore_connections is False and connections:
+            raise ValueError('Polymer %s cannot be converted to FASTA format. It contains connections.' % helm_sequence)
+
+        if len(polymers.keys()) > 1:
+            raise ValueError('Polymer %s cannot be converted to FASTA format. It contains more than one sequence.' % helm_sequence)
+
+        fasta_sequences.append(''.join(polymers[list(polymers.keys())[0]]))
+
+    return fasta_sequences
 
 
 def build_helm_string(polymers, connections=None):
