@@ -8,10 +8,13 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import pandas as pd
+import torch
 
+from .descriptors import Map4Fingerprint
+from .kernels import TanimotoSimilarityKernel
 from .utils import build_helm_string
 from .utils import read_pssm_file
-from .utils import convert_HELM_to_FASTA
+from .utils import convert_FASTA_to_HELM, convert_HELM_to_FASTA
 
 
 class _Emulator(ABC):
@@ -20,6 +23,58 @@ class _Emulator(ABC):
     @abstractmethod
     def predict(self):
         raise NotImplementedError()
+
+
+class FindMe(_Emulator):
+
+    def __init__(self, target_sequence, input_type='helm', kernel=None, data_transformer=None):
+        if data_transformer != 'precomputed':
+            assert input_type.lower() in ['fasta', 'helm'], 'Format (%s) not handled. Please use FASTA or HELM format.'
+
+            if input_type == 'fasta':
+                target_sequence = convert_FASTA_to_HELM(target_sequence)
+
+        self._target_sequence = target_sequence
+
+        if kernel is None:
+            self._kernel = TanimotoSimilarityKernel()
+        else:
+            self._kernel = kernel
+
+        if data_transformer is None:
+            self._data_transformer = Map4Fingerprint()
+        elif data_transformer == 'precomputed':
+            self._data_transformer = 'precomputed'
+        else:
+            self._data_transformer = data_transformer
+
+        if self._data_transformer != 'precomputed':
+            target_sequence_transformed = self._data_transformer.transform(target_sequence)
+        else:
+            target_sequence_transformed = self._target_sequence
+
+        self._target_sequence_transformed = torch.from_numpy(np.asarray(target_sequence_transformed)).float()
+
+    def predict(self, sequences, input_type='helm'):
+        # If the input sequences are precomputed, no need to check for the format
+        if self._data_transformer != 'precomputed':
+            assert input_type.lower() in ['fasta', 'helm'], 'Format (%s) not handled. Please use FASTA or HELM format.'
+
+            if input_type == 'fasta':
+                sequence = convert_FASTA_to_HELM(sequences)
+
+        if not isinstance(sequences, (list, tuple, np.ndarray)):
+            sequences = [sequences]
+
+        if self._data_transformer != 'precomputed':
+            sequences_transformed = self._data_transformer.transform(sequences)
+
+        sequences_transformed = torch.from_numpy(np.asarray(sequences_transformed)).float()
+
+        d = self._kernel.forward(self._target_sequence_transformed, sequences_transformed)[0]
+        d = d.detach().numpy()
+
+        return d
 
 
 class LinearPeptideEmulator(_Emulator):
