@@ -42,9 +42,9 @@ def _group_by_scaffold(helm_sequences, return_index=False):
                 attachment_positions = np.concatenate([attachment_positions1, attachment_positions2])
                 # Build scaffold polymer sequence (X represents an unknown monomer in the HELM notation)
                 scaffold_sequence = np.array(['X'] * len(polymers[polymer_id]))
-                scaffold_sequence[attachment_positions] = np.array(list(polymers[polymer_id]))[attachment_positions]
+                scaffold_sequence[attachment_positions - 1] = np.array(polymers[polymer_id])[attachment_positions - 1]
                 # Replace polymer sequence by scaffold sequence
-                polymers[polymer_id] = ''.join(scaffold_sequence)
+                polymers[polymer_id] = scaffold_sequence
             else:
                 # Replace polymer sequence by scaffold sequence (but faster version since no connections)
                 # (X represents an unknown monomer in the HELM notation)
