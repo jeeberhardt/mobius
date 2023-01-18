@@ -110,7 +110,7 @@ def monomers_scanning(input_sequence, monomers=None, input_type='helm', position
                     yield new_sequence
 
 
-def alanine_scanning(input_sequence, input_type='helm', positions=None, repeats=None):
+def alanine_scanning(input_sequence, repeats=None, input_type='helm', positions=None):
     assert input_type.lower() in ['fasta', 'helm'], 'Format (%s) not handled. Please use FASTA or HELM format.'
 
     monomer = 'A'
