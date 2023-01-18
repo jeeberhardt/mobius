@@ -97,7 +97,7 @@ class HELMGeneticOperators:
         polymers, connections, _, _ = parse_helm(helm_string)
 
         if connections:
-            raise NotImplementedError('Does not handle peptides with connections.')
+            raise NotImplementedError('Can only insert new monomers in linear polymers.')
         
         # Generate mutants...
         for i in range(n):
@@ -162,7 +162,7 @@ class HELMGeneticOperators:
         polymers, connections, _, _ = parse_helm(helm_string)
 
         if connections:
-            raise NotImplementedError('Does not handle peptides with connections.')
+            raise NotImplementedError('Can only delete monomers in linear polymers.')
         
         # Generate mutants...
         for i in range(n):
