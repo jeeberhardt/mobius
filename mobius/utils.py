@@ -101,10 +101,10 @@ def convert_HELM_to_FASTA(helm_sequences, ignore_connections=False):
         polymers, connections, _, _ = parse_helm(helm_sequence)
 
         if ignore_connections is False and connections:
-            raise ValueError('Polymer %s cannot be converted to FASTA format. It contains connections.' % helm_sequence)
+            raise ValueError('Polymer %s cannot be converted to FASTA string. It contains connections.' % helm_sequence)
 
         if len(polymers.keys()) > 1:
-            raise ValueError('Polymer %s cannot be converted to FASTA format. It contains more than one sequence.' % helm_sequence)
+            raise ValueError('Polymer %s cannot be converted to FASTA string. It contains more than one sequence.' % helm_sequence)
 
         fasta_sequences.append(''.join(polymers[list(polymers.keys())[0]]))
 
