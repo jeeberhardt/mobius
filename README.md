@@ -51,11 +51,13 @@ from mobius import convert_FASTA_to_HELM
 
 
 # Simple linear peptide emulator/oracle for MHC class I A*0201
+# WARNING: This is for benchmarking purpose only. This step
+# should be an actual lab experiment.
 pssm_files = ['data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-8.txt',
               'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-9.txt',
               'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-10.txt',
               'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-11.txt']
-mps = LinearPeptideEmulator(pssm_files)
+lpe = LinearPeptideEmulator(pssm_files)
 
 # Now we define a peptide sequence we want to optimize
 lead_peptide = convert_FASTA_to_HELM('HMTEVVRRC')[0]
@@ -77,8 +79,9 @@ for seq in homolog_scanning(lead_peptide):
 
 # The seed library is then virtually tested (Make/Test)
 # using the linear peptide emulator we defined earlier.
-# WARNING: This step is supposed to be an actual lab experiments
-pic50_seed_library = mps.predict(seed_library)
+# WARNING: This is for benchmarking purpose only. This 
+# step is supposed to be an actual lab experiment.
+pic50_seed_library = lpe.predict(seed_library)
 
 # Once we got results from our first lab experiment
 # we can now start the Bayesian Optimization (BO)
@@ -120,10 +123,13 @@ pic50_scores = list(pic50_seed_library)[:]
 for i in range(3):
     # Run optimization, recommand 96 new peptides based on existing data
     suggested_peptides, _ = ps.recommand(peptides, pic50_scores, batch_size=96)
+
+    # Here you can add whatever methods you want to further filter out peptides
     
     # Get the pIC50 (Make/Test) of all the suggested peptides using the MHC emulator
-    # WARNING: This step is supposed to be an actual lab experiments
-    pic50_suggested_peptides = mps.predict(suggested_peptides)
+    # WARNING: This is for benchmarking purpose only. This 
+    # step is supposed to be an actual lab experiment.
+    pic50_suggested_peptides = lpe.predict(suggested_peptides)
     
     # Add all the new data
     peptides.extend(list(suggested_peptides))
