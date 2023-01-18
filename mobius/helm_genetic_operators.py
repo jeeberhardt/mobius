@@ -222,13 +222,10 @@ class HELMGeneticOperators:
         
         return mutant_helm_strings
 
-    def mutate(self, helm_string, n=10, minimum_mutations=1, maximum_mutations=None):
+    def mutate(self, helm_string, n=10, minimum_mutations=1, maximum_mutations=None, keep_connections=True):
         mutant_helm_strings = []
         
         polymers, connections, _, _ = parse_helm(helm_string)
-
-        if connections:
-            raise NotImplementedError('Does not handle peptides with connections.')
         
         # Generate mutants...
         for i in range(n):
@@ -237,7 +234,16 @@ class HELMGeneticOperators:
             
             for pid, sequence in polymers.items():
                 mutated_sequence = list(sequence)
-                possible_positions = list(range(len(sequence)))
+                
+                # Residues involved in a connection within and between peptides won't be mutated
+                if keep_connections and pid in polymers.keys():
+                    connection_resids = list(connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition'])
+                    connection_resids += list(connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition'])
+                    # Because positions are 1-based in HELM
+                    connection_resids = np.asarray(connection_resids) - 1
+                    possible_positions = list(set(range(len(sequence))).difference(connection_resids))
+                else:
+                    possible_positions = list(range(len(sequence)))
                 
                 # Choose a random number of mutations between min and max
                 if minimum_mutations == maximum_mutations:
@@ -271,8 +277,21 @@ class HELMGeneticOperators:
                 n_mutations += len(mutation_positions)
             
             if n_mutations > 0:
+                if not keep_connections:
+                    connections_to_keep = []
+
+                    # Check if we have to remove connections due to the mutations
+                    for i, connection in enumerate(connections):
+                        # The connection positions must not be in the mutation lists
+                        # mutant_polymers[connection['XXXXXPolymerID']][1] + 1 because positions are 1-based in HELM
+                        if connection['SourceMonomerPosition'] not in mutant_polymers[connection['SourcePolymerID']][1] + 1 and \
+                           connection['TargetMonomerPosition'] not in mutant_polymers[connection['TargetPolymerID']][1] + 1:
+                            connections_to_keep.append(i)
+                else:
+                    connections_to_keep = list(range(connections.shape[0]))
+
                 # Reconstruct the HELM string
-                mutant_helm_string = build_helm_string({p: s[0] for p, s in mutant_polymers.items()})
+                mutant_helm_string = build_helm_string({p: s[0] for p, s in mutant_polymers.items()}, connections[connections_to_keep])
                 mutant_helm_strings.append(mutant_helm_string)
             else:
                 mutant_helm_strings.append(helm_string)
@@ -286,16 +305,16 @@ class HELMGeneticOperators:
             
         polymers1, connections1, _, _ = parse_helm(helm_string1)
         polymers2, connections2, _, _ = parse_helm(helm_string2)
-        
-        if connections1 or connections2:
-            raise NotImplementedError('Does not handle peptides with connections.')
 
         if polymers1.keys() != polymers2.keys():
-            raise RuntimeError('Peptides does not contain the same polymer ids.')
+            raise ValueError('Polymers do not contain the same polymer ids.')
+
+        if connections1 != connections2:
+            raise ValueError('Polymers must have the same scaffold (connections are different).')
         
         for pid in polymers1.keys():
             if len(polymers1[pid]) != len(polymers2[pid]):
-                raise RuntimeError('Peptide sequence lengths are different.')
+                raise ValueError('Polymer sequences with ID %s have different lengths.' % pid)
             
             # Copy parents since we are going to modify the children
             ind1 = list(polymers1[pid])
@@ -312,6 +331,7 @@ class HELMGeneticOperators:
             mutant1_polymers[pid] = ''.join(ind1)
             mutant2_polymers[pid] = ''.join(ind2)
             
-        mutant_helm_strings.extend([build_helm_string(mutant1_polymers), build_helm_string(mutant2_polymers)])
+        mutant_helm_strings.extend([build_helm_string(mutant1_polymers, connections1),
+                                    build_helm_string(mutant2_polymers, connections2)])
         
         return mutant_helm_strings
