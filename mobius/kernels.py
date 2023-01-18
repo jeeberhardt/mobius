@@ -38,3 +38,22 @@ class TanimotoSimilarityKernel(gpytorch.kernels.Kernel):
         res = (product + eps) / (denominator + eps)
 
         return res
+
+
+class CosineSimilarityKernel(gpytorch.kernels.Kernel):
+    # the sequence kernel is stationary
+    is_stationary = True     
+
+    # this is the kernel function
+    def forward(self, x1, x2, eps=1e-6, **params):
+        # Source: https://stackoverflow.com/questions/50411191/how-to-compute-the-cosine-similarity-in-pytorch-for-all-rows-in-a-matrix-with-re
+        # Normalize the rows, before computing their dot products via transposition
+        x1_n = x1.norm(dim=1)[:, None]
+        x2_n = x2.norm(dim=1)[:, None]
+
+        x1_norm = x1 / torch.max(x1_n, eps * torch.ones_like(x1_n))
+        x2_norm = x2 / torch.max(x2_n, eps * torch.ones_like(x2_n))
+        
+        sim_mt = torch.mm(x1_norm, x2_norm.transpose(0, 1))
+        
+        return sim_mt
