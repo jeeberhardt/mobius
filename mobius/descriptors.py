@@ -22,6 +22,9 @@ class Map4Fingerprint:
         self._input_type = input_type.lower()
 
     def transform(self, sequences):
+        if not isinstance(sequences, (list, tuple, np.ndarray)):
+            sequences = [sequences]
+
         try:
             if self._input_type == 'fasta':
                 mols = [Chem.rdmolfiles.MolFromFASTA(s) for s in sequences]
@@ -49,6 +52,9 @@ class MorganFingerprint:
         self._input_type = input_type.lower()
 
     def transform(self, sequences):
+        if not isinstance(sequences, (list, tuple, np.ndarray)):
+            sequences = [sequences]
+
         try:
             if self._input_type == 'fasta':
                 mols = [Chem.rdmolfiles.MolFromFASTA(s) for s in sequences]
