@@ -39,8 +39,7 @@ class Mobius:
         for i in range(num_iter):
             suggested_polymers, predicted_values = sampler.recommand(all_suggested_polymers, all_exp_values, batch_size)
 
-            suggested_polymers_fasta = [''.join(c.split('$')[0].split('{')[1].split('}')[0].split('.')) for c in suggested_polymers]
-            exp_values = emulator.predict(suggested_polymers_fasta)
+            exp_values = emulator.predict(suggested_polymers)
 
             all_suggested_polymers = np.concatenate([all_suggested_polymers, suggested_polymers])
             all_exp_values = np.concatenate([all_exp_values, exp_values])
