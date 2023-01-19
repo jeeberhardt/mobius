@@ -81,7 +81,7 @@ class DummyModel(_SurrogateModel):
 
 
 # We will use the simplest form of GP model, exact inference
-class ExactGPModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchModel):
+class _ExactGPModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchModel):
     # to inform GPyTorchModel API
     _num_outputs = 1
 
@@ -157,7 +157,7 @@ class GPModel(_SurrogateModel):
         noise_prior = None
         #noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
         self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
-        self._model = ExactGPModel(X_train, y_train, self._likelihood, self._kernel)
+        self._model = _ExactGPModel(X_train, y_train, self._likelihood, self._kernel)
 
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self._likelihood, self._model)
