@@ -1,2 +1,0 @@
-Peptide	Core_Scoring_Matrix	Core_Sequence_Motif
-IPTAFSIGKTYKPEE	FSIGKTYKP	SIGKTYKPE
