@@ -11,6 +11,7 @@ import gpytorch
 import numpy as np
 import torch
 from botorch.fit import fit_gpytorch_model
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
 
 from .kernels import TanimotoSimilarityKernel
@@ -194,6 +195,85 @@ class GPModel(_SurrogateModel):
 
         return mu, sigma
 
+    def score(self, X_test, y_test):
+        mu, _ = self.predict(X_test)
+        return r2_score(y_test, mu)
+
+
+class RFModel(_SurrogateModel):
+    
+    def __init__(self, kernel=None, data_transformer=None, **kwargs):
+        self._kernel = kernel
+        self._data_transformer = data_transformer
+        self._model = None
+        self._X_train = None
+        self._X_train_original = None
+        self._y_train = None
+        self._kwargs = kwargs
+        
+        # Set default parameters for RF
+        self._kwargs.setdefault('n_estimators', 500)
+        self._kwargs.setdefault('max_features', 'auto')
+        self._kwargs.setdefault('max_depth', 5)
+        self._kwargs.setdefault('oob_score', True)
+        self._kwargs.setdefault('bootstrap', True)
+        self._kwargs.setdefault('max_samples', 0.8)
+        
+    @property
+    def X_train(self):
+        if self._X_train is None:
+            msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise RuntimeError(msg)
+
+        return self._X_train
+
+    @property
+    def X_train_original(self):
+        if self._X_train_original is None:
+            msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise RuntimeError(msg)
+
+        return self._X_train_original
+
+    @property
+    def y_train(self):
+        if self._y_train is None:
+            msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise RuntimeError(msg)
+
+        return self._y_train
+    
+    def fit(self, X_train, y_train):
+        # Make sure that inputs are numpy arrays, keep a persistant copy
+        self._X_train_original = np.asarray(X_train).copy()
+        self._y_train = np.asarray(y_train).copy()
+
+        if self._data_transformer is not None:
+            # Transform input data
+            self._X_train = self._data_transformer.transform(self._X_train_original)
+        else:
+            self._X_train = self._X_train_original
+        
+        self._model = RandomForestRegressor(**self._kwargs)
+        self._model.fit(self._X_train, self._y_train)
+    
+    def predict(self, X_test):
+        if self._model is None:
+            msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise RuntimeError(msg)
+        
+        if self._data_transformer is not None:
+            # Transform input data
+            X_test = self._data_transformer.transform(X_test)
+        
+        mu = self._model.predict(X_test)
+        # Just a test. The uncertainty estimations should not be done this way.
+        # https://stats.stackexchange.com/questions/490514/is-it-valid-to-use-the-distribution-of-individual-tree-predictions-in-a-random-f
+        estimations = np.stack([t.predict(X_test) for t in self._model.estimators_])
+        sigma = np.std(estimations, axis=0)
+        
+        return mu, sigma
+    
     def score(self, X_test, y_test):
         mu, _ = self.predict(X_test)
         return r2_score(y_test, mu)
