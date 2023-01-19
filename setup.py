@@ -23,10 +23,10 @@ def find_files(directory):
 setup(
     name="mobius",
     version='0.2',
-    author="Jerome Eberhardt, Markus A. Lill",
+    author="Jerome Eberhardt, Markus A. Lill, Torsten Schwede",
     author_email="jerome.eberhardt@unibas.ch",
     url="https://git.scicore.unibas.ch/schwede/mobius",
-    description='Python package for creating virtual peptide dataset',
+    description='Python package for optimizing peptide sequences using Bayesian optimization (BO)',
     long_description=open(os.path.join(base_dir, 'README.md')).read(),
     long_description_content_type="text/markdown",
     packages=find_packages(),
