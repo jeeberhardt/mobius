@@ -12,7 +12,7 @@ from .mobius import Mobius
 from .sampler import PolymerSampler
 from .descriptors import Map4Fingerprint, SequenceDescriptors, SubstitutionMatrix
 from .ga import SequenceGA, ParallelSequenceGA, ScaffoldGA, RandomGA
-from .surrogate_model import GPModel, DummyModel
+from .surrogate_model import GPModel, DummyModel, RFModel
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning
 from .helm_genetic_operators import HELMGeneticOperators
 from .kernels import TanimotoSimilarityKernel
@@ -26,7 +26,7 @@ __all__ = ['VirtualTarget', 'ForceField',
            'LinearPeptideEmulator', 'FindMe',
            'Mobius',
            'PolymerSampler',
-           'GPModel', 'DummyModel',
+           'GPModel', 'DummyModel', 'RFModel',
            'TanimotoSimilarityKernel',
            'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement',
            'Map4Fingerprint', 'SequenceDescriptors', 'SubstitutionMatrix',
