@@ -47,10 +47,7 @@ class PolymerSampler(_Sampler):
             suggested_polymers, values = sampler.run(self._acq_fun, suggested_polymers, values)
 
         # Sort sequences by scores in the decreasing order (best to worst)
-        if self._acq_fun.goal == 'minimize':
-            sorted_indices = np.argsort(values)
-        else:
-            sorted_indices = np.argsort(values)[::-1]
+        sorted_indices = np.argsort(values)
 
         suggested_polymers = suggested_polymers[sorted_indices]
         values = values[sorted_indices]
@@ -58,6 +55,11 @@ class PolymerSampler(_Sampler):
         return suggested_polymers[:batch_size], values[:batch_size]
 
     def tell(self, polymers, values):
+        values = np.asarray(values)
+
+        if self._acq_fun.maximize:
+            values = -values
+
         self._acq_fun.surrogate_model.fit(polymers, values)
 
     def recommand(self, polymers, values, batch_size=None):
@@ -81,10 +83,7 @@ class PolymerSampler(_Sampler):
             all_exp_values = np.concatenate([all_exp_values, exp_values])
 
         # Sort sequences by scores in the decreasing order (best to worst)
-        if self._acq_fun.goal == 'minimize':
-            sorted_indices = np.argsort(all_exp_values)
-        else:
-            sorted_indices = np.argsort(all_exp_values)[::-1]
+        sorted_indices = np.argsort(all_exp_values)
 
         all_suggested_polymers = all_suggested_polymers[sorted_indices]
         all_exp_values = all_exp_values[sorted_indices]

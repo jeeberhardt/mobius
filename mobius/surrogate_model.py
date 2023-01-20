@@ -86,7 +86,7 @@ class _ExactGPModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchMod
     _num_outputs = 1
 
     def __init__(self, train_x, train_y, likelihood, kernel=None):
-        super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
+        super(_ExactGPModel, self).__init__(train_x, train_y, likelihood)
         self.mean_module = gpytorch.means.ConstantMean()
 
         if kernel is not None:

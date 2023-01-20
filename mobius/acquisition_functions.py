@@ -28,12 +28,7 @@ class _AcquisitionFunction(ABC):
 
     @property
     @abstractmethod
-    def goal(self):
-        pass
-
-    @property
-    @abstractmethod
-    def greater_is_better(self):
+    def maximize(self):
         pass
 
     @abstractmethod
@@ -43,36 +38,25 @@ class _AcquisitionFunction(ABC):
 
 class RandomImprovement(_AcquisitionFunction):
 
-    def __init__(self, goal='minimize'):
+    def __init__(self, maximize=True):
         """
         Random acquisition function
 
         Arguments:
         ----------
-            goal: Indicates whether the function is to be maximised or minimised (default: minimize).
+            maximize: Indicates whether the function is to be maximised (default: False).
 
         """
-        assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
-        
-        self._goal = goal
         self._surrogate_model = DummyModel()
-
-        if self._goal == 'minimize':
-            self._greater_is_better = False
-        else:
-            self._greater_is_better = True
+        self._maximize = maximize
 
     @property
     def surrogate_model(self):
         return self._surrogate_model
 
     @property
-    def goal(self):
-        return self._goal
-
-    @property
-    def greater_is_better(self):
-        return self._greater_is_better
+    def maximize(self):
+        return self._maximize
 
     def forward(self, X_test):
         X_test = np.asarray(X_test)
@@ -83,37 +67,26 @@ class RandomImprovement(_AcquisitionFunction):
 
 class Greedy(_AcquisitionFunction):
 
-    def __init__(self, surrogate_model, goal='minimize'):
+    def __init__(self, surrogate_model, maximize=False):
         """
         Greedy acquisition function
 
         Arguments:
         ----------
             surrogate_model: Surrogate model
-            goal: Indicates whether the function is to be maximised or minimised (default: minimize).
+            maximize: Indicates whether the function is to be maximised (default: False).
 
         """
-        assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
-
-        self._goal = goal
         self._surrogate_model = surrogate_model
-
-        if self._goal == 'minimize':
-            self._greater_is_better = False
-        else:
-            self._greater_is_better = True
+        self._maximize = maximize
 
     @property
     def surrogate_model(self):
         return self._surrogate_model
 
     @property
-    def goal(self):
-        return self._goal
-
-    @property
-    def greater_is_better(self):
-        return self._greater_is_better
+    def maximize(self):
+        return self._maximize
 
     def forward(self, X_test):
         mu, _ = self._surrogate_model.predict(X_test)
@@ -123,7 +96,7 @@ class Greedy(_AcquisitionFunction):
 
 class ExpectedImprovement(_AcquisitionFunction):
 
-    def __init__(self, surrogate_model, goal='minimize', xi=0.00):
+    def __init__(self, surrogate_model, maximize=False, xi=0.00, eps=1e-9):
         """
         Expected improvement acquisition function.
 
@@ -132,57 +105,40 @@ class ExpectedImprovement(_AcquisitionFunction):
         Arguments:
         ----------
             surrogate_model: Surrogate model
-            goal: Indicates whether the function is to be maximised or minimised (default: minimize).
+            maximize: Indicates whether the function is to be maximised (default: False).
             xi: Exploitation-exploration trade-off parameter (default: 0.0)
 
         """
-        assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
-
-        self._goal = goal
         self._surrogate_model = surrogate_model
         self._xi = xi
-
-        if self._goal == 'minimize':
-            self._greater_is_better = False
-        else:
-            self._greater_is_better = True
-
-        # goal = maximize // greater_is_better = True -> scaling_factor = 1
-        # goal = minimize // greater_is_better = False -> scaling_factor = -1
-        self._scaling_factor = (-1) ** (not self._greater_is_better)
+        self._eps = eps
+        self._maximize = maximize
 
     @property
     def surrogate_model(self):
         return self._surrogate_model
 
     @property
-    def goal(self):
-        return self._goal
-
-    @property
-    def greater_is_better(self):
-        return self._greater_is_better
+    def maximize(self):
+        return self._maximize
 
     def forward(self, X_test):
-        if self._greater_is_better:
-            best_f = np.max(self._surrogate_model.y_train)
-        else:
-            best_f = np.min(self._surrogate_model.y_train)
+        best_f = np.min(self._surrogate_model.y_train)
 
         # calculate mean and stdev via surrogate function*
         mu, sigma = self._surrogate_model.predict(X_test)
 
-        # calculate the expected improvement
-        Z = self._scaling_factor * (mu - best_f - self._xi) / (sigma + 1E-9)
-        ei = self._scaling_factor * (mu - best_f) * norm.cdf(Z) + (sigma * norm.pdf(Z))
+        imp = (mu - best_f - self._xi)
+        Z = imp / (sigma + self._eps)
+        ei = (imp * norm.cdf(Z)) + (sigma * norm.pdf(Z))
         ei[sigma == 0.0] == 0.0
 
-        return -1 * ei
+        return ei
 
 
 class ProbabilityOfImprovement(_AcquisitionFunction):
 
-    def __init__(self, surrogate_model, goal='minimize'):
+    def __init__(self, surrogate_model, maximize=False, eps=1e-9):
         """
         Expected improvement acquisition function.
 
@@ -191,46 +147,29 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
         Arguments:
         ----------
             surrogate_model: Surrogate model
-            goal: Indicates whether the function is to be maximised or minimised (default: minimize).
+            maximize: Indicates whether the function is to be maximised (default: False).
 
         """
-        assert goal in ['minimize', 'maximize'], 'The goal can only be \'minimize\' or \'maximize\'.'
-
-        self._goal = goal
         self._surrogate_model = surrogate_model
-
-        if self._goal == 'minimize':
-            self._greater_is_better = False
-        else:
-            self._greater_is_better = True
-
-        # goal = maximize // greater_is_better = True -> scaling_factor = 1
-        # goal = minimize // greater_is_better = False -> scaling_factor = -1
-        self._scaling_factor = (-1) ** (not self._greater_is_better)
+        self._maximize = maximize
+        self._eps = eps
 
     @property
     def surrogate_model(self):
         return self._surrogate_model
 
     @property
-    def goal(self):
-        return self._goal
-
-    @property
-    def greater_is_better(self):
-        return self._greater_is_better
+    def maximize(self):
+        return self._maximize
 
     def forward(self, X_test):
-        if self._greater_is_better:
-            best_f = np.max(self._surrogate_model.y_train)
-        else:
-            best_f = np.min(self._surrogate_model.y_train)
+        best_f = np.min(self._surrogate_model.y_train)
 
         # calculate mean and stdev via surrogate function
         mu, sigma = self._surrogate_model.predict(X_test)
 
         # calculate the probability of improvement
-        Z = self._scaling_factor * (mu - best_f) / (sigma + 1E-9)
+        Z = (mu - best_f) / (sigma + self._eps)
         pi = norm.cdf(Z)
         pi[sigma == 0.0] == 0.0
 
