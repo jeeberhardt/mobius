@@ -47,7 +47,10 @@ class PolymerSampler(_Sampler):
             suggested_polymers, values = sampler.run(self._acq_fun, suggested_polymers, values)
 
         # Sort sequences by scores in the decreasing order (best to worst)
-        sorted_indices = np.argsort(values)
+        # We want the best score to be the lowest, so we apply a scaling 
+        # factor (1 or -1). This scalng factor depends of the acquisition
+        # function nature.
+        sorted_indices = np.argsort(self._acq_fun.scaling_factor * values)
 
         suggested_polymers = suggested_polymers[sorted_indices]
         values = values[sorted_indices]
@@ -55,11 +58,6 @@ class PolymerSampler(_Sampler):
         return suggested_polymers[:batch_size], values[:batch_size]
 
     def tell(self, polymers, values):
-        values = np.asarray(values)
-
-        if self._acq_fun.maximize:
-            values = -values
-
         self._acq_fun.surrogate_model.fit(polymers, values)
 
     def recommand(self, polymers, values, batch_size=None):

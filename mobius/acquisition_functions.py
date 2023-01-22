@@ -31,6 +31,11 @@ class _AcquisitionFunction(ABC):
     def maximize(self):
         pass
 
+    @property
+    @abstractmethod
+    def scaling_factor(self):
+        pass
+
     @abstractmethod
     def forward(self):
         raise NotImplementedError()
@@ -57,6 +62,13 @@ class RandomImprovement(_AcquisitionFunction):
     @property
     def maximize(self):
         return self._maximize
+
+    @property
+    def scaling_factory(self):
+        if self.maximize:
+            return -1
+        else:
+            return 1
 
     def forward(self, X_test):
         X_test = np.asarray(X_test)
@@ -88,8 +100,17 @@ class Greedy(_AcquisitionFunction):
     def maximize(self):
         return self._maximize
 
+    @property
+    def scaling_factor(self):
+        if self._maximize:
+            return -1
+        else:
+            return 1
+
     def forward(self, X_test):
         mu, _ = self._surrogate_model.predict(X_test)
+
+        #scaling_factor = (-1) ** (not self._maximize)
 
         return mu
 
@@ -122,15 +143,25 @@ class ExpectedImprovement(_AcquisitionFunction):
     def maximize(self):
         return self._maximize
 
+    @property
+    def scaling_factor(self):
+        return -1
+
     def forward(self, X_test):
-        best_f = np.min(self._surrogate_model.y_train)
+        if self._maximize:
+            best_f = np.max(self._surrogate_model.y_train)
+        else:
+            best_f = np.min(self._surrogate_model.y_train)
 
         # calculate mean and stdev via surrogate function*
         mu, sigma = self._surrogate_model.predict(X_test)
 
-        imp = (mu - best_f - self._xi)
-        Z = imp / (sigma + self._eps)
-        ei = (imp * norm.cdf(Z)) + (sigma * norm.pdf(Z))
+        u = (mu - best_f - self._xi) / (sigma + self._eps)
+        if not self.maximize:
+            u = -u
+        ucdf = norm.cdf(u)
+        updf = norm.pdf(u)
+        ei = sigma * (updf + u * ucdf)
         ei[sigma == 0.0] == 0.0
 
         return ei
@@ -162,15 +193,24 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
     def maximize(self):
         return self._maximize
 
+    @property
+    def scaling_factor(self):
+        return -1
+
     def forward(self, X_test):
-        best_f = np.min(self._surrogate_model.y_train)
+        if self._maximize:
+            best_f = np.max(self._surrogate_model.y_train)
+        else:
+            best_f = np.min(self._surrogate_model.y_train)
 
         # calculate mean and stdev via surrogate function
         mu, sigma = self._surrogate_model.predict(X_test)
 
         # calculate the probability of improvement
-        Z = (mu - best_f) / (sigma + self._eps)
-        pi = norm.cdf(Z)
+        u = (mu - best_f) / (sigma + self._eps)
+        if not self.maximize:
+            u = -u
+        pi = norm.cdf(u)
         pi[sigma == 0.0] == 0.0
 
         return pi

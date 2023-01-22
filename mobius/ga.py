@@ -63,7 +63,15 @@ def _group_by_scaffold(helm_sequences, return_index=False):
 
 def _boltzmann_probability(values, temperature=300.):
     p = np.exp(-(np.asarray(values)) / temperature)
-    return p / np.sum(p)
+    p /= np.sum(p)
+
+    if np.isnan(p).any():
+        error_msg = 'Boltzmann probabilities contains NaN.\n'
+        error_msg += 'Temperature: %3.f\n' % temperature
+        error_msg += 'Values: %s\n' % values
+        raise ValueError(error_msg)
+
+    return p
 
 
 def _number_of_children_to_generate_per_parent(parent_scores, n_children, temperature):
@@ -108,12 +116,7 @@ def _generate_mating_couples(parent_sequences, parent_scores, n_children, temper
         mating_couples = [(parent_sequences[0], parent_sequences[0])] * n_couples
         return mating_couples
 
-    try:
-        p = _boltzmann_probability(parent_scores, temperature)
-    except ValueError:
-        error_msg = 'parent_sequences : %s/nparent_scores    : %s' % (parent_sequences, parent_scores)
-        raise ValueError(error_msg)
-
+    p = _boltzmann_probability(parent_scores, temperature)
     mates_per_parent = np.floor(n_couples * p).astype(int)
 
     # In the case no parents really stood up from the rest, all
@@ -165,14 +168,25 @@ class _GeneticAlgorithm(ABC):
         best_sequence_seen = None
         # Store all the sequences seen so far...
         sequences_cache = {}
+        scaling_factor = acquisition_function.scaling_factor
 
-        # Make sure that inputs are numpy arrays
         sequences = np.asarray(sequences)
         scores = np.asarray(scores)
 
+        # We inverse the scores so the best scores are the lowest ones
+        # Necessary for calculating the Boltzmann weights correctly
+        if acquisition_function.maximize:
+            scores = -scores
+
         for i in range(self._n_gen):
             # Generate new population
-            sequences = self._generate_new_population(sequences, scores)
+            if i == 0:
+                sequences = self._generate_new_population(sequences, scores)
+            else:
+                # Inverse the sign of the scores from the acquisition function so that
+                # the best score is always the lowest, necessary for the Boltzmann weights
+                # This scaling factor is based on the acquisition function nature
+                sequences = self._generate_new_population(sequences, scaling_factor * scores)
 
             # Keep only unseen sequences. We don't want to reevaluate known sequences...
             sequences_to_evaluate = list(set(sequences).difference(sequences_cache.keys()))
@@ -198,31 +212,35 @@ class _GeneticAlgorithm(ABC):
             # Store new sequences and scores in the cache
             sequences_cache.update(dict(zip(sequences_to_evaluate, sequences_to_evaluate_scores)))
 
-            idx = np.argmin(scores)
-
+            # Same thing, we want the best to be the lowest
+            idx = np.argmin(scaling_factor * scores)
             current_best_sequence = sequences[idx]
+            current_best_score = scores[idx]
 
             # Convergence criteria
             # If the best score does not improve after N attempts, we stop.
-            if attempts < self._total_attempts:
-                if best_sequence_seen == current_best_sequence:
-                    attempts += 1
-                else:
-                    attempts = 0
-                    best_sequence_seen = current_best_sequence
+            if best_sequence_seen == current_best_sequence:
+                attempts += 1
             else:
+                best_sequence_seen = current_best_sequence
+                attempts = 0 
+
+            if attempts == self._total_attempts:
                 print('Reached maximum number of attempts (%d), no improvement observed!' % self._total_attempts)
                 break
 
-            print('N %03d - Score: %.6f - Seq: %d - %s (%03d/%03d) - New seq: %d' % (i + 1, scores[idx], current_best_sequence.count('.'),
-                                                                                     current_best_sequence, attempts, self._total_attempts,
+            print('N %03d - Score: %.6f - Seq: %d - %s (%03d/%03d) - New seq: %d' % (i + 1, current_best_score, 
+                                                                                     current_best_sequence.count('.'),
+                                                                                     current_best_sequence, attempts + 1, 
+                                                                                     self._total_attempts,
                                                                                      len(sequences_to_evaluate)))
 
         all_sequences = np.array(list(sequences_cache.keys()))
         all_sequence_scores = np.fromiter(sequences_cache.values(), dtype=float)
 
         # Sort sequences by scores in the decreasing order (best to worst)
-        sorted_indices = np.argsort(all_sequence_scores)
+        # Same same thing, we want the best to be the lowest
+        sorted_indices = np.argsort(scaling_factor * all_sequence_scores)
 
         self.sequences = all_sequences[sorted_indices]
         self.scores = all_sequence_scores[sorted_indices]
@@ -340,7 +358,9 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         scores = np.concatenate(scores)[unique_indices]
 
         # Sort sequences by scores in the decreasing order (best to worst)
-        sorted_indices = np.argsort(scores)
+        # The scores are scaled to be sure that the best has the lowest score
+        # This scaling factor is based on the acquisition function nature
+        sorted_indices = np.argsort(acquisition_function.scaling_factor * scores)
 
         self.sequences = sequences[sorted_indices]
         self.scores = scores[sorted_indices]
