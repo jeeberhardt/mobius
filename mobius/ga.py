@@ -62,13 +62,15 @@ def _group_by_scaffold(helm_sequences, return_index=False):
 
 
 def _boltzmann_probability(values, temperature=300.):
-    p = np.exp(-(np.asarray(values)) / temperature)
+    # On way to avoid probabilities that do not sum to 1: https://stackoverflow.com/a/65384032
+    p = np.exp(-np.around(np.asarray(values), decimals=3) / temperature).astype('float64')
     p /= np.sum(p)
 
     if np.isnan(p).any():
         error_msg = 'Boltzmann probabilities contains NaN.\n'
-        error_msg += 'Temperature: %3.f\n' % temperature
+        error_msg += 'Temperature: %.5f\n' % temperature
         error_msg += 'Values: %s\n' % values
+        error_msg += 'Probabilities: %s' % p
         raise ValueError(error_msg)
 
     return p
