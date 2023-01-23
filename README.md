@@ -90,7 +90,7 @@ pic50_seed_library = lpe.predict(seed_library)
 # and the acquisition function (Expected Improvement)
 map4 = Map4Fingerprint(input_type='helm', dimensions=4096, radius=1)
 gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), data_transformer=map4)
-ei = ExpectedImprovement(gpmodel, goal='minimize')
+ei = ExpectedImprovement(gpmodel, maximize=False)
 
 # ... and also we define the search protocol
 # that will be used to search/sample peptide sequences
