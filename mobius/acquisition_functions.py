@@ -43,16 +43,20 @@ class _AcquisitionFunction(ABC):
 
 class RandomImprovement(_AcquisitionFunction):
 
-    def __init__(self, maximize=True):
+    def __init__(self, low=0, high=1, maximize=True):
         """
         Random acquisition function
 
         Arguments:
         ----------
+            low: Lower boundary of the output interval. All values generated will be greater than or equal to low. The default value is 0.
+            high: Upper boundary of the output interval. All values generated will be less than or equal to high. The default value is 1.0.
             maximize: Indicates whether the function is to be maximised (default: False).
 
         """
         self._surrogate_model = DummyModel()
+        self._low = low
+        self._high = high
         self._maximize = maximize
 
     @property
@@ -72,7 +76,7 @@ class RandomImprovement(_AcquisitionFunction):
 
     def forward(self, X_test):
         X_test = np.asarray(X_test)
-        mu = np.random.uniform(low=0, high=1, size=X_test.shape[0])
+        mu = np.random.uniform(low=self._low, high=self._high, size=X_test.shape[0])
 
         return mu
 
@@ -86,7 +90,7 @@ class Greedy(_AcquisitionFunction):
         Arguments:
         ----------
             surrogate_model: Surrogate model
-            maximize: Indicates whether the function is to be maximised (default: False).
+            maximize: Indicates whether the function is to be maximised. The default value is False.
 
         """
         self._surrogate_model = surrogate_model
@@ -110,8 +114,6 @@ class Greedy(_AcquisitionFunction):
     def forward(self, X_test):
         mu, _ = self._surrogate_model.predict(X_test)
 
-        #scaling_factor = (-1) ** (not self._maximize)
-
         return mu
 
 
@@ -126,8 +128,8 @@ class ExpectedImprovement(_AcquisitionFunction):
         Arguments:
         ----------
             surrogate_model: Surrogate model
-            maximize: Indicates whether the function is to be maximised (default: False).
-            xi: Exploitation-exploration trade-off parameter (default: 0.0)
+            maximize: Indicates whether the function is to be maximised. The default value is False.
+            xi: Exploitation-exploration trade-off parameter. The default value is 0.
 
         """
         self._surrogate_model = surrogate_model
@@ -178,7 +180,7 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
         Arguments:
         ----------
             surrogate_model: Surrogate model
-            maximize: Indicates whether the function is to be maximised (default: False).
+            maximize: Indicates whether the function is to be maximised. The default value is False.
 
         """
         self._surrogate_model = surrogate_model
