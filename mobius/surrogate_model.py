@@ -51,7 +51,7 @@ class DummyModel(_SurrogateModel):
 
     def __init__(self):
         self._kernel = None
-        self._data_transformer = None
+        self._input_transformer = None
         self._likelihood = None
         self._model = None
         self._X_train = np.array([])
@@ -105,9 +105,9 @@ class _ExactGPModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchMod
 
 class GPModel(_SurrogateModel):
 
-    def __init__(self, kernel=None, data_transformer=None):
+    def __init__(self, kernel=None, input_transformer=None):
         self._kernel = kernel
-        self._data_transformer = data_transformer
+        self._input_transformer = input_transformer
         self._likelihood = None
         self._model = None
         self._X_train = None
@@ -143,9 +143,9 @@ class GPModel(_SurrogateModel):
         self._X_train_original = np.asarray(X_train).copy()
         self._y_train = np.asarray(y_train).copy()
 
-        if self._data_transformer is not None:
+        if self._input_transformer is not None:
             # Transform input data
-            self._X_train = self._data_transformer.transform(self._X_train_original)
+            self._X_train = self._input_transformer.transform(self._X_train_original)
         else:
             self._X_train = self._X_train_original
 
@@ -179,9 +179,9 @@ class GPModel(_SurrogateModel):
         self._model.eval()
         self._likelihood.eval()
 
-        if self._data_transformer is not None:
+        if self._input_transformer is not None:
             # Transform input data
-            X_test = self._data_transformer.transform(X_test)
+            X_test = self._input_transformer.transform(X_test)
 
         X_test = torch.from_numpy(X_test).float()
 
@@ -202,9 +202,9 @@ class GPModel(_SurrogateModel):
 
 class RFModel(_SurrogateModel):
     
-    def __init__(self, kernel=None, data_transformer=None, **kwargs):
+    def __init__(self, kernel=None, input_transformer=None, **kwargs):
         self._kernel = kernel
-        self._data_transformer = data_transformer
+        self._input_transformer = input_transformer
         self._model = None
         self._X_train = None
         self._X_train_original = None
@@ -248,9 +248,9 @@ class RFModel(_SurrogateModel):
         self._X_train_original = np.asarray(X_train).copy()
         self._y_train = np.asarray(y_train).copy()
 
-        if self._data_transformer is not None:
+        if self._input_transformer is not None:
             # Transform input data
-            self._X_train = self._data_transformer.transform(self._X_train_original)
+            self._X_train = self._input_transformer.transform(self._X_train_original)
         else:
             self._X_train = self._X_train_original
         
@@ -262,9 +262,9 @@ class RFModel(_SurrogateModel):
             msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
         
-        if self._data_transformer is not None:
+        if self._input_transformer is not None:
             # Transform input data
-            X_test = self._data_transformer.transform(X_test)
+            X_test = self._input_transformer.transform(X_test)
         
         mu = self._model.predict(X_test)
         # Just a test. The uncertainty estimations should not be done this way.

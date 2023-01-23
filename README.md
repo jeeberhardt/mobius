@@ -89,7 +89,7 @@ pic50_seed_library = lpe.predict(seed_library)
 # use as well as the surrogate model (Gaussian Process)
 # and the acquisition function (Expected Improvement)
 map4 = Map4Fingerprint(input_type='helm', dimensions=4096, radius=1)
-gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), data_transformer=map4)
+gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
 ei = ExpectedImprovement(gpmodel, maximize=False)
 
 # ... and also we define the search protocol
