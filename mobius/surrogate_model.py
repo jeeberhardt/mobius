@@ -202,8 +202,7 @@ class GPModel(_SurrogateModel):
 
 class RFModel(_SurrogateModel):
     
-    def __init__(self, kernel=None, input_transformer=None, **kwargs):
-        self._kernel = kernel
+    def __init__(self, input_transformer=None, **kwargs):
         self._input_transformer = input_transformer
         self._model = None
         self._X_train = None
