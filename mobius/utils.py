@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import torch
 
 
 def path_module(module_name):
@@ -58,6 +59,17 @@ def split(n, k):
 
 def split_list_in_chunks(size, n):
     return [(l[0], l[-1]) for l in np.array_split(range(size), n)]
+
+
+def get_device():
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torhc.device("mps")
+    else:
+        device = torch.device("cpu")
+    
+    return device
 
 
 def generate_random_linear_peptides(n_peptides, peptide_lengths, monomer_symbols, output_format='helm'):
@@ -112,11 +124,19 @@ def convert_HELM_to_FASTA(helm_sequences, ignore_connections=False):
 
 
 def build_helm_string(polymers, connections=None):
-    sequences_str = '|'.join(['%s{%s}' % (p, '.'.join(s)) for p, s in polymers.items()])
+    sequences = []
+
+    for p, s in polymers.items():
+        tmp = '%s{%s}' % (p, '.'.join([m if len(m) == 1 else '[%s]' % m for m in s]))
+        sequences.append(tmp)
+
+    sequences_str = '|'.join(sequences)
+
     if connections is not None:
         connections_str = '|'.join(['%s,%s,%d:%s-%d:%s' % (c[0], c[1], c[2], c[3], c[4], c[5]) for c in connections])
     else:
         connections_str = ''
+
     helm_string = '%s$%s$$$V2.0' % (sequences_str, connections_str)
     
     return helm_string
@@ -133,7 +153,7 @@ def parse_helm(helm_string):
     data = {}
     for polymer in polymers.split('|'):
         pid = polymer.split('{')[0]
-        sequence = polymer[len(pid) + 1:-1].split('.')
+        sequence = [monomer.strip("[]") for monomer in polymer[len(pid) + 1:-1].split('.')]
         data[pid] = sequence
         
     polymers = data
