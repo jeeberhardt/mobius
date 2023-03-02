@@ -1,0 +1,2328 @@
+[
+    {
+        "monomerType": "Backbone",
+        "smiles": "C[C@H](N[*])C([*])=O |$;;;_R1;;_R2;$|",
+        "name": "Alanine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  7  6  0  0  1  0  0  0  0  0999 V2000\n    2.0625    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    1.4289    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    2.1434    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  2  1  1  1\n  2  3  1  0\n  3  4  1  0\n  2  5  1  0\n  5  6  1  0\n  5  7  2  0\nM  RGP  2   4   1   6   2\nM  END\n",
+        "naturalAnalog": "A",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "A"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](CS[*])C([*])=O |$_R1;;;;;_R3;;_R2;$|",
+        "name": "Cysteine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  9  8  0  0  1  0  0  0  0  0999 V2000\n    2.6664   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5230    0.5230    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  3  7  1  0\n  7  8  1  0\n  7  9  2  0\nM  RGP  3   1   1   6   3   8   2\nM  END\n",
+        "naturalAnalog": "C",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "[*][H] |$_R3;$|",
+                "alternateId": "R3-H",
+                "capGroupName": "H",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "C"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](CC([*])=O)C([*])=O |$_R1;;;;;_R3;;;_R2;$|",
+        "name": "Aspartic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    2.6664   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5230    0.5230    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520    0.5230    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  5  7  2  0\n  3  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  3   1   1   6   3   9   2\nM  END\n",
+        "naturalAnalog": "D",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R3$|",
+                "alternateId": "R3-OH",
+                "capGroupName": "OH",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "D"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](CCC([*])=O)C([*])=O |$_R1;;;;;;_R3;;;_R2;$|",
+        "name": "Glutamic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 11 10  0  0  1  0  0  0  0  0999 V2000\n    4.5375    3.5724    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125    3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000    2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    2.8579    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375    2.1434    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000    1.4289    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  6  8  2  0\n  3  9  1  0\n  9 10  1  0\n  9 11  2  0\nM  RGP  3   1   1   7   3  10   2\nM  END\n",
+        "naturalAnalog": "E",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R3$|",
+                "alternateId": "R3-OH",
+                "capGroupName": "OH",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "E"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](Cc1ccccc1)C([*])=O |$_R1;;;;;;;;;;;_R2;$|",
+        "name": "Phenylalanine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 13 13  0  0  1  0  0  0  0  0999 V2000\n   -0.7145    3.7125    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    3.3000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    2.4750    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    1.2375    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.4289    2.4750    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  2  0\n  6  7  1  0\n  7  8  2  0\n  8  9  1  0\n  9 10  2  0\n  5 10  1  0\n  3 11  1  0\n 11 12  1  0\n 11 13  2  0\nM  RGP  2   1   1  12   2\nM  END\n",
+        "naturalAnalog": "F",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "F"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]NCC([*])=O |$_R1;;;;_R2;$|",
+        "name": "Glycine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  6  5  0  0  0  0  0  0  0  0999 V2000\n    1.2375    2.1434    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    1.4289    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  4  5  1  0\n  4  6  2  0\nM  RGP  2   1   1   5   2\nM  END\n",
+        "naturalAnalog": "G",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "G"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](Cc1cnc[nH]1)C([*])=O |$_R1;;;;;;;;;;_R2;$|",
+        "name": "Histidine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 12 12  0  0  1  0  0  0  0  0999 V2000\n   -0.8612    3.5893    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1467    3.1768    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1467    2.3518    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.9393    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.1143    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2352    0.6294    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9803   -0.1553    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.1553   -0.1553    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0997    0.6294    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8612    1.9393    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8612    1.1143    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.5757    2.3518    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  2  0\n  6  7  1  0\n  7  8  1  0\n  8  9  2  0\n  5  9  1  0\n  3 10  1  0\n 10 11  1  0\n 10 12  2  0\nM  RGP  2   1   1  11   2\nM  END\n",
+        "naturalAnalog": "H",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "H"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC[C@H](C)[C@H](N[*])C([*])=O |$;;;;;;_R1;;_R2;$|",
+        "name": "Isoleucine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    0.5230    0.5230    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5230   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  0\n  3  4  1  1\n  3  5  1  0\n  5  6  1  1\n  6  7  1  0\n  5  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   7   1   9   2\nM  END\n",
+        "naturalAnalog": "I",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "I"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](CCCCN[*])C([*])=O |$_R1;;;;;;;;_R3;;_R2;$|",
+        "name": "Lysine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 12 11  0  0  1  0  0  0  0  0999 V2000\n    6.0983    4.8196    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.2882    4.9755    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    4.7481    4.3519    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.9379    4.5078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3979    3.8842    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5877    4.0401    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0476    3.4164    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.6974    2.9487    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.0181    3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.8283    3.4164    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.4780    2.9487    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  7  8  1  0\n  8  9  1  0\n  3 10  1  0\n 10 11  1  0\n 10 12  2  0\nM  RGP  3   1   1   9   3  11   2\nM  END\n",
+        "naturalAnalog": "K",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "[*][H] |$_R3;$|",
+                "alternateId": "R3-H",
+                "capGroupName": "H",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "K"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC(C)C[C@H](N[*])C([*])=O |$;;;;;;_R1;;_R2;$|",
+        "name": "Leucine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    0.5230    0.5230    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520    0.5230    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  2  4  1  0\n  5  4  1  0\n  5  6  1  1\n  6  7  1  0\n  5  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   7   1   9   2\nM  END\n",
+        "naturalAnalog": "L",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "L"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CSCC[C@H](N[*])C([*])=O |$;;;;;;_R1;;_R2;$|",
+        "name": "Methionine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -3.5724    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -2.1434    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  5  4  1  0\n  5  6  1  1\n  6  7  1  0\n  5  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   7   1   9   2\nM  END\n",
+        "naturalAnalog": "M",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "M"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "NC(=O)C[C@H](N[*])C([*])=O |$;;;;;;_R1;;_R2;$|",
+        "name": "Asparagine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    0.5230    0.5230    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520    0.5230    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  2  0\n  2  4  1  0\n  5  4  1  0\n  5  6  1  1\n  6  7  1  0\n  5  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   7   1   9   2\nM  END\n",
+        "naturalAnalog": "N",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "N"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N1CCC[C@H]1C([*])=O |$_R1;;;;;;;_R2;$|",
+        "name": "Proline",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  9  9  0  0  1  0  0  0  0  0999 V2000\n    0.5678    1.9393    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.1143    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2352    0.6294    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9803   -0.1553    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.1553   -0.1553    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0997    0.6294    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8843    0.8843    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.4974    0.3323    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.0558    1.6913    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  4  5  1  0\n  6  5  1  0\n  6  2  1  0\n  6  7  1  1\n  7  8  1  0\n  7  9  2  0\nM  RGP  2   1   1   8   2\nM  END\n",
+        "naturalAnalog": "P",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "P"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "NC(=O)CC[C@H](N[*])C([*])=O |$;;;;;;;_R1;;_R2;$|",
+        "name": "Glutamine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 11 10  0  0  1  0  0  0  0  0999 V2000\n    0.8250   -1.4289    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -2.8579    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -3.5724    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -2.1434    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  2  0\n  2  4  1  0\n  4  5  1  0\n  6  5  1  0\n  6  7  1  1\n  7  8  1  0\n  6  9  1  0\n  9 10  1  0\n  9 11  2  0\nM  RGP  2   8   1  10   2\nM  END\n",
+        "naturalAnalog": "Q",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Q"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "NC(=N)NCCC[C@H](N[*])C([*])=O |$;;;;;;;;;_R1;;_R2;$|",
+        "name": "Arginine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 13 12  0  0  1  0  0  0  0  0999 V2000\n    0.6974   -2.9487    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9675   -4.3519    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0476   -3.4164    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5877   -4.0401    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3979   -3.8842    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.9379   -4.5078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.7481   -4.3519    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.2882   -4.9755    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    6.0983   -4.8196    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.0181   -3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.4780   -2.9487    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.8283   -3.4164    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  2  0\n  2  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  8  7  1  0\n  8  9  1  1\n  9 10  1  0\n  8 11  1  0\n 11 12  1  0\n 11 13  2  0\nM  RGP  2  10   1  12   2\nM  END\n",
+        "naturalAnalog": "R",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "R"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "OC[C@H](N[*])C([*])=O |$;;;;_R1;;_R2;$|",
+        "name": "Serine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  8  7  0  0  1  0  0  0  0  0999 V2000\n    0.0000   -1.4289    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -0.7145    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    0.0000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  0\n  3  4  1  1\n  4  5  1  0\n  3  6  1  0\n  6  7  1  0\n  6  8  2  0\nM  RGP  2   5   1   7   2\nM  END\n",
+        "naturalAnalog": "S",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "S"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "C[C@@H](O)[C@H](N[*])C([*])=O |$;;;;;_R1;;_R2;$|",
+        "name": "Threonine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  9  8  0  0  1  0  0  0  0  0999 V2000\n    0.0000   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -0.7145    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    0.0000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  2  1  1  0\n  2  3  1  6\n  2  4  1  0\n  4  5  1  1\n  5  6  1  0\n  4  7  1  0\n  7  8  1  0\n  7  9  2  0\nM  RGP  2   6   1   8   2\nM  END\n",
+        "naturalAnalog": "T",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "T"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC(C)[C@H](N[*])C([*])=O |$;;;;;_R1;;_R2;$|",
+        "name": "Valine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  9  8  0  0  1  0  0  0  0  0999 V2000\n    0.0000   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -0.7145    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    0.0000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  2  1  0\n  4  5  1  1\n  5  6  1  0\n  4  7  1  0\n  7  8  1  0\n  7  9  2  0\nM  RGP  2   6   1   8   2\nM  END\n",
+        "naturalAnalog": "V",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "V"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](Cc1c[nH]c2ccccc12)C([*])=O |$_R1;;;;;;;;;;;;;;_R2;$|",
+        "name": "Tryptophan",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 16 17  0  0  1  0  0  0  0  0999 V2000\n   -0.9851   -3.2777    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1781   -3.1062    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0768   -2.3215    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8838   -2.1500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.1387   -1.3654    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.6538   -0.6979    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.1387   -0.0305    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9233   -0.2854    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6378    0.1271    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3523   -0.2854    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3523   -1.1104    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6378   -1.5229    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9233   -1.1104    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.4752   -1.7084    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.2203   -0.9238    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.2822   -1.8800    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  2  0\n  6  7  1  0\n  7  8  1  0\n  8  9  2  0\n  9 10  1  0\n 10 11  2  0\n 11 12  1  0\n 12 13  2  0\n  5 13  1  0\n  8 13  1  0\n  3 14  1  0\n 14 15  1  0\n 14 16  2  0\nM  RGP  2   1   1  15   2\nM  END\n",
+        "naturalAnalog": "W",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "W"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "Oc1ccc(C[C@H](N[*])C([*])=O)cc1 |$;;;;;;;;_R1;;_R2;;;$|",
+        "name": "Tyrosine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 14 14  0  0  1  0  0  0  0  0999 V2000\n    0.7145    2.0625    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289   -1.6500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289   -2.4750    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -2.8875    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.8579   -1.6500    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -0.4125    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  2  0\n  3  4  1  0\n  4  5  2  0\n  5  6  1  0\n  7  6  1  0\n  7  8  1  1\n  8  9  1  0\n  7 10  1  0\n 10 11  1  0\n 10 12  2  0\n  5 13  1  0\n 13 14  2  0\n  2 14  1  0\nM  RGP  2   9   1  11   2\nM  END\n",
+        "naturalAnalog": "Y",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Y"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "C[C@@H](N[*])C([*])=O |$;;;_R1;;_R2;$|",
+        "name": "D-Alanine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  7  6  0  0  1  0  0  0  0  0999 V2000\n    2.0625    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    1.4289    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    2.1434    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  2  1  1  6\n  2  3  1  0\n  3  4  1  0\n  2  5  1  0\n  5  6  1  0\n  5  7  2  0\nM  RGP  2   4   1   6   2\nM  END\n",
+        "naturalAnalog": "A",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dA"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@H](CS[*])C([*])=O |$_R1;;;;;_R3;;_R2;$|",
+        "name": "D-Cysteine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  9  8  0  0  1  0  0  0  0  0999 V2000\n    2.6664   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5230    0.5230    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  3  7  1  0\n  7  8  1  0\n  7  9  2  0\nM  RGP  3   1   1   6   3   8   2\nM  END\n",
+        "naturalAnalog": "C",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "[*][H] |$_R3;$|",
+                "alternateId": "R3-H",
+                "capGroupName": "H",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dC"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@H](CC([*])=O)C([*])=O |$_R1;;;;;_R3;;;_R2;$|",
+        "name": "D-Aspartic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    2.6664   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5230    0.5230    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520    0.5230    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  5  7  2  0\n  3  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  3   1   1   6   3   9   2\nM  END\n",
+        "naturalAnalog": "D",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R3$|",
+                "alternateId": "R3-OH",
+                "capGroupName": "OH",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dD"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@H](CCC([*])=O)C([*])=O |$_R1;;;;;;_R3;;;_R2;$|",
+        "name": "D-Glutamic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 11 10  0  0  1  0  0  0  0  0999 V2000\n    4.5375    3.5724    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125    3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000    2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    2.8579    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375    2.1434    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000    1.4289    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  6  8  2  0\n  3  9  1  0\n  9 10  1  0\n  9 11  2  0\nM  RGP  3   1   1   7   3  10   2\nM  END\n",
+        "naturalAnalog": "E",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R3$|",
+                "alternateId": "R3-OH",
+                "capGroupName": "OH",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dE"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@H](Cc1ccccc1)C([*])=O |$_R1;;;;;;;;;;;_R2;$|",
+        "name": "D-Phenylalanine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 13 13  0  0  1  0  0  0  0  0999 V2000\n   -0.7145    3.7125    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    3.3000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    2.4750    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    1.2375    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.4289    2.4750    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  2  0\n  6  7  1  0\n  7  8  2  0\n  8  9  1  0\n  9 10  2  0\n  5 10  1  0\n  3 11  1  0\n 11 12  1  0\n 11 13  2  0\nM  RGP  2   1   1  12   2\nM  END\n",
+        "naturalAnalog": "F",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dF"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@H](Cc1cnc[nH]1)C([*])=O |$_R1;;;;;;;;;;_R2;$|",
+        "name": "D-Histidine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 12 12  0  0  1  0  0  0  0  0999 V2000\n   -0.8612    3.5893    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1467    3.1768    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1467    2.3518    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.9393    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.1143    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2352    0.6294    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9803   -0.1553    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.1553   -0.1553    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0997    0.6294    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8612    1.9393    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8612    1.1143    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.5757    2.3518    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  2  0\n  6  7  1  0\n  7  8  1  0\n  8  9  2  0\n  5  9  1  0\n  3 10  1  0\n 10 11  1  0\n 10 12  2  0\nM  RGP  2   1   1  11   2\nM  END\n",
+        "naturalAnalog": "H",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dH"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC[C@@H](C)[C@@H](N[*])C([*])=O |$;;;;;;_R1;;_R2;$|",
+        "name": "D-Isoleucine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    0.5230    0.5230    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5230   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  0\n  3  4  1  6\n  3  5  1  0\n  5  6  1  6\n  6  7  1  0\n  5  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   7   1   9   2\nM  END\n",
+        "naturalAnalog": "I",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dI"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@H](CCCCN[*])C([*])=O |$_R1;;;;;;;;_R3;;_R2;$|",
+        "name": "D-Lysine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 12 11  0  0  1  0  0  0  0  0999 V2000\n    6.0983    4.8196    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.2882    4.9755    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    4.7481    4.3519    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.9379    4.5078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3979    3.8842    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5877    4.0401    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0476    3.4164    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.6974    2.9487    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.0181    3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.8283    3.4164    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.4780    2.9487    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  7  8  1  0\n  8  9  1  0\n  3 10  1  0\n 10 11  1  0\n 10 12  2  0\nM  RGP  3   1   1   9   3  11   2\nM  END\n",
+        "naturalAnalog": "K",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "[*][H] |$_R3;$|",
+                "alternateId": "R3-H",
+                "capGroupName": "H",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dK"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC(C)C[C@@H](N[*])C([*])=O |$;;;;;;_R1;;_R2;$|",
+        "name": "D-Leucine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    0.5230    0.5230    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520    0.5230    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  2  4  1  0\n  5  4  1  0\n  5  6  1  6\n  6  7  1  0\n  5  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   7   1   9   2\nM  END\n",
+        "naturalAnalog": "L",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dL"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CSCC[C@@H](N[*])C([*])=O |$;;;;;;_R1;;_R2;$|",
+        "name": "D-Methionine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -3.5724    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -2.1434    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  5  4  1  0\n  5  6  1  6\n  6  7  1  0\n  5  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   7   1   9   2\nM  END\n",
+        "naturalAnalog": "M",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dM"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "NC(=O)C[C@@H](N[*])C([*])=O |$;;;;;;_R1;;_R2;$|",
+        "name": "D-Asparagine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    0.5230    0.5230    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520    0.5230    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  2  0\n  2  4  1  0\n  5  4  1  0\n  5  6  1  6\n  6  7  1  0\n  5  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   7   1   9   2\nM  END\n",
+        "naturalAnalog": "N",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dN"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N1CCC[C@@H]1C([*])=O |$_R1;;;;;;;_R2;$|",
+        "name": "D-Proline",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  9  9  0  0  1  0  0  0  0  0999 V2000\n    0.5678    1.9393    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.1143    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2352    0.6294    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9803   -0.1553    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.1553   -0.1553    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0997    0.6294    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8843    0.8843    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.4974    0.3323    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.0558    1.6913    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  4  5  1  0\n  6  5  1  0\n  6  2  1  0\n  6  7  1  6\n  7  8  1  0\n  7  9  2  0\nM  RGP  2   1   1   8   2\nM  END\n",
+        "naturalAnalog": "P",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dP"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "NC(=O)CC[C@@H](N[*])C([*])=O |$;;;;;;;_R1;;_R2;$|",
+        "name": "D-Glutamine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 11 10  0  0  1  0  0  0  0  0999 V2000\n    0.8250   -1.4289    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -2.8579    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -3.5724    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -2.1434    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  2  0\n  2  4  1  0\n  4  5  1  0\n  6  5  1  0\n  6  7  1  6\n  7  8  1  0\n  6  9  1  0\n  9 10  1  0\n  9 11  2  0\nM  RGP  2   8   1  10   2\nM  END\n",
+        "naturalAnalog": "Q",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dQ"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "NC(=N)NCCC[C@@H](N[*])C([*])=O |$;;;;;;;;;_R1;;_R2;$|",
+        "name": "D-Arginine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 13 12  0  0  1  0  0  0  0  0999 V2000\n    0.6974   -2.9487    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9675   -4.3519    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0476   -3.4164    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5877   -4.0401    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3979   -3.8842    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.9379   -4.5078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.7481   -4.3519    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.2882   -4.9755    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    6.0983   -4.8196    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.0181   -3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.4780   -2.9487    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.8283   -3.4164    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  2  0\n  2  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  8  7  1  0\n  8  9  1  6\n  9 10  1  0\n  8 11  1  0\n 11 12  1  0\n 11 13  2  0\nM  RGP  2  10   1  12   2\nM  END\n",
+        "naturalAnalog": "R",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dR"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "OC[C@@H](N[*])C([*])=O |$;;;;_R1;;_R2;$|",
+        "name": "D-Serine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  8  7  0  0  1  0  0  0  0  0999 V2000\n    0.0000   -1.4289    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -0.7145    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    0.0000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  0\n  3  4  1  6\n  4  5  1  0\n  3  6  1  0\n  6  7  1  0\n  6  8  2  0\nM  RGP  2   5   1   7   2\nM  END\n",
+        "naturalAnalog": "S",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dS"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "C[C@H](O)[C@@H](N[*])C([*])=O |$;;;;;_R1;;_R2;$|",
+        "name": "D-Threonine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  9  8  0  0  1  0  0  0  0  0999 V2000\n    0.0000   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -0.7145    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    0.0000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  2  1  1  0\n  2  3  1  1\n  2  4  1  0\n  4  5  1  6\n  5  6  1  0\n  4  7  1  0\n  7  8  1  0\n  7  9  2  0\nM  RGP  2   6   1   8   2\nM  END\n",
+        "naturalAnalog": "T",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dT"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC(C)[C@@H](N[*])C([*])=O |$;;;;;_R1;;_R2;$|",
+        "name": "D-Valine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  9  8  0  0  1  0  0  0  0  0999 V2000\n    0.0000   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -0.7145    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    0.0000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  2  1  0\n  4  5  1  6\n  5  6  1  0\n  4  7  1  0\n  7  8  1  0\n  7  9  2  0\nM  RGP  2   6   1   8   2\nM  END\n",
+        "naturalAnalog": "V",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dV"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@H](Cc1c[nH]c2ccccc12)C([*])=O |$_R1;;;;;;;;;;;;;;_R2;$|",
+        "name": "D-Tryptophan",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 16 17  0  0  1  0  0  0  0  0999 V2000\n   -0.9851   -3.2777    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1781   -3.1062    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0768   -2.3215    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8838   -2.1500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.1387   -1.3654    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.6538   -0.6979    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.1387   -0.0305    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9233   -0.2854    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6378    0.1271    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3523   -0.2854    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3523   -1.1104    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6378   -1.5229    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9233   -1.1104    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.4752   -1.7084    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.2203   -0.9238    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.2822   -1.8800    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  2  0\n  6  7  1  0\n  7  8  1  0\n  8  9  2  0\n  9 10  1  0\n 10 11  2  0\n 11 12  1  0\n 12 13  2  0\n  5 13  1  0\n  8 13  1  0\n  3 14  1  0\n 14 15  1  0\n 14 16  2  0\nM  RGP  2   1   1  15   2\nM  END\n",
+        "naturalAnalog": "W",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dW"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "Oc1ccc(C[C@@H](N[*])C([*])=O)cc1 |$;;;;;;;;_R1;;_R2;;;$|",
+        "name": "D-Tyrosine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 14 14  0  0  1  0  0  0  0  0999 V2000\n    0.7145    2.0625    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289   -1.6500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289   -2.4750    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -2.8875    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.8579   -1.6500    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -0.4125    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  2  0\n  3  4  1  0\n  4  5  2  0\n  5  6  1  0\n  7  6  1  0\n  7  8  1  6\n  8  9  1  0\n  7 10  1  0\n 10 11  1  0\n 10 12  2  0\n  5 13  1  0\n 13 14  2  0\n  2 14  1  0\nM  RGP  2   9   1  11   2\nM  END\n",
+        "naturalAnalog": "Y",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "dY"
+    },
+    {
+        "monomerType": "Terminal",
+        "smiles": "CC([*])=O |$;;_R2;$|",
+        "name": "N-Terminal acetic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  4  3  0  0  0  0  0  0  0  0999 V2000\n    1.2375    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  2  4  2  0\nM  RGP  1   3   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "ac"
+    },
+    {
+        "monomerType": "Terminal",
+        "smiles": "N[*] |$;_R1$|",
+        "name": "C-Terminal amine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  2  1  0  0  0  0  0  0  0  0999 V2000\n    0.8250    0.0000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\nM  RGP  1   2   1\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "am"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "C[C@H](N(C)[*])C([*])=O |$;;;;_R1;;_R2;$|",
+        "name": "N-Methyl-Alanine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  8  7  0  0  1  0  0  0  0  0999 V2000\n    2.0625    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    1.4289    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  2  1  1  1\n  2  3  1  0\n  3  4  1  0\n  3  5  1  0\n  2  6  1  0\n  6  7  1  0\n  6  8  2  0\nM  RGP  2   5   1   7   2\nM  END\n",
+        "naturalAnalog": "A",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meA"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CN([*])[C@@H](CC([*])=O)C([*])=O |$;;_R1;;;;_R3;;;_R2;$|",
+        "name": "N-Methyl-Aspartic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 11 10  0  0  1  0  0  0  0  0999 V2000\n    2.6664   -2.3645    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5230    0.5230    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520    0.5230    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  2  1  1\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  6  8  2  0\n  4  9  1  0\n  9 10  1  0\n  9 11  2  0\nM  RGP  3   3   1   7   3  10   2\nM  END\n",
+        "naturalAnalog": "D",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R3$|",
+                "alternateId": "R3-OH",
+                "capGroupName": "OH",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meD"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CN([*])[C@@H](CO)C([*])=O |$;;_R1;;;;;_R2;$|",
+        "name": "N-Methyl-Serine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  9  8  0  0  1  0  0  0  0  0999 V2000\n    0.0000   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  2  1  6\n  4  5  1  0\n  5  6  1  0\n  4  7  1  0\n  7  8  1  0\n  7  9  2  0\nM  RGP  2   3   1   8   2\nM  END\n",
+        "naturalAnalog": "S",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meS"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "C[C@@H](O)[C@H](N(C)[*])C([*])=O |$;;;;;;_R1;;_R2;$|",
+        "name": "N-Methyl-Threonine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    0.0000   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -0.7145    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  2  1  1  0\n  2  3  1  6\n  2  4  1  0\n  4  5  1  1\n  5  6  1  0\n  5  7  1  0\n  4  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   7   1   9   2\nM  END\n",
+        "naturalAnalog": "T",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meT"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC(C)[C@H](N(C)[*])C([*])=O |$;;;;;;_R1;;_R2;$|",
+        "name": "N-Methyl-Valine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    0.0000   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -0.7145    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  2  1  0\n  4  5  1  1\n  5  6  1  0\n  5  7  1  0\n  4  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   7   1   9   2\nM  END\n",
+        "naturalAnalog": "V",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meV"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CN([*])[C@@H](Cc1ccc(O)cc1)C([*])=O |$;;_R1;;;;;;;;;;;_R2;$|",
+        "name": "N-Methyl-Tyrosine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 15 15  0  0  1  0  0  0  0  0999 V2000\n   -0.7145    3.7125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    3.3000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    3.7125    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    2.4750    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -1.2375    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    1.2375    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.4289    2.4750    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  2  1  1\n  4  5  1  0\n  5  6  1  0\n  6  7  2  0\n  7  8  1  0\n  8  9  2  0\n  9 10  1  0\n  9 11  1  0\n 11 12  2  0\n  6 12  1  0\n  4 13  1  0\n 13 14  1  0\n 13 15  2  0\nM  RGP  2   3   1  14   2\nM  END\n",
+        "naturalAnalog": "Y",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meY"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CN([*])[C@@H](CCC([*])=O)C([*])=O |$;;_R1;;;;;_R3;;;_R2;$|",
+        "name": "N-Methyl-Glutamic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 12 11  0  0  1  0  0  0  0  0999 V2000\n    4.5375    3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125    3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000    4.2868    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000    2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    2.8579    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375    2.1434    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000    1.4289    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  2  1  6\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  7  8  1  0\n  7  9  2  0\n  4 10  1  0\n 10 11  1  0\n 10 12  2  0\nM  RGP  3   3   1   8   3  11   2\nM  END\n",
+        "naturalAnalog": "E",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R3$|",
+                "alternateId": "R3-OH",
+                "capGroupName": "OH",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meE"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC[C@H](C)[C@H](N(C)[*])C([*])=O |$;;;;;;;_R1;;_R2;$|",
+        "name": "N-Methyl-Isoleucine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 11 10  0  0  1  0  0  0  0  0999 V2000\n    0.5230    0.5230    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5230   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -2.3645    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  0\n  3  4  1  1\n  3  5  1  0\n  5  6  1  1\n  6  7  1  0\n  6  8  1  0\n  5  9  1  0\n  9 10  1  0\n  9 11  2  0\nM  RGP  2   8   1  10   2\nM  END\n",
+        "naturalAnalog": "I",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meI"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CSCC[C@H](N(C)[*])C([*])=O |$;;;;;;;_R1;;_R2;$|",
+        "name": "N-Methyl-Methionine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 11 10  0  0  1  0  0  0  0  0999 V2000\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -4.2868    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -2.1434    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  5  4  1  0\n  5  6  1  1\n  6  7  1  0\n  6  8  1  0\n  5  9  1  0\n  9 10  1  0\n  9 11  2  0\nM  RGP  2   8   1  10   2\nM  END\n",
+        "naturalAnalog": "M",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meM"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CN([*])[C@@H](CS[*])C([*])=O |$;;_R1;;;;_R3;;_R2;$|",
+        "name": "N-Methyl-Cysteine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    2.6664   -2.3645    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5230    0.5230    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  2  1  1\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  4  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  3   3   1   7   3   9   2\nM  END\n",
+        "naturalAnalog": "C",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "[*][H] |$_R3;$|",
+                "alternateId": "R3-H",
+                "capGroupName": "H",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meC"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CN([*])[C@@H](CCCNC(N)=N)C([*])=O |$;;_R1;;;;;;;;;;_R2;$|",
+        "name": "N-Methyl-Arginine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 14 13  0  0  1  0  0  0  0  0999 V2000\n    6.0983    4.8196    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.2882    4.9755    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    5.0181    5.7551    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.7481    4.3519    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.9379    4.5078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3979    3.8842    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5877    4.0401    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0476    3.4164    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.6974    2.9487    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9675    4.3519    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    5.0181    3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.8283    3.4164    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.4780    2.9487    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  2  1  6\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  7  8  1  0\n  8  9  1  0\n  9 10  1  0\n  9 11  2  0\n  4 12  1  0\n 12 13  1  0\n 12 14  2  0\nM  RGP  2   3   1  13   2\nM  END\n",
+        "naturalAnalog": "R",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meR"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CN([*])[C@@H](Cc1c[nH]c2ccccc12)C([*])=O |$;;_R1;;;;;;;;;;;;;_R2;$|",
+        "name": "N-Methyl-Tryptophan",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 17 18  0  0  1  0  0  0  0  0999 V2000\n   -0.9851   -3.2777    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1781   -3.1062    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.3739   -3.7192    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0768   -2.3215    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8838   -2.1500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.1387   -1.3654    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.6538   -0.6979    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.1387   -0.0305    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9233   -0.2854    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6378    0.1271    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3523   -0.2854    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3523   -1.1104    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6378   -1.5229    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9233   -1.1104    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.4752   -1.7084    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.2203   -0.9238    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.2822   -1.8800    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  2  1  6\n  4  5  1  0\n  5  6  1  0\n  6  7  2  0\n  7  8  1  0\n  8  9  1  0\n  9 10  2  0\n 10 11  1  0\n 11 12  2  0\n 12 13  1  0\n 13 14  2  0\n  6 14  1  0\n  9 14  1  0\n  4 15  1  0\n 15 16  1  0\n 15 17  2  0\nM  RGP  2   3   1  16   2\nM  END\n",
+        "naturalAnalog": "W",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meW"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CN([*])[C@@H](Cc1ccccc1)C([*])=O |$;;_R1;;;;;;;;;;_R2;$|",
+        "name": "N-Methyl-Phenylalanine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 14 14  0  0  1  0  0  0  0  0999 V2000\n   -0.7145    3.7125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    3.3000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    3.7125    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    2.4750    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    1.2375    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.4289    2.4750    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  2  1  1\n  4  5  1  0\n  5  6  1  0\n  6  7  2  0\n  7  8  1  0\n  8  9  2  0\n  9 10  1  0\n 10 11  2  0\n  6 11  1  0\n  4 12  1  0\n 12 13  1  0\n 12 14  2  0\nM  RGP  2   3   1  13   2\nM  END\n",
+        "naturalAnalog": "F",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meF"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CN([*])[C@@H](Cc1cnc[nH]1)C([*])=O |$;;_R1;;;;;;;;;_R2;$|",
+        "name": "N-Methyl-Histidine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 13 13  0  0  1  0  0  0  0  0999 V2000\n   -0.8612    3.5893    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1467    3.1768    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    3.5893    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1467    2.3518    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.9393    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.1143    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2352    0.6294    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9803   -0.1553    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.1553   -0.1553    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0997    0.6294    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8612    1.9393    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8612    1.1143    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.5757    2.3518    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  2  1  1\n  4  5  1  0\n  5  6  1  0\n  6  7  2  0\n  7  8  1  0\n  8  9  1  0\n  9 10  2  0\n  6 10  1  0\n  4 11  1  0\n 11 12  1  0\n 11 13  2  0\nM  RGP  2   3   1  12   2\nM  END\n",
+        "naturalAnalog": "H",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meH"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC(C)C[C@H](N(C)[*])C([*])=O |$;;;;;;;_R1;;_R2;$|",
+        "name": "N-Methyl-Leucine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 11 10  0  0  1  0  0  0  0  0999 V2000\n    0.5230    0.5230    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520    0.5230    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -2.3645    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  2  4  1  0\n  5  4  1  0\n  5  6  1  1\n  6  7  1  0\n  6  8  1  0\n  5  9  1  0\n  9 10  1  0\n  9 11  2  0\nM  RGP  2   8   1  10   2\nM  END\n",
+        "naturalAnalog": "L",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "meL"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CCCC[C@H](N[*])C([*])=O |$;;;;;;_R1;;_R2;$|",
+        "name": "Norleucine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -3.5724    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -2.1434    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  5  4  1  0\n  5  6  1  1\n  6  7  1  0\n  5  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   7   1   9   2\nM  END\n",
+        "naturalAnalog": "L",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Nle"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CCC[C@H](N[*])C([*])=O |$;;;;;_R1;;_R2;$|",
+        "name": "Norvaline",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  9  8  0  0  1  0  0  0  0  0999 V2000\n    0.5230    0.5230    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  3  1  0\n  4  5  1  1\n  5  6  1  0\n  4  7  1  0\n  7  8  1  0\n  7  9  2  0\nM  RGP  2   6   1   8   2\nM  END\n",
+        "naturalAnalog": "V",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Nva"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](CCCN[*])C([*])=O |$_R1;;;;;;;_R3;;_R2;$|",
+        "name": "L-ornithine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 11 10  0  0  1  0  0  0  0  0999 V2000\n    4.5375   -3.5724    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -2.1434    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  7  8  1  0\n  3  9  1  0\n  9 10  1  0\n  9 11  2  0\nM  RGP  3   1   1   8   3  10   2\nM  END\n",
+        "naturalAnalog": "K",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "[*][H] |$_R3;$|",
+                "alternateId": "R3-H",
+                "capGroupName": "H",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Orn"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC[C@](C)(N[*])C([*])=O |$;;;;;_R1;;_R2;$|",
+        "name": "Isovaline",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  9  8  0  0  1  0  0  0  0  0999 V2000\n    0.5230   -1.9520    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5230   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.6500   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -0.3020    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520    0.5230    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  0\n  3  4  1  6\n  3  5  1  1\n  5  6  1  0\n  3  7  1  0\n  7  8  1  0\n  7  9  2  0\nM  RGP  2   6   1   8   2\nM  END\n",
+        "naturalAnalog": "V",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Iva"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](CCS[*])C([*])=O |$_R1;;;;;;_R3;;_R2;$|",
+        "name": "Homocysteine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    4.5375    3.5724    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125    3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000    2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    2.1434    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375    2.1434    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000    1.4289    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  3  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  3   1   1   7   3   9   2\nM  END\n",
+        "naturalAnalog": "C",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "[*][H] |$_R3;$|",
+                "alternateId": "R3-H",
+                "capGroupName": "H",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Hcy"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "OCC[C@H](N[*])C([*])=O |$;;;;;_R1;;_R2;$|",
+        "name": "Homoserine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  9  8  0  0  1  0  0  0  0  0999 V2000\n    0.5230    0.5230    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.1105    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520   -1.9520    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.1105    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809   -1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  4  3  1  0\n  4  5  1  1\n  5  6  1  0\n  4  7  1  0\n  7  8  1  0\n  7  9  2  0\nM  RGP  2   6   1   8   2\nM  END\n",
+        "naturalAnalog": "S",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Hse"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "O[C@@H]1C[C@H](N([*])C1)C([*])=O |$;;;;;_R1;;;_R2;$|",
+        "name": "4-Hydroxyproline",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10 10  0  0  1  0  0  0  0  0999 V2000\n    0.5678    1.9393    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.1143    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2352    0.6294    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9803   -0.1553    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.1553   -0.1553    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.3297   -0.8227    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0997    0.6294    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4652   -0.8227    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.2857   -0.7365    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.1296   -1.5764    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  2  1  1  6\n  2  3  1  0\n  4  3  1  0\n  4  5  1  0\n  5  6  1  0\n  5  7  1  0\n  2  7  1  0\n  4  8  1  1\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   6   1   9   2\nM  END\n",
+        "naturalAnalog": "P",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Hyp"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@H](C([*])=O)c1ccccc1 |$_R1;;;;_R2;;;;;;;$|",
+        "name": "2-Phenylglycine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 12 12  0  0  1  0  0  0  0  0999 V2000\n    0.0000    3.3000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    2.4750    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    2.4750    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434    2.0625    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    3.3000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  4  6  2  0\n  3  7  1  0\n  7  8  2  0\n  8  9  1  0\n  9 10  2  0\n 10 11  1  0\n 11 12  2  0\n  7 12  1  0\nM  RGP  2   1   1   5   2\nM  END\n",
+        "naturalAnalog": "G",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Phg"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](Cc1cscn1)C([*])=O |$_R1;;;;;;;;;;_R2;$|",
+        "name": "3-Thiazolylalanine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 12 12  0  0  1  0  0  0  0  0999 V2000\n   -0.8612    3.5893    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1467    3.1768    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1467    2.3518    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.9393    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.1143    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2352    0.6294    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9803   -0.1553    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n    0.1553   -0.1553    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0997    0.6294    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8612    1.9393    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8612    1.1143    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.5757    2.3518    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  2  0\n  6  7  1  0\n  7  8  1  0\n  8  9  2  0\n  5  9  1  0\n  3 10  1  0\n 10 11  1  0\n 10 12  2  0\nM  RGP  2   1   1  11   2\nM  END\n",
+        "naturalAnalog": "A",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Tza"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](CC1CCCCC1)C([*])=O |$_R1;;;;;;;;;;;_R2;$|",
+        "name": "3-Cyclohexylalanine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 13 13  0  0  1  0  0  0  0  0999 V2000\n   -0.7145    3.7125    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    3.3000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    2.4750    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    1.2375    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.4289    2.4750    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  7  8  1  0\n  8  9  1  0\n  9 10  1  0\n  5 10  1  0\n  3 11  1  0\n 11 12  1  0\n 11 13  2  0\nM  RGP  2   1   1  12   2\nM  END\n",
+        "naturalAnalog": "A",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Cha"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "OS(=O)(=O)C[C@H](N[*])C([*])=O |$;;;;;;;_R1;;_R2;$|",
+        "name": "3-Sulfoalanine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 11 10  0  0  1  0  0  0  0  0999 V2000\n   -0.8250   -1.4289    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000   -1.4289    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000   -2.2539    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000   -0.6039    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -0.7145    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    0.0000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  2  0\n  2  4  2  0\n  2  5  1  0\n  6  5  1  0\n  6  7  1  1\n  7  8  1  0\n  6  9  1  0\n  9 10  1  0\n  9 11  2  0\nM  RGP  2   8   1  10   2\nM  END\n",
+        "naturalAnalog": "A",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Cya"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC(C)(S[*])[C@H](N[*])C([*])=O |$;;;;_R3;;;_R1;;_R2;$|",
+        "name": "Penicillamine (3-mercaptovaline)",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 11 10  0  0  1  0  0  0  0  0999 V2000\n    1.6500    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5230    0.3020    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1914    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520    1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    0.7145    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3809    1.1270    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520    1.9520    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6664    2.3645    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    2.3645    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  2  4  1  0\n  4  5  1  0\n  6  2  1  0\n  6  7  1  1\n  7  8  1  0\n  6  9  1  0\n  9 10  1  0\n  9 11  2  0\nM  RGP  3   5   3   8   1  10   2\nM  END\n",
+        "naturalAnalog": "V",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "[*][H] |$_R3;$|",
+                "alternateId": "R3-H",
+                "capGroupName": "H",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Pen"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](Cc1cccs1)C([*])=O |$_R1;;;;;;;;;;_R2;$|",
+        "name": "3-thienylalanine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 12 12  0  0  1  0  0  0  0  0999 V2000\n   -0.8612    3.5893    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1467    3.1768    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1467    2.3518    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.9393    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.5678    1.1143    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2352    0.6294    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9803   -0.1553    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.1553   -0.1553    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.0997    0.6294    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8612    1.9393    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8612    1.1143    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.5757    2.3518    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  2  0\n  6  7  1  0\n  7  8  2  0\n  8  9  1  0\n  5  9  1  0\n  3 10  1  0\n 10 11  1  0\n 10 12  2  0\nM  RGP  2   1   1  11   2\nM  END\n",
+        "naturalAnalog": "A",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Thi"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](Cn1ccc(=O)[nH]c1=O)C([*])=O |$_R1;;;;;;;;;;;;;_R2;$|",
+        "name": "Alpha-amino-2,4-dioxopyrimidinepropanoic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 15 15  0  0  1  0  0  0  0  0999 V2000\n   -1.4289    2.4750    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    2.0625    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    2.4750    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    1.2375    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -1.2375    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    1.2375    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    3.3000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    3.7125    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145    3.7125    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  2  0\n  7  8  1  0\n  8  9  2  0\n  8 10  1  0\n 10 11  1  0\n  5 11  1  0\n 11 12  2  0\n  3 13  1  0\n 13 14  1  0\n 13 15  2  0\nM  RGP  2   1   1  14   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Wil"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC[C@H](N[*])C([*])=O |$;;;;_R1;;_R2;$|",
+        "name": "2-Aminobutanoic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  8  7  0  0  1  0  0  0  0  0999 V2000\n    0.0000   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -0.7145    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    0.0000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  0\n  3  4  1  1\n  4  5  1  0\n  3  6  1  0\n  6  7  1  0\n  6  8  2  0\nM  RGP  2   5   1   7   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Abu"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](CCCCC([*])=O)C([*])=O |$_R1;;;;;;;;_R3;;;_R2;$|",
+        "name": "2-Aminopimelic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 13 12  0  0  1  0  0  0  0  0999 V2000\n    6.0983    4.8196    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.2882    4.9755    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    4.7481    4.3519    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.9379    4.5078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3979    3.8842    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5877    4.0401    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0476    3.4164    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.6974    2.9487    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.9675    4.3519    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    5.0181    3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.8283    3.4164    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.4780    2.9487    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  7  8  1  0\n  8  9  1  0\n  8 10  2  0\n  3 11  1  0\n 11 12  1  0\n 11 13  2  0\nM  RGP  3   1   1   9   3  12   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R3$|",
+                "alternateId": "R3-OH",
+                "capGroupName": "OH",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Apm"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](C1CCCCC1)C([*])=O |$_R1;;;;;;;;;;_R2;$|",
+        "name": "Alpha-cyclohexylglycine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 12 12  0  0  1  0  0  0  0  0999 V2000\n    0.0000    3.3000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    2.4750    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    2.0625    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    2.4750    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434    2.0625    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    3.3000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  7  8  1  0\n  8  9  1  0\n  4  9  1  0\n  3 10  1  0\n 10 11  1  0\n 10 12  2  0\nM  RGP  2   1   1  11   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Chg"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](CCN[*])C([*])=O |$_R1;;;;;;_R3;;_R2;$|",
+        "name": "2,4-diaminobutanoic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    4.5375    3.5724    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125    3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000    2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    2.1434    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375    2.1434    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000    1.4289    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  3  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  3   1   1   7   3   9   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "[*][H] |$_R3;$|",
+                "alternateId": "R3-H",
+                "capGroupName": "H",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Dab"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CCCCCCCC[C@H](N[*])C([*])=O |$;;;;;;;;;;_R1;;_R2;$|",
+        "name": "2-Aminocapric acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 14 13  0  0  1  0  0  0  0  0999 V2000\n    0.6430   -4.4293    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -5.0013    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0301   -4.7725    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6246   -5.3445    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.4172   -5.1157    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.0117   -5.6877    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.8044   -5.4589    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.3988   -6.0310    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    6.1915   -5.8021    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    6.7859   -6.3742    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    7.5786   -6.1454    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    6.3896   -5.0013    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.7951   -4.4293    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    7.1823   -4.7725    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  7  8  1  0\n  9  8  1  0\n  9 10  1  1\n 10 11  1  0\n  9 12  1  0\n 12 13  1  0\n 12 14  2  0\nM  RGP  2  11   1  13   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Aca"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N1Cc2ccccc2C[C@H]1C([*])=O |$_R1;;;;;;;;;;;;_R2;$|",
+        "name": "1,2,3,4-tetrahydro-3-isoquinolinecarboxylic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 14 15  0  0  1  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.8579    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.5724   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.5724   -1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.8579   -1.6500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289   -1.6500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000   -1.6500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000   -2.4750    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145   -1.2375    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  4  5  2  0\n  5  6  1  0\n  6  7  2  0\n  7  8  1  0\n  8  9  2  0\n  4  9  1  0\n  9 10  1  0\n 11 10  1  0\n 11  2  1  0\n 11 12  1  1\n 12 13  1  0\n 12 14  2  0\nM  RGP  2   1   1  13   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Tic"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](CCCC([*])=O)C([*])=O |$_R1;;;;;;;_R3;;;_R2;$|",
+        "name": "2-Aminoadipic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 12 11  0  0  1  0  0  0  0  0999 V2000\n    4.5375   -3.5724    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -2.1434    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  7  8  1  0\n  7  9  2  0\n  3 10  1  0\n 10 11  1  0\n 10 12  2  0\nM  RGP  3   1   1   8   3  11   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R3$|",
+                "alternateId": "R3-OH",
+                "capGroupName": "OH",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Aad"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "NC(=O)NCCC[C@H](N[*])C([*])=O |$;;;;;;;;;_R1;;_R2;$|",
+        "name": "Citrullin",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 13 12  0  0  1  0  0  0  0  0999 V2000\n    0.6974   -2.9487    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9675   -4.3519    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0476   -3.4164    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5877   -4.0401    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3979   -3.8842    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.9379   -4.5078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.7481   -4.3519    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.2882   -4.9755    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    6.0983   -4.8196    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.0181   -3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.4780   -2.9487    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.8283   -3.4164    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  2  0\n  2  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  8  7  1  0\n  8  9  1  1\n  9 10  1  0\n  8 11  1  0\n 11 12  1  0\n 11 13  2  0\nM  RGP  2  10   1  12   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Cit"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N1CC[C@H]1C([*])=O |$_R1;;;;;;_R2;$|",
+        "name": "2-Carboxyazetidine",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  8  8  0  0  1  0  0  0  0  0999 V2000\n    0.4125    1.8209    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.4125    0.9959    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.9959    0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.4125   -0.1709    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1709    0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.9959    0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.4084   -0.3020    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -1.4084    1.1270    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  5  4  1  0\n  5  2  1  0\n  5  6  1  1\n  6  7  1  0\n  6  8  2  0\nM  RGP  2   1   1   7   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Aze"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "CC(C)(N[*])C([*])=O |$;;;;_R1;;_R2;$|",
+        "name": "Alpha-aminoisobutyric acid (2-aminoalanine)",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  8  7  0  0  0  0  0  0  0  0999 V2000\n    0.5230    1.1270    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9520    0.3020    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.6500    1.4289    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    2.1434    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  2  4  1  0\n  4  5  1  0\n  2  6  1  0\n  6  7  1  0\n  6  8  2  0\nM  RGP  2   5   1   7   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Aib"
+    },
+    {
+        "monomerType": "Backbone",
+        "smiles": "[*]N[C@@H](CCCCCC([*])=O)C([*])=O |$_R1;;;;;;;;;_R3;;;_R2;$|",
+        "name": "2-Aminosuberic acid",
+        "author": "Pistoia Alliance HELM project",
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 14 13  0  0  1  0  0  0  0  0999 V2000\n    6.0983   -4.8196    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.2882   -4.9755    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    4.7481   -4.3519    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.9379   -4.5078    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3979   -3.8842    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5877   -4.0401    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0476   -3.4164    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.6974   -2.9487    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1127   -3.1046    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.9675   -2.1692    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    5.0181   -3.5724    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.4780   -2.9487    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    5.8283   -3.4164    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  7  8  1  0\n  8  9  1  0\n  9 10  1  0\n  9 11  2  0\n  3 12  1  0\n 12 13  1  0\n 12 14  2  0\nM  RGP  3   1   1  10   3  13   2\nM  END\n",
+        "naturalAnalog": "X",
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|",
+                "alternateId": "R1-H",
+                "capGroupName": "H",
+                "label": "R1"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|",
+                "alternateId": "R2-OH",
+                "capGroupName": "OH",
+                "label": "R2"
+            },
+            {
+                "capGroupSmiles": "O[*] |$;_R3$|",
+                "alternateId": "R3-OH",
+                "capGroupName": "OH",
+                "label": "R3"
+            }
+        ],
+        "createDate": null,
+        "id": 0,
+        "polymerType": "PEPTIDE",
+        "symbol": "Asu"
+    },
+    {
+        "monomerType": "Backbone", 
+        "smiles": "Cn1cc(C[C@H](N[*])C([*])=O)c2ccccc12 |$;;;;;;;_R1;;_R2;;;;;;;$|", 
+        "name": "(2S)-2-amino-3-(1-methyl-1H-indol-3-yl)propanoic acid", 
+        "author": "Pistoia Alliance HELM project", 
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 17 18  0  0  1  0  0  0  0  0999 V2000\n    0.8838   -2.1500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.1387   -1.3654    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.6538   -0.6979    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.1387   -0.0305    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8838    0.7541    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0768    0.9256    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1781    1.7103    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.9851    1.8818    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.4752    0.3126    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.2822    0.4841    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.2203   -0.4721    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9233   -0.2854    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6378    0.1271    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3523   -0.2854    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3523   -1.1104    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.6378   -1.5229    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9233   -1.1104    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  2  0\n  4  5  1  0\n  6  5  1  0\n  6  7  1  1\n  7  8  1  0\n  6  9  1  0\n  9 10  1  0\n  9 11  2  0\n  4 12  1  0\n 12 13  2  0\n 13 14  1  0\n 14 15  2  0\n 15 16  1  0\n 16 17  2  0\n  2 17  1  0\n 12 17  1  0\nM  RGP  2   8   1  10   2\nM  END\n", 
+        "naturalAnalog": "W", 
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|", 
+                "alternateId": "R1-H", 
+                "capGroupName": "H", 
+                "label": "R1"
+            }, 
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|", 
+                "alternateId": "R2-OH", 
+                "capGroupName": "OH", 
+                "label": "R2"
+            }
+        ], 
+        "createDate": null, 
+        "id": 0, 
+        "polymerType": "PEPTIDE", 
+        "symbol": "Trp_Me"
+    }, 
+    {
+        "monomerType": "Backbone", 
+        "smiles": "CC(C)(C)[C@H](N[*])C([*])=O |$;;;;;;_R1;;_R2;$|", 
+        "name": "3-Methylvaline", 
+        "author": "Pistoia Alliance HELM project", 
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 10  9  0  0  1  0  0  0  0  0999 V2000\n    0.4125   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.5395   -1.8414    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.1105   -1.0164    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -0.7145    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750    0.0000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  2  4  1  0\n  5  2  1  0\n  5  6  1  1\n  6  7  1  0\n  5  8  1  0\n  8  9  1  0\n  8 10  2  0\nM  RGP  2   7   1   9   2\nM  END\n", 
+        "naturalAnalog": "A", 
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|", 
+                "alternateId": "R1-H", 
+                "capGroupName": "H", 
+                "label": "R1"
+            }, 
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|", 
+                "alternateId": "R2-OH", 
+                "capGroupName": "OH", 
+                "label": "R2"
+            }
+        ], 
+        "createDate": null, 
+        "id": 0, 
+        "polymerType": "PEPTIDE", 
+        "symbol": "Ala_tBu"
+    }, 
+    {
+        "monomerType": "Backbone", 
+        "smiles": "CN([*])CC([*])=O |$;;_R1;;;_R2;$|", 
+        "name": "Sarcosine (N-Methyl-Glycine)", 
+        "author": "Pistoia Alliance HELM project", 
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  7  6  0  0  0  0  0  0  0  0999 V2000\n    1.2375    2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    1.4289    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375    0.7145    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -0.7145    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  2  4  1  0\n  4  5  1  0\n  5  6  1  0\n  5  7  2  0\nM  RGP  2   3   1   6   2\nM  END\n", 
+        "naturalAnalog": "G", 
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|", 
+                "alternateId": "R1-H", 
+                "capGroupName": "H", 
+                "label": "R1"
+            }, 
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|", 
+                "alternateId": "R2-OH", 
+                "capGroupName": "OH", 
+                "label": "R2"
+            }
+        ], 
+        "createDate": null, 
+        "id": 0, 
+        "polymerType": "PEPTIDE", 
+        "symbol": "meG"
+    }, 
+    {
+        "monomerType": "Backbone", 
+        "smiles": "CN([*])[C@@H](Cc1ccc2ccccc2c1)C([*])=O |$;;_R1;;;;;;;;;;;;;;_R2;$|", 
+        "name": "3-Naphthylalanine", 
+        "author": "Pistoia Alliance HELM project", 
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 17 18  0  0  1  0  0  0  0  0999 V2000\n   -0.7145   -3.7125    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7145   -2.8875    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000   -2.4750    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000   -1.6500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.8579    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.5724   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.5724   -1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.8579   -1.6500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289   -1.6500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -2.8875    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289   -2.4750    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -3.7125    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  1\n  3  4  1  0\n  4  5  1  0\n  5  6  2  0\n  6  7  1  0\n  7  8  2  0\n  8  9  1  0\n  9 10  2  0\n 10 11  1  0\n 11 12  2  0\n 12 13  1  0\n  8 13  1  0\n 13 14  2  0\n  5 14  1  0\n  3 15  1  0\n 15 16  1  0\n 15 17  2  0\nM  RGP  2   1   1  16   2\nM  END\n", 
+        "naturalAnalog": "A", 
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|", 
+                "alternateId": "R1-H", 
+                "capGroupName": "H", 
+                "label": "R1"
+            }, 
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|", 
+                "alternateId": "R2-OH", 
+                "capGroupName": "OH", 
+                "label": "R2"
+            }
+        ], 
+        "createDate": null, 
+        "id": 0, 
+        "polymerType": "PEPTIDE", 
+        "symbol": "2Nal"
+    }, 
+    {
+        "monomerType": "Terminal", 
+        "smiles": "C[*] |$;_R2;$|", 
+        "name": "N-Terminal methyl", 
+        "author": "Pistoia Alliance HELM project", 
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n  2  1  0  0  0  0  0  0  0  0999 V2000\n    0.8250    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\nM  RGP  1   2   2\nM  END\n", 
+        "naturalAnalog": "X", 
+        "rgroups": [
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|", 
+                "alternateId": "R2-OH", 
+                "capGroupName": "OH", 
+                "label": "R2"
+            }
+        ], 
+        "createDate": null, 
+        "id": 0, 
+        "polymerType": "PEPTIDE", 
+        "symbol": "Me-"
+    }
+]
