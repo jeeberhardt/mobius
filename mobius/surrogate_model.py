@@ -212,11 +212,11 @@ class RFModel(_SurrogateModel):
         
         # Set default parameters for RF
         self._kwargs.setdefault('n_estimators', 500)
-        self._kwargs.setdefault('max_features', 'auto')
-        self._kwargs.setdefault('max_depth', 5)
+        self._kwargs.setdefault('max_features', 'sqrt')
+        self._kwargs.setdefault('max_depth', None)
         self._kwargs.setdefault('oob_score', True)
         self._kwargs.setdefault('bootstrap', True)
-        self._kwargs.setdefault('max_samples', 0.8)
+        self._kwargs.setdefault('max_samples', None)
         
     @property
     def X_train(self):
