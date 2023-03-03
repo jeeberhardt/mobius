@@ -4,6 +4,8 @@
 # Mobius - utils
 #
 
+import json
+import os
 from importlib import util
 
 import matplotlib.pyplot as plt
@@ -14,6 +16,9 @@ import torch
 from rdkit import Chem
 from rdkit.Chem import molzip
 from rdkit import RDLogger
+
+lg = RDLogger.logger()
+lg.setLevel(RDLogger.ERROR)
 
 
 def path_module(module_name):
@@ -177,163 +182,161 @@ def parse_helm(helm_string):
     return polymers, connections, hydrogen_bonds, attributes
 
 
-def MolFromHELM(helm_string, HELMCoreLibrary_filename=None):
-    molecules_to_zip = []
+def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
+    if not isinstance(HELM_strings, (list, tuple, np.ndarray)):
+            HELM_strings = [HELM_strings]
 
     if HELMCoreLibrary_filename is None:
-        d = utils.path_module("mobius")
+        d = path_module("mobius")
         HELMCoreLibrary_filename = os.path.join(d, "data/HELMCoreLibrary_new.json")
 
     with open(HELMCoreLibrary_filename) as f:
-        monomer_data = json.load(f)
+        data = json.load(f)
     
-    HELMCoreLibrary = {monomer['symbol']: monomer for monomer in monomer_data}
-    
-    polymers, connections, _, _ = parse_helm(helm_string)
-    
-    #print(polymers)
-    #print(connections)
-    
-    for pid, seq in polymers.items():
-        number_monomers = len(seq)
+    # Re-organize monomer data in a dictionary for faster access
+    HELMCoreLibrary = {monomer['symbol']: monomer for monomer in data}
 
-        for i, monomer_symbol in enumerate(seq):
-            non_canonical_points = {}
-            canonical_points = {}
-            atom_attachments = {}
-            
-            try:
-                monomer_data = HELMCoreLibrary[monomer_symbol]
-            except KeyError:
-                error_msg = 'Error: monomer %s unknown.' % monomer_symbol
-                print(error_msg)
-            
-            # Read SMILES string
-            monomer = Chem.MolFromSmiles(monomer_data['smiles'])
-            assert monomer is not None, 'Error: invalid monomer SMILES (%s) for %s' % (monomer_data['smiles'], monomer_symbol)
-            
-            #print(monomer_symbol, (i + 1), HELMCoreLibrary[monomer_symbol]['smiles'])
-            
-            # Get all the non-canonical attachment points
-            if connections.size > 0:
-                c_ids = np.where((connections['SourceMonomerPosition'] == (i + 1)) | (connections['TargetMonomerPosition'] == (i + 1)))[0]
-                
-                if c_ids.size > 0:
-                    for connection in connections[c_ids]:
-                        if connection['SourcePolymerID'] == pid and connection['SourceMonomerPosition'] == (i + 1):
-                            non_canonical_points['_%s' % connection['SourceAttachment']] = '_'.join(['%s' % s for s in connection])
-                        elif connection['TargetPolymerID'] == pid and connection['TargetMonomerPosition'] == (i + 1):
-                            non_canonical_points['_%s' % connection['TargetAttachment']] = '_'.join(['%s' % s for s in connection])
-                
-            #print('Non-canonical attachments: ', non_canonical_points)
-            
-            # Get all the canonical attachment points (not involved in a non-canonical attachment)
-            for r in monomer_data['rgroups']:
-                label = '_%s' % r['label']
-                
-                if label not in non_canonical_points:
-                    monomer_cap = None
-                    monomer_cap_smiles = None
-                    
-                    if label == '_R1':
-                        if i == 0:
-                            # If it is the first monomer and R1 is not involved in a non-canonical connections, then add cap
-                            key = '%s_%d_%s' % (pid, (i + 1), r['label'])
-                            monomer_cap_smiles = r['capGroupSmiles']
-                        else:
-                            # Look at R2 of the previous monomer and check if not involved in a non-canonical connections
-                            r2_1 = np.where((connections['SourcePolymerID'] == pid) & (connections['SourceMonomerPosition'] == i) & (connections['SourceAttachment'] == 'R2'))[0]
-                            r2_2 = np.where((connections['TargetPolymerID'] == pid) & (connections['TargetMonomerPosition'] == i) & (connections['TargetAttachment'] == 'R2'))[0]
-                             
-                            if r2_1.size or r2_2.size:
-                                # R2_previous monomer involved in non-canonical connection 
-                                key = '%s_%d_%s' % (pid, (i + 1), r['label'])
-                                monomer_cap_smiles = r['capGroupSmiles']
-                                #print('R2 of previous monomer involved in a non-canonical attachments!!')
-                            else:
-                                # Canonical connection between R2_previous and R1_current monomers
-                                key = '%s_%d_%d' % (pid, i, (i + 1))
-                    elif label == '_R2':
-                        if i == number_monomers - 1:
-                            # If it is the last monomer and R2 is not involved in non-canonical connections, then add cap
-                            key = '%s_%d_%s' % (pid, (i + 1), r['label'])
-                            monomer_cap_smiles = r['capGroupSmiles']
-                        else:
-                            # Look at R1 of the next monomer and check if not involved in a non-canonical connections
-                            r1_1 = np.where((connections['SourcePolymerID'] == pid) & (connections['SourceMonomerPosition'] == (i + 2)) & (connections['SourceAttachment'] == 'R1'))[0]
-                            r1_2 = np.where((connections['TargetPolymerID'] == pid) & (connections['TargetMonomerPosition'] == (i + 2)) & (connections['TargetAttachment'] == 'R1'))[0]
-                            
-                            if r1_1.size or r1_2.size:
-                                # R1_next monomer involved in non-canonical connection 
-                                key = '%s_%d_%s' % (pid, (i + 1), r['label'])
-                                monomer_cap_smiles = r['capGroupSmiles']
-                                #print('R1 of next monomer involved in a non-canonical attachments!!')
-                            else:
-                                # Canonical connection between R2_current and R2_next monomers
-                                key = '%s_%d_%d' % (pid, (i + 1), (i + 2))
-                    else:
-                        # For every R3, R4,... not involved in a non-canonical connections
-                        key = '%s_%d_%s' % (pid, (i + 1), r['label'])
-                        monomer_cap_smiles = r['capGroupSmiles']
-
-                    canonical_points[label] = (key, monomer_cap_smiles)
-            
-            #print('Canonical attachments: ', canonical_points)
-            
-            # Set all the attachment points
-            for atm in monomer.GetAtoms():
-                if atm.HasProp('atomLabel') and atm.GetProp('atomLabel').startswith('_R'):
-                    label = atm.GetProp('atomLabel')
-                    
-                    if label in non_canonical_points:
-                        # Set the non-canonical attachment points in the monomer
-                        hashed_key = abs(hash(non_canonical_points[label])) % (10 ** 8)
-                        atm.SetAtomMapNum(hashed_key)
-                    elif label in canonical_points:
-                        # Set the canonical attachment points in the monomer and monomer cap
-                        hashed_key = abs(hash(canonical_points[label][0])) % (10 ** 8)
-                        atm.SetAtomMapNum(hashed_key)
-                        
-                        # Set canonical attachment point in monomer cap
-                        if canonical_points[label][1] is not None:
-                            cap_smiles = canonical_points[label][1]
-                            
-                            cap = Chem.MolFromSmiles(cap_smiles)
-                            assert cap is not None, 'Error: invalid monomer cap SMILES (%s) for %s' % (cap_smiles, monomer_symbol)
-                            
-                            for cap_atm in cap.GetAtoms():
-                                if cap_atm.HasProp('atomLabel') and cap_atm.GetProp('atomLabel') == label:
-                                    #print('-- Monomer cap on: %s - %s (%d)' % (label, cap_smiles, hashed_key))
-                                    cap_atm.SetAtomMapNum(hashed_key)
-                            # ... and add monomer cap to peptide
-                            molecules_to_zip.append(cap)
-                    else:
-                        print('Warning: attachment point %s not defined for monomer %s!' % (label, monomer_symbol))
-            
-            molecules_to_zip.append(monomer)
+    for HELM_string in HELM_strings:
+        molecules_to_zip = []
+    
+        polymers, connections, _, _ = parse_helm(HELM_string)
         
-            #print('')
-    
-    # Disable Warnings for a short moment 
-    # It just removes annoying "WARNING: not removing hydrogen atom with dummy atom neighbors" messages...
-    lg = RDLogger.logger()
-    lg.setLevel(RDLogger.ERROR)
-    
-    with Chem.RWMol() as rw_peptide:
-        [rw_peptide.InsertMol(molecule) for molecule in molecules_to_zip]
-    
-    lg.setLevel(RDLogger.WARNING)
-    
-    # Bop-it, Twist-it, Pull-it and Zip-it!
-    peptide = Chem.molzip(rw_peptide)
-    
-    # Clean mol and remove dummy H atoms
-    Chem.SanitizeMol(peptide)
-    params = Chem.RemoveHsParameters()
-    params.removeDegreeZero = True
-    peptide = Chem.RemoveHs(peptide, params)
-    
-    return peptide
+        #print(polymers)
+        #print(connections)
+        
+        for pid, seq in polymers.items():
+            number_monomers = len(seq)
+
+            for i, monomer_symbol in enumerate(seq):
+                non_canonical_points = {}
+                canonical_points = {}
+                atom_attachments = {}
+                
+                try:
+                    monomer_data = HELMCoreLibrary[monomer_symbol]
+                except KeyError:
+                    error_msg = 'Error: monomer %s unknown.' % monomer_symbol
+                    print(error_msg)
+                
+                # Read SMILES string
+                monomer = Chem.MolFromSmiles(monomer_data['smiles'])
+                assert monomer is not None, 'Error: invalid monomer SMILES (%s) for %s' % (monomer_data['smiles'], monomer_symbol)
+                
+                #print(monomer_symbol, (i + 1), HELMCoreLibrary[monomer_symbol]['smiles'])
+                
+                # Get all the non-canonical attachment points
+                if connections.size > 0:
+                    c_ids = np.where((connections['SourceMonomerPosition'] == (i + 1)) | (connections['TargetMonomerPosition'] == (i + 1)))[0]
+                    
+                    if c_ids.size > 0:
+                        for connection in connections[c_ids]:
+                            if connection['SourcePolymerID'] == pid and connection['SourceMonomerPosition'] == (i + 1):
+                                non_canonical_points['_%s' % connection['SourceAttachment']] = '_'.join(['%s' % s for s in connection])
+                            elif connection['TargetPolymerID'] == pid and connection['TargetMonomerPosition'] == (i + 1):
+                                non_canonical_points['_%s' % connection['TargetAttachment']] = '_'.join(['%s' % s for s in connection])
+                    
+                #print('Non-canonical attachments: ', non_canonical_points)
+                
+                # Get all the canonical attachment points (not involved in a non-canonical attachment)
+                for r in monomer_data['rgroups']:
+                    label = '_%s' % r['label']
+                    
+                    if label not in non_canonical_points:
+                        monomer_cap = None
+                        monomer_cap_smiles = None
+                        
+                        if label == '_R1':
+                            if i == 0:
+                                # If it is the first monomer and R1 is not involved in a non-canonical connections, then add cap
+                                key = '%s_%d_%s' % (pid, (i + 1), r['label'])
+                                monomer_cap_smiles = r['capGroupSmiles']
+                            else:
+                                # Look at R2 of the previous monomer and check if not involved in a non-canonical connections
+                                r2_1 = np.where((connections['SourcePolymerID'] == pid) & (connections['SourceMonomerPosition'] == i) & (connections['SourceAttachment'] == 'R2'))[0]
+                                r2_2 = np.where((connections['TargetPolymerID'] == pid) & (connections['TargetMonomerPosition'] == i) & (connections['TargetAttachment'] == 'R2'))[0]
+                                 
+                                if r2_1.size or r2_2.size:
+                                    # R2_previous monomer involved in non-canonical connection 
+                                    key = '%s_%d_%s' % (pid, (i + 1), r['label'])
+                                    monomer_cap_smiles = r['capGroupSmiles']
+                                    #print('R2 of previous monomer involved in a non-canonical attachments!!')
+                                else:
+                                    # Canonical connection between R2_previous and R1_current monomers
+                                    key = '%s_%d_%d' % (pid, i, (i + 1))
+                        elif label == '_R2':
+                            if i == number_monomers - 1:
+                                # If it is the last monomer and R2 is not involved in non-canonical connections, then add cap
+                                key = '%s_%d_%s' % (pid, (i + 1), r['label'])
+                                monomer_cap_smiles = r['capGroupSmiles']
+                            else:
+                                # Look at R1 of the next monomer and check if not involved in a non-canonical connections
+                                r1_1 = np.where((connections['SourcePolymerID'] == pid) & (connections['SourceMonomerPosition'] == (i + 2)) & (connections['SourceAttachment'] == 'R1'))[0]
+                                r1_2 = np.where((connections['TargetPolymerID'] == pid) & (connections['TargetMonomerPosition'] == (i + 2)) & (connections['TargetAttachment'] == 'R1'))[0]
+                                
+                                if r1_1.size or r1_2.size:
+                                    # R1_next monomer involved in non-canonical connection 
+                                    key = '%s_%d_%s' % (pid, (i + 1), r['label'])
+                                    monomer_cap_smiles = r['capGroupSmiles']
+                                    #print('R1 of next monomer involved in a non-canonical attachments!!')
+                                else:
+                                    # Canonical connection between R2_current and R2_next monomers
+                                    key = '%s_%d_%d' % (pid, (i + 1), (i + 2))
+                        else:
+                            # For every R3, R4,... not involved in a non-canonical connections
+                            key = '%s_%d_%s' % (pid, (i + 1), r['label'])
+                            monomer_cap_smiles = r['capGroupSmiles']
+
+                        canonical_points[label] = (key, monomer_cap_smiles)
+                
+                #print('Canonical attachments: ', canonical_points)
+                
+                # Set all the attachment points
+                for atm in monomer.GetAtoms():
+                    if atm.HasProp('atomLabel') and atm.GetProp('atomLabel').startswith('_R'):
+                        label = atm.GetProp('atomLabel')
+                        
+                        if label in non_canonical_points:
+                            # Set the non-canonical attachment points in the monomer
+                            hashed_key = abs(hash(non_canonical_points[label])) % (10 ** 8)
+                            atm.SetAtomMapNum(hashed_key)
+                        elif label in canonical_points:
+                            # Set the canonical attachment points in the monomer and monomer cap
+                            hashed_key = abs(hash(canonical_points[label][0])) % (10 ** 8)
+                            atm.SetAtomMapNum(hashed_key)
+                            
+                            # Set canonical attachment point in monomer cap
+                            if canonical_points[label][1] is not None:
+                                cap_smiles = canonical_points[label][1]
+                                
+                                cap = Chem.MolFromSmiles(cap_smiles)
+                                assert cap is not None, 'Error: invalid monomer cap SMILES (%s) for %s' % (cap_smiles, monomer_symbol)
+                                
+                                for cap_atm in cap.GetAtoms():
+                                    if cap_atm.HasProp('atomLabel') and cap_atm.GetProp('atomLabel') == label:
+                                        #print('-- Monomer cap on: %s - %s (%d)' % (label, cap_smiles, hashed_key))
+                                        cap_atm.SetAtomMapNum(hashed_key)
+                                # ... and add monomer cap to peptide
+                                molecules_to_zip.append(cap)
+                        else:
+                            print('Warning: attachment point %s not defined for monomer %s!' % (label, monomer_symbol))
+                
+                molecules_to_zip.append(monomer)
+            
+                #print('')
+        
+        with Chem.RWMol() as rw_peptide:
+            [rw_peptide.InsertMol(molecule) for molecule in molecules_to_zip]
+        
+        # Bop-it, Twist-it, Pull-it and Zip-it!
+        peptide = Chem.molzip(rw_peptide)
+        
+        # Clean mol and remove dummy H atoms
+        Chem.SanitizeMol(peptide)
+        params = Chem.RemoveHsParameters()
+        params.removeDegreeZero = True
+        peptide = Chem.RemoveHs(peptide, params)
+        
+        yield peptide
 
 
 def read_pssm_file(pssm_file):
