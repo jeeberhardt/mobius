@@ -32,7 +32,7 @@ class Map4Fingerprint:
             elif self._input_type == 'helm_rdkit':
                 mols = [Chem.rdmolfiles.MolFromHELM(s) for s in sequences]
             elif self._input_type == 'helm':
-                mols = [m for m in MolFromHELM(sequences, self._HELMCoreLibrary_filename)]
+                mols = MolFromHELM(sequences, self._HELMCoreLibrary_filename)
             else:
                 mols = [Chem.rdmolfiles.MolFromSmiles(s) for s in sequences]
         except AttributeError:
@@ -65,7 +65,7 @@ class MorganFingerprint:
             elif self._input_type == 'helm_rdkit':
                 mols = [Chem.rdmolfiles.MolFromHELM(s) for s in sequences]
             elif self._input_type == 'helm':
-                mols = [m for m in MolFromHELM(sequences, self._HELMCoreLibrary_filename)]
+                mols = MolFromHELM(sequences, self._HELMCoreLibrary_filename)
             else:
                 mols = [Chem.rdmolfiles.MolFromSmiles(s) for s in sequences]
         except AttributeError:
