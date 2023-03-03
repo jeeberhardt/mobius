@@ -31,27 +31,26 @@ class Mobius:
 
         Arguments
         ---------
-            polymers: list of str
+            polymers : list of str
                 List of polymers in HELM format
-            values: list of int or float
+            values : list of int or float
                 List of values associated to each polymer
-            emulator: Emulator
+            emulator : Emulator
                 Emulator/Oracle used to simulate actual lab experiments
-            sampler: Sampler
+            sampler : Sampler
                 Protocol used for sampling the polymer sequence space
-            num_iter: int, default: 5
+            num_iter : int, default: 5
                 Total number of optimization cycles
-            batch_size: int, default: 96
+            batch_size : int, default: 96
                 Size of the batches, number of polymers returned after each optimization cycle
 
         Returns
         -------
-        pd.DataFrame
+        results : pd.DataFrame
             Pandas DataFrame containing all the results from the optimization process with
             the following columns: ['iter', 'polymer', 'exp_value', 'pred_value']
 
         """
-
         data = []
 
         all_suggested_polymers = np.asarray(polymers).copy()
@@ -84,29 +83,28 @@ class Mobius:
 
         Arguments
         ---------
-            polymers: list of str
+            polymers : list of str
                 List of polymers in HELM format
-            values: list of int or float
+            values : list of int or float
                 List of values associated to each polymer
-            emulator: Emulator
+            emulator : Emulator
                 Emulator/Oracle used to simulate actual lab experiments
-            samplers: dict of Sampler
+            samplers : dict of Sampler
                 Dictionary of protocols used for sampling the polymer sequence space
-            num_iter: int, default: 5
+            num_iter : int, default: 5
                 Total number of optimization cycles
-            batch_size: int, default: 96
+            batch_size : int, default: 96
                 Size of the batches, number of polymers returned after each optimization cycle
-            num_independent_run:, int, default: 5
+            num_independent_run :, int, default: 5
                 Total number of independent runs to execute for each sampling protocol
 
         Returns
         -------
-        pd.DataFrame
+        results : pd.DataFrame
             Pandas DataFrame containing all the results from the optimization process with
             the following columns: ['sampler', 'run', 'iter', 'polymer', 'exp_value', 'pred_value']
 
         """
-
         dfs = []
 
         assert isinstance(samplers, dict), 'Samplers must be defined as a dictionary ({\'sampler1_name\': sampler})'

@@ -31,12 +31,83 @@ class _Sampler(ABC):
 
 
 class PolymerSampler(_Sampler):
+    """
+    Class for sampling the polymer sequence space using an acquisition function
+    and a search protocol.
+
+    Methods
+    -------
+    ask(batch_size=None)
+        Ask for new polymers based on previous experiments.
+    tell(polymers, values)
+        Tell what is known so far in term of polymers and their associated values.
+    recommand(polymers, values, batch_size=None)
+        Recommand new polymers based on input polymers and associated values.
+    optimize(emulator, num_iter, batch_size)
+        Optimize polymers using emulator as the oracle (for benchmark purpose only).
+
+    """
 
     def __init__(self, acquisition_function, search_protocol):
+        """
+        Initialize the polymer sampler.
+
+        Arguments
+        ---------
+        acquisition_function : AcquisitionFunction
+            The acquisition function that will be used to score the polymer
+        search_protocol : Dictionary
+            Search/sampling protocol describing all the sampling blocks
+
+        Examples
+        --------
+        from mobius import PolymerSampler, SequenceGA
+
+        # Define a search protocol using the SequenceGA optimizer
+        search_protocol = {
+            'SequenceGA': {
+                'function': SequenceGA,
+                'parameters': {
+                    'n_process': -1,
+                    'n_gen': 1000,
+                    'n_children': 500,
+                    'temperature': 0.01,
+                    'elitism': True,
+                    'total_attempts': 50,
+                    'cx_points': 2,
+                    'pm': 0.1,
+                    'minimum_mutations': 1,
+                    'maximum_mutations': 5
+                }
+            }
+        }
+
+        ps = PolymerSampler(acq_fun, search_protocol)
+
+        """
         self._acq_fun = acquisition_function
         self._search_protocol = search_protocol
 
     def ask(self, batch_size=None):
+        """
+        Function to suggest new polymers based on previous experiments
+
+        Arguments
+        ---------
+        batch_size : int, default: None
+            Total number of new polymers that will be returned. If not provided,
+            it will return all the polymers sampled during the optimization.
+
+        Returns
+        -------
+        suggested_polymers : ndarray
+            All the suggested polymers. The returned number of polymers will
+            be equal to `batch_size`.
+        values : ndarray
+            All the predicted values for each suggested polymers. The returned number
+            will be equal to `batch_size`
+
+        """
         # Use the training set from the surrogate model as inputs for the optimization
         suggested_polymers = self._acq_fun.surrogate_model.X_train_original.copy()
         values = self._acq_fun.surrogate_model.y_train.copy()
@@ -58,15 +129,69 @@ class PolymerSampler(_Sampler):
         return suggested_polymers[:batch_size], values[:batch_size]
 
     def tell(self, polymers, values):
+        """
+        Function to fit the surrogate model using data from past experiments
+
+        Arguments
+        ---------
+        polymers : list of str
+            List of all the polymers in HELM format for which there are experimental data.
+        values : list of int of float
+            List of all the value associated to each polymer
+
+        """
         self._acq_fun.surrogate_model.fit(polymers, values)
 
     def recommand(self, polymers, values, batch_size=None):
+        """
+        Function to suggest new polymers based on existing/previous data.
+
+        Arguments
+        ---------
+        polymers : list of str
+            List of all the polymers in HELM format for which there are experimental data.
+        values : list of int of float
+            List of all the value associated to each polymer
+        batch_size : int, default: None
+            Total number of new polymers that will be returned. If not provided,
+            it will return all the polymers sampled during the optimization.
+
+        Returns
+        -------
+        suggested_polymers : ndarray
+            All the suggested polymers. The returned number of polymers will
+            be equal to `batch_size`.
+        values : ndarray
+            All the predicted values for each suggested polymers. The returned number
+            will be equal to `batch_size`
+
+        """
         self.tell(polymers, values)
         suggested_polymers, predicted_values = self.ask(batch_size)
 
         return suggested_polymers, predicted_values
 
     def optimize(self, emulator, num_iter, batch_size):
+        """
+        Function to optimize polymers based on an emulator/oracle.
+        
+        emulator : Emulator
+            Emulator/Oracle used to simulate actual lab experiments
+        num_iter : int
+            Total number of optimization cycles
+        batch_size : int
+            Size of the batches, number of polymers returned after each optimization cycle
+        
+        Returns
+        -------
+        suggested_polymers : ndarray
+            All the suggested polymers during the optimization process and sorted based 
+            on `values` obtained from `emulator`.
+        values : ndarray
+            All the values for each polymers suggested during the optimization process and 
+            sorted based on the values obtained from `emulator`.
+
+        """
         # Use the training set from the surrogate model as inputs for the optimization
         all_suggested_polymers = self._acq_fun.surrogate_model.X_train_original.copy()
         all_exp_values = self._acq_fun.surrogate_model.y_train.copy()
