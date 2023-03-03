@@ -15,7 +15,7 @@ from .utils import convert_HELM_to_FASTA, MolFromHELM
 
 class Map4Fingerprint:
 
-    def __init__(self, input_type='helm_rdkit', dimensions=4096, radius=2, is_counted=False, is_folded=True, HELMCoreLibrary_filename=None):
+    def __init__(self, input_type='helm_rdkit', dimensions=4096, radius=1, is_counted=False, is_folded=True, HELMCoreLibrary_filename=None):
         assert input_type.lower() in ['fasta', 'helm_rdkit', 'helm', 'smiles'], 'Format (%s) not handled. Please use FASTA, HELM_rdkit, HELM or SMILES format.'
 
         self._map4calc = MAP4Calculator(dimensions=dimensions, radius=radius, is_counted=is_counted, is_folded=is_folded)
