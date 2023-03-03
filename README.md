@@ -88,7 +88,7 @@ pic50_seed_library = lpe.predict(seed_library)
 # First, we define the molecular fingerprint we want to
 # use as well as the surrogate model (Gaussian Process)
 # and the acquisition function (Expected Improvement)
-map4 = Map4Fingerprint(input_type='helm', dimensions=4096, radius=1)
+map4 = Map4Fingerprint(input_type='helm_rdkit', dimensions=4096, radius=1)
 gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
 ei = ExpectedImprovement(gpmodel, maximize=False)
 
