@@ -17,6 +17,8 @@ from rdkit import Chem
 from rdkit.Chem import molzip
 from rdkit import RDLogger
 
+# Disable Warnings for MolFromHELM function
+# It just removes annoying "WARNING: not removing hydrogen atom with dummy atom neighbors" messages...
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.ERROR)
 
