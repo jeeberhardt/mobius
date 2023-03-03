@@ -10,16 +10,17 @@ from map4 import MAP4Calculator
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from .utils import convert_HELM_to_FASTA
+from .utils import convert_HELM_to_FASTA, MolFromHELM
 
 
 class Map4Fingerprint:
 
-    def __init__(self, input_type='helm', dimensions=4096, radius=2, is_counted=False, is_folded=True):
-        assert input_type.lower() in ['fasta', 'helm', 'smiles'], 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
+    def __init__(self, input_type='helm_rdkit', dimensions=4096, radius=2, is_counted=False, is_folded=True, HELMCoreLibrary_filename=None):
+        assert input_type.lower() in ['fasta', 'helm_rdkit', 'helm', 'smiles'], 'Format (%s) not handled. Please use FASTA, HELM_rdkit, HELM or SMILES format.'
 
         self._map4calc = MAP4Calculator(dimensions=dimensions, radius=radius, is_counted=is_counted, is_folded=is_folded)
         self._input_type = input_type.lower()
+        self._HELMCoreLibrary_filename = HELMCoreLibrary_filename
 
     def transform(self, sequences):
         if not isinstance(sequences, (list, tuple, np.ndarray)):
@@ -28,8 +29,10 @@ class Map4Fingerprint:
         try:
             if self._input_type == 'fasta':
                 mols = [Chem.rdmolfiles.MolFromFASTA(s) for s in sequences]
-            elif self._input_type == 'helm':
+            elif self._input_type == 'helm_rdkit':
                 mols = [Chem.rdmolfiles.MolFromHELM(s) for s in sequences]
+            elif self._input_type == 'helm':
+                mols = [m for m in MolFromHELM(sequences, self._HELMCoreLibrary_filename)]
             else:
                 mols = [Chem.rdmolfiles.MolFromSmiles(s) for s in sequences]
         except AttributeError:
@@ -44,12 +47,13 @@ class Map4Fingerprint:
 
 class MorganFingerprint:
 
-    def __init__(self, input_type='helm', dimensions=4096, radius=2):
-        assert input_type.lower() in ['fasta', 'helm', 'smiles'], 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
+    def __init__(self, input_type='helm_rdkit', dimensions=4096, radius=2, HELMCoreLibrary_filename=None):
+        assert input_type.lower() in ['fasta', 'helm_rdkit', 'helm', 'smiles'], 'Format (%s) not handled. Please use FASTA, HELM_rdkit, HELM or SMILES format.'
 
         self._radius = radius
         self._dimensions = dimensions
         self._input_type = input_type.lower()
+        self._HELMCoreLibrary_filename = HELMCoreLibrary_filename
 
     def transform(self, sequences):
         if not isinstance(sequences, (list, tuple, np.ndarray)):
@@ -58,8 +62,10 @@ class MorganFingerprint:
         try:
             if self._input_type == 'fasta':
                 mols = [Chem.rdmolfiles.MolFromFASTA(s) for s in sequences]
-            elif self._input_type == 'helm':
+            elif self._input_type == 'helm_rdkit':
                 mols = [Chem.rdmolfiles.MolFromHELM(s) for s in sequences]
+            elif self._input_type == 'helm':
+                mols = [m for m in MolFromHELM(sequences, self._HELMCoreLibrary_filename)]
             else:
                 mols = [Chem.rdmolfiles.MolFromSmiles(s) for s in sequences]
         except AttributeError:
