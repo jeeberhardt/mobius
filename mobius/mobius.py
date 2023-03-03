@@ -9,24 +9,49 @@ import pandas as pd
 
 
 class Mobius:
+    """
+    Class for benchmarking sampling protocol against one emulator/oracle.
+
+    Methods
+    -------
+    run(polymers, values, emulator, sampler, num_iter=5, batch_size=96)
+        Function for running the benchmark optimization process with one sampling protocol
+    benchmark(polymers, values, emulator, samplers, num_iter=5, batch_size=96, num_independent_run=5)
+        Function for running the benchmark optimization process with multiple sampling protocols
+
+    """
 
     def __init__(self):
         pass
     
     def run(self, polymers, values, emulator, sampler, num_iter=5, batch_size=96):
         """
-        Run function to optimize polymers
+        Function for running the benchmark optimization process for polymers against one
+        emulator/oracle.
 
-        Arguments:
-        ----------
-            polymers: List of polymers in HELM format
-            values: List of values associated to each polymer
+        Arguments
+        ---------
+            polymers: list of str
+                List of polymers in HELM format
+            values: list of int or float
+                List of values associated to each polymer
             emulator: Emulator
+                Emulator/Oracle used to simulate actual lab experiments
             sampler: Sampler
-            num_iter: number of iterations (default: 5)
-            batch_size: size of the batches (default: 96)
+                Protocol used for sampling the polymer sequence space
+            num_iter: int, default: 5
+                Total number of optimization cycles
+            batch_size: int, default: 96
+                Size of the batches, number of polymers returned after each optimization cycle
+
+        Returns
+        -------
+        pd.DataFrame
+            Pandas DataFrame containing all the results from the optimization process with
+            the following columns: ['iter', 'polymer', 'exp_value', 'pred_value']
 
         """
+
         data = []
 
         all_suggested_polymers = np.asarray(polymers).copy()
@@ -54,19 +79,34 @@ class Mobius:
 
     def benchmark(self, polymers, values, emulator, samplers, num_iter=5, batch_size=96, num_independent_run=5):
         """
-        Run function to benchmark sampler strategies
+        Function to benchmark multiple sampling strategies for polymers optimization against
+        one emulator/oracle.
 
-        Arguments:
-        ----------
-            polymers: List of polymers in HELM format
-            values: List of values associated to each polymer
+        Arguments
+        ---------
+            polymers: list of str
+                List of polymers in HELM format
+            values: list of int or float
+                List of values associated to each polymer
             emulator: Emulator
-            sampler: Samplers
-            num_iter: number of iterations (default: 5)
-            batch_size: size of the batches (default: 96)
-            num_independent_run: number of independent runs (default: 5)
+                Emulator/Oracle used to simulate actual lab experiments
+            samplers: dict of Sampler
+                Dictionary of protocols used for sampling the polymer sequence space
+            num_iter: int, default: 5
+                Total number of optimization cycles
+            batch_size: int, default: 96
+                Size of the batches, number of polymers returned after each optimization cycle
+            num_independent_run:, int, default: 5
+                Total number of independent runs to execute for each sampling protocol
+
+        Returns
+        -------
+        pd.DataFrame
+            Pandas DataFrame containing all the results from the optimization process with
+            the following columns: ['sampler', 'run', 'iter', 'polymer', 'exp_value', 'pred_value']
 
         """
+
         dfs = []
 
         assert isinstance(samplers, dict), 'Samplers must be defined as a dictionary ({\'sampler1_name\': sampler})'
