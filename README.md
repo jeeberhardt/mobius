@@ -42,6 +42,7 @@ pip install -e .
 # -*- coding: utf-8 -*-
 #
 
+import numpy as np
 from mobius import PolymerSampler, SequenceGA
 from mobius import Map4Fingerprint
 from mobius import GPModel, ExpectedImprovement, TanimotoSimilarityKernel
