@@ -1594,6 +1594,38 @@
         "symbol": "Orn"
     },
     {
+        "monomerType": "Backbone", 
+        "smiles": "[*]N[C@H](CCCN[*])C([*])=O |$_R1;;;;;;;_R3;;_R2;$|", 
+        "name": "D-Ornithine", 
+        "author": "Pistoia Alliance HELM project", 
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 11 10  0  0  1  0  0  0  0  0999 V2000\n    4.5375   -3.5724    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -3.5724    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.4750   -2.8579    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0625   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2375   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8250   -1.4289    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    3.7125   -2.1434    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3000   -1.4289    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    4.5375   -2.1434    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  3  2  1  6\n  3  4  1  0\n  4  5  1  0\n  5  6  1  0\n  6  7  1  0\n  7  8  1  0\n  3  9  1  0\n  9 10  1  0\n  9 11  2  0\nM  RGP  3   1   1   8   3  10   2\nM  END\n", 
+        "naturalAnalog": "K", 
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*][H] |$_R1;$|", 
+                "alternateId": "R1-H", 
+                "capGroupName": "H", 
+                "label": "R1"
+            }, 
+            {
+                "capGroupSmiles": "O[*] |$;_R2$|", 
+                "alternateId": "R2-OH", 
+                "capGroupName": "OH", 
+                "label": "R2"
+            }, 
+            {
+                "capGroupSmiles": "[*][H] |$_R3;$|", 
+                "alternateId": "R3-H", 
+                "capGroupName": "H", 
+                "label": "R3"
+            }
+        ], 
+        "createDate": null, 
+        "id": 0, 
+        "polymerType": "PEPTIDE", 
+        "symbol": "D-Orn"
+    }, 
+    {
         "monomerType": "Backbone",
         "smiles": "CC[C@](C)(N[*])C([*])=O |$;;;;;_R1;;_R2;$|",
         "name": "Isovaline",
