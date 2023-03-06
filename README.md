@@ -5,7 +5,9 @@ Python package for optimizing peptide sequences using Bayesian optimization (BO)
 ## Requirements
 * botorch
 * gpytorch
+* map4
 * matplotlib
+* mhfp
 * numpy
 * pandas
 * python (>= 3.7)
@@ -25,7 +27,7 @@ conda create -n mobius -c conda-forge python=3 mkl numpy scipy pandas \
     matplotlib rdkit seaborn sklearn torch botorch gpytorch \
     sphinx sphinx_rtd_theme
 conda activate mobius
-pip install ray git+https://github.com/reymond-group/map4@v1.0 # To install ray and map4 packages
+pip install ray mhfp git+https://github.com/reymond-group/map4@v1.0 # To install ray, mhfp and map4 packages
 ```
 
 We can now install the `mobius` package

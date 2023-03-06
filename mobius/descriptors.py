@@ -7,10 +7,47 @@
 import numpy as np
 import pandas as pd
 from map4 import MAP4Calculator
+from mhfp.encoder import MHFPEncoder
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
 from .utils import convert_HELM_to_FASTA, MolFromHELM
+
+
+class MHFingerprint:
+
+    def __init__(self, input_type='helm_rdkit', dimensions=4096, radius=3, rings=True, kekulize=True, HELMCoreLibrary_filename=None):
+        assert input_type.lower() in ['fasta', 'helm_rdkit', 'helm', 'smiles'], 'Format (%s) not handled. Please use FASTA, HELM_rdkit, HELM or SMILES format.'
+
+        self._dimensions = dimensions
+        self._radius = radius
+        self._rings = rings
+        self._kekulize = kekulize
+        self._encoder = MHFPEncoder()
+        self._input_type = input_type.lower()
+        self._HELMCoreLibrary_filename = HELMCoreLibrary_filename
+
+    def transform(self, sequences):
+        if not isinstance(sequences, (list, tuple, np.ndarray)):
+            sequences = [sequences]
+
+        try:
+            if self._input_type == 'fasta':
+                mols = [Chem.rdmolfiles.MolFromFASTA(s) for s in sequences]
+            elif self._input_type == 'helm_rdkit':
+                mols = [Chem.rdmolfiles.MolFromHELM(s) for s in sequences]
+            elif self._input_type == 'helm':
+                mols = MolFromHELM(sequences, self._HELMCoreLibrary_filename)
+            else:
+                mols = [Chem.rdmolfiles.MolFromSmiles(s) for s in sequences]
+        except AttributeError:
+            print('Error: there are issues with the input molecules')
+            print(sequences)
+
+        fps = [self._encoder.fold(self._encoder.encode_mol(m, radius=self._radius, rings=self._rings, kekulize=self._kekulize), length=self._dimensions) for m in mols]
+        fps = np.asarray(fps)
+
+        return fps
 
 
 class Map4Fingerprint:

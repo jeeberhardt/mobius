@@ -10,7 +10,7 @@ from .virtual_target import VirtualTarget
 from .acquisition_functions import ExpectedImprovement, ProbabilityOfImprovement, Greedy, RandomImprovement
 from .mobius import Mobius
 from .sampler import PolymerSampler
-from .descriptors import Map4Fingerprint, SequenceDescriptors, SubstitutionMatrix
+from .descriptors import MHFingerprint, Map4Fingerprint, MorganFingerprint, SequenceDescriptors, SubstitutionMatrix
 from .ga import SequenceGA, ParallelSequenceGA, ScaffoldGA, RandomGA
 from .surrogate_model import GPModel, DummyModel, RFModel
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning
@@ -29,7 +29,7 @@ __all__ = ['VirtualTarget', 'ForceField',
            'GPModel', 'DummyModel', 'RFModel',
            'TanimotoSimilarityKernel',
            'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement',
-           'Map4Fingerprint', 'SequenceDescriptors', 'SubstitutionMatrix',
+           'MHFingerprint', 'Map4Fingerprint', 'MorganFingerprint', 'SequenceDescriptors', 'SubstitutionMatrix',
            'HELMGeneticOperators', 'SequenceGA', 'ScaffoldGA', 'RandomGA', 'ParallelSequenceGA',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 'scrumbled_scanning', 'homolog_scanning',
            'plot_results',
