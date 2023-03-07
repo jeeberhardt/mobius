@@ -12,13 +12,6 @@ class Mobius:
     """
     Class for benchmarking sampling protocol against one emulator/oracle.
 
-    Methods
-    -------
-    run(polymers, values, emulator, sampler, num_iter=5, batch_size=96)
-        Function for running the benchmark optimization process with one sampling protocol
-    benchmark(polymers, values, emulator, samplers, num_iter=5, batch_size=96, num_independent_run=5)
-        Function for running the benchmark optimization process with multiple sampling protocols
-
     """
 
     def __init__(self):
@@ -29,8 +22,8 @@ class Mobius:
         Function for running the benchmark optimization process for polymers against one
         emulator/oracle.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
             polymers : list of str
                 List of polymers in HELM format
             values : list of int or float
@@ -81,8 +74,8 @@ class Mobius:
         Function to benchmark multiple sampling strategies for polymers optimization against
         one emulator/oracle.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
             polymers : list of str
                 List of polymers in HELM format
             values : list of int or float

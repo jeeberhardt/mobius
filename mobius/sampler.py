@@ -35,25 +35,14 @@ class PolymerSampler(_Sampler):
     Class for sampling the polymer sequence space using an acquisition function
     and a search protocol.
 
-    Methods
-    -------
-    ask(batch_size=None)
-        Ask for new polymers based on previous experiments.
-    tell(polymers, values)
-        Tell what is known so far in term of polymers and their associated values.
-    recommand(polymers, values, batch_size=None)
-        Recommand new polymers based on input polymers and associated values.
-    optimize(emulator, num_iter, batch_size)
-        Optimize polymers using emulator as the oracle (for benchmark purpose only).
-
     """
 
     def __init__(self, acquisition_function, search_protocol):
         """
         Initialize the polymer sampler.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         acquisition_function : AcquisitionFunction
             The acquisition function that will be used to score the polymer
         search_protocol : Dictionary
@@ -61,28 +50,26 @@ class PolymerSampler(_Sampler):
 
         Examples
         --------
-        from mobius import PolymerSampler, SequenceGA
-
-        # Define a search protocol using the SequenceGA optimizer
-        search_protocol = {
-            'SequenceGA': {
-                'function': SequenceGA,
-                'parameters': {
-                    'n_process': -1,
-                    'n_gen': 1000,
-                    'n_children': 500,
-                    'temperature': 0.01,
-                    'elitism': True,
-                    'total_attempts': 50,
-                    'cx_points': 2,
-                    'pm': 0.1,
-                    'minimum_mutations': 1,
-                    'maximum_mutations': 5
-                }
-            }
+        >>> from mobius import PolymerSampler, SequenceGA
+        >>> # Define a search protocol using the SequenceGA optimizer
+        >>> search_protocol = {
+        …    'SequenceGA': {
+        …        'function': SequenceGA,
+        …        'parameters': {
+        …            'n_process': -1,
+        …            'n_gen': 1000,
+        …            'n_children': 500,
+        …            'temperature': 0.01,
+        …            'elitism': True,
+        …            'total_attempts': 50,
+        …            'cx_points': 2,
+        …            'pm': 0.1,
+        …            'minimum_mutations': 1,
+        …            'maximum_mutations': 5
+        …        }
+        …    }
         }
-
-        ps = PolymerSampler(acq_fun, search_protocol)
+        >>> ps = PolymerSampler(acq_fun, search_protocol)
 
         """
         self._acq_fun = acquisition_function
@@ -92,8 +79,8 @@ class PolymerSampler(_Sampler):
         """
         Function to suggest new polymers based on previous experiments
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         batch_size : int, default: None
             Total number of new polymers that will be returned. If not provided,
             it will return all the polymers sampled during the optimization.
@@ -132,8 +119,8 @@ class PolymerSampler(_Sampler):
         """
         Function to fit the surrogate model using data from past experiments
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         polymers : list of str
             List of all the polymers in HELM format for which there are experimental data.
         values : list of int of float
@@ -146,8 +133,8 @@ class PolymerSampler(_Sampler):
         """
         Function to suggest new polymers based on existing/previous data.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         polymers : list of str
             List of all the polymers in HELM format for which there are experimental data.
         values : list of int of float
@@ -175,6 +162,8 @@ class PolymerSampler(_Sampler):
         """
         Function to optimize polymers based on an emulator/oracle.
         
+        Parameters
+        ----------
         emulator : Emulator
             Emulator/Oracle used to simulate actual lab experiments
         num_iter : int
