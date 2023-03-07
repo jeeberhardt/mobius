@@ -103,7 +103,7 @@ class RandomImprovement(_AcquisitionFunction):
 
         Arguments
         ---------
-        X_test : ndarray or list of shape (n_samples, n_features)
+        X_test : array-like of shape (n_samples, n_features)
             The input samples.
 
         Returns
@@ -174,7 +174,7 @@ class Greedy(_AcquisitionFunction):
 
         Arguments
         ---------
-        X_test : ndarray or list of shape (n_samples, n_features)
+        X_test : array-like of shape (n_samples, n_features)
             The input samples.
 
         Returns
@@ -249,7 +249,7 @@ class ExpectedImprovement(_AcquisitionFunction):
 
         Arguments
         ---------
-        X_test : ndarray or list of shape (n_samples, n_features)
+        X_test : array-like of shape (n_samples, n_features)
             The input samples.
 
         Returns
@@ -333,7 +333,7 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
 
         Arguments
         ---------
-        X_test : ndarray or list of shape (n_samples, n_features)
+        X_test : array-like of shape (n_samples, n_features)
             The input samples.
 
         Returns
