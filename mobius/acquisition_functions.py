@@ -42,16 +42,39 @@ class _AcquisitionFunction(ABC):
 
 
 class RandomImprovement(_AcquisitionFunction):
+    """
+    Class for the random improvement acquisition function. This acquisition
+    function is used for benchmarking purposes only. It can be used to
+    simulate a random search.
+
+    Attributes
+    ----------
+    surrogate_model : _SurrogateModel
+        The surrogate model used by the acquisition function (DummyModel).
+    maximize : bool
+        Tell if the goal to maximize (True) or minimize (False) the acquisition function.
+    scaling_factor : int
+        Scaling factor used by the Bolzmann weigthing function in the GA
+
+    Methods
+    -------
+    forward(X_test)
+        Returns random values for `X_test`.
+
+    """
 
     def __init__(self, low=0, high=1, maximize=True):
         """
         Random acquisition function
 
-        Arguments:
-        ----------
-            low: Lower boundary of the output interval. All values generated will be greater than or equal to low. The default value is 0.
-            high: Upper boundary of the output interval. All values generated will be less than or equal to high. The default value is 1.0.
-            maximize: Indicates whether the function is to be maximised (default: False).
+        Arguments
+        ---------
+            low : int, default : 0
+                Lower boundary of the output interval. All values generated will be greater than or equal to low.
+            high : int, default : 1
+                Upper boundary of the output interval. All values generated will be less than or equal to high.
+            maximize : bool, default : True
+                Indicates whether the function is to be maximised.
 
         """
         self._surrogate_model = DummyModel()
@@ -75,6 +98,20 @@ class RandomImprovement(_AcquisitionFunction):
             return 1
 
     def forward(self, X_test):
+        """
+        Predict random mean values for input sample `X_test`.
+
+        Arguments
+        ---------
+        X_test : ndarray or list of shape (n_samples, n_features)
+            The input samples.
+
+        Returns
+        -------
+        mu : ndarray of shape (n_samples, )
+            Random value for each input sample.
+
+        """
         X_test = np.asarray(X_test)
         mu = np.random.uniform(low=self._low, high=self._high, size=X_test.shape[0])
 
@@ -82,15 +119,35 @@ class RandomImprovement(_AcquisitionFunction):
 
 
 class Greedy(_AcquisitionFunction):
+    """
+    Class for the Greedy acquisition function.
+
+    Attributes
+    ----------
+    surrogate_model : _SurrogateModel
+        The surrogate model used by the acquisition function.
+    maximize : bool
+        Tell if the goal to maximize (True) or minimize (False) the acquisition function.
+    scaling_factor : int
+        Scaling factor used by the Bolzmann weigthing function in the GA
+
+    Methods
+    -------
+    forward(X_test)
+        The mean values predicted by the surrogate model for `X_test`.
+
+    """
 
     def __init__(self, surrogate_model, maximize=False):
         """
-        Greedy acquisition function
+        Greedy acquisition function.
 
-        Arguments:
-        ----------
-            surrogate_model: Surrogate model
-            maximize: Indicates whether the function is to be maximised. The default value is False.
+        Arguments
+        ---------
+            surrogate_model: _SurrogateModel
+                The surrogate model to be used by the acquisition function.
+            maximize : bool, default : False
+                Indicates whether the function is to be maximised.
 
         """
         self._surrogate_model = surrogate_model
@@ -112,12 +169,44 @@ class Greedy(_AcquisitionFunction):
             return 1
 
     def forward(self, X_test):
+        """
+        Predict mean values by the surrogate model for input sample `X_test`.
+
+        Arguments
+        ---------
+        X_test : ndarray or list of shape (n_samples, n_features)
+            The input samples.
+
+        Returns
+        -------
+        mu : ndarray of shape (n_samples, )
+            The mean values predicted by the surrogate model for each input sample.
+
+        """
         mu, _ = self._surrogate_model.predict(X_test)
 
         return mu
 
 
 class ExpectedImprovement(_AcquisitionFunction):
+    """
+    Class for the Expected Improvement acquisition function.
+
+    Attributes
+    ----------
+    surrogate_model : _SurrogateModel
+        The surrogate model used by the acquisition function.
+    maximize : bool
+        Tell if the goal to maximize (True) or minimize (False) the acquisition function.
+    scaling_factor : int
+        Scaling factor used by the Bolzmann weigthing function in the GA
+
+    Methods
+    -------
+    forward(X_test)
+        Predict the Expected Improvement values for `X_test`.
+
+    """
 
     def __init__(self, surrogate_model, maximize=False, xi=0.00, eps=1e-9):
         """
@@ -125,11 +214,16 @@ class ExpectedImprovement(_AcquisitionFunction):
 
         Source: https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
 
-        Arguments:
-        ----------
-            surrogate_model: Surrogate model
-            maximize: Indicates whether the function is to be maximised. The default value is False.
-            xi: Exploitation-exploration trade-off parameter. The default value is 0.
+        Arguments
+        ---------
+            surrogate_model: _SurrogateModel
+                The surrogate model to be used by the acquisition function.
+            maximize : bool, default : False
+                Indicates whether the function is to be maximised.
+            xi : float, default : 0.
+                Exploitation-exploration trade-off parameter.
+            eps : float, default : 1e-9
+                Small number to avoid numerical instability.
 
         """
         self._surrogate_model = surrogate_model
@@ -150,6 +244,20 @@ class ExpectedImprovement(_AcquisitionFunction):
         return -1
 
     def forward(self, X_test):
+        """
+        Predict the Expected Improvement values for input sample `X_test`.
+
+        Arguments
+        ---------
+        X_test : ndarray or list of shape (n_samples, n_features)
+            The input samples.
+
+        Returns
+        -------
+        ei : ndarray of shape (n_samples, )
+            Predicted Expected Improvement value for each input sample.
+
+        """
         if self._maximize:
             best_f = np.max(self._surrogate_model.y_train)
         else:
@@ -170,17 +278,37 @@ class ExpectedImprovement(_AcquisitionFunction):
 
 
 class ProbabilityOfImprovement(_AcquisitionFunction):
+    """
+    Class for the Probability of Improvement acquisition function.
+
+    Attributes
+    ----------
+    surrogate_model : _SurrogateModel
+        The surrogate model used by the acquisition function.
+    maximize : bool
+        Tell if the goal to maximize (True) or minimize (False) the acquisition function.
+    scaling_factor : int
+        Scaling factor used by the Bolzmann weigthing function in the GA
+
+    Methods
+    -------
+    forward(X_test)
+        Predict the Probability of Improvement values for `X_test`.
+
+    """
 
     def __init__(self, surrogate_model, maximize=False, eps=1e-9):
         """
-        Expected improvement acquisition function.
+        Probability of Improvement acquisition function.
 
-        Source: https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
-
-        Arguments:
-        ----------
-            surrogate_model: Surrogate model
-            maximize: Indicates whether the function is to be maximised. The default value is False.
+        Arguments
+        ---------
+            surrogate_model: _SurrogateModel
+                The surrogate model to be used by the acquisition function.
+            maximize : bool, default : False
+                Indicates whether the function is to be maximised.
+            eps : float, default : 1e-9
+                Small number to avoid numerical instability.
 
         """
         self._surrogate_model = surrogate_model
@@ -200,6 +328,20 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
         return -1
 
     def forward(self, X_test):
+        """
+        Predict the Probability of Improvement values for input sample `X_test`.
+
+        Arguments
+        ---------
+        X_test : ndarray or list of shape (n_samples, n_features)
+            The input samples.
+
+        Returns
+        -------
+        pi : ndarray of shape (n_samples, )
+            Predicted Probability of Improvement value for each input sample.
+
+        """
         if self._maximize:
             best_f = np.max(self._surrogate_model.y_train)
         else:
