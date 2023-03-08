@@ -44,9 +44,9 @@ class PolymerSampler(_Sampler):
         Parameters
         ----------
         acquisition_function : AcquisitionFunction
-            The acquisition function that will be used to score the polymer
+            The acquisition function that will be used to score the polymer.
         search_protocol : Dictionary
-            Search/sampling protocol describing all the sampling blocks
+            Search/sampling protocol describing all the sampling blocks.
 
         Examples
         --------
@@ -124,7 +124,7 @@ class PolymerSampler(_Sampler):
         polymers : list of str
             List of all the polymers in HELM format for which there are experimental data.
         values : list of int of float
-            List of all the value associated to each polymer
+            List of all the value associated to each polymer.
 
         """
         self._acq_fun.surrogate_model.fit(polymers, values)
