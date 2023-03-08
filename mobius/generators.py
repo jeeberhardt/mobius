@@ -11,8 +11,54 @@ import random
 
 import numpy as np
 
-from .descriptors import SubstitutionMatrix
 from . import utils
+
+
+class SubstitutionMatrix:
+
+    def __init__(self, matrix_filename):
+        self._matrix = self._read_matrix(matrix_filename)
+
+    def _read_matrix(self, matrix_filename):
+        data = []
+        columns = None
+
+        with open(matrix_filename) as f:
+            lines = f.readlines()
+
+            for line in lines:
+                if not line.startswith('#'):
+                    if columns is None:
+                        columns = [x.strip() for x in line.split(' ') if x]
+                    else:
+                        data.append([x.strip() for x in line.split(' ') if x][1:])
+
+        data = np.array(data).astype(int)
+
+        df = pd.DataFrame(data=data, columns=columns, index=columns)
+        return df
+
+    @property
+    def shape(self):
+        return self._matrix.shape
+
+    def substitutes(self, monomer_symbol, include=False, reverse_order=False):
+        monomers_to_drop = ['X']
+
+        try:
+            substitutions = self._matrix.loc[monomer_symbol]
+        except KeyError:
+            error_msg = 'Error: Monomer symbol %s not present in the substitution matrix.' % monomer_symbol
+            raise KeyError(error_msg)
+
+        substitutions.sort_values(ascending=reverse_order, inplace=True)
+
+        if not include:
+            monomers_to_drop.append(monomer_symbol)
+
+        substitutions.drop(monomers_to_drop, inplace=True)
+        
+        return substitutions.index.values
 
 
 def homolog_scanning(input_sequence, substitution_matrix=None, input_type='helm', positions=None):
