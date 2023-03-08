@@ -13,7 +13,7 @@ from .sampler import PolymerSampler
 from .descriptors import MHFingerprint, Map4Fingerprint, MorganFingerprint, SequenceDescriptors
 from .ga import SequenceGA, ParallelSequenceGA, ScaffoldGA, RandomGA
 from .surrogate_model import GPModel, DummyModel, RFModel
-from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning
+from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning, SubstitutionMatrix
 from .helm_genetic_operators import HELMGeneticOperators
 from .kernels import TanimotoSimilarityKernel
 from .emulator import LinearPeptideEmulator, FindMe
@@ -31,7 +31,7 @@ __all__ = ['VirtualTarget', 'ForceField',
            'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement',
            'MHFingerprint', 'Map4Fingerprint', 'MorganFingerprint', 'SequenceDescriptors',
            'HELMGeneticOperators', 'SequenceGA', 'ScaffoldGA', 'RandomGA', 'ParallelSequenceGA',
-           'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 'scrumbled_scanning', 'homolog_scanning',
+           'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 'scrumbled_scanning', 'homolog_scanning', 'SubstitutionMatrix',
            'plot_results',
            'parse_helm', 'build_helm_string', 'read_pssm_file', 
            'affinity_binding_to_energy', 'energy_to_affinity_binding', 'generate_random_linear_peptides', 'ic50_to_pic50', 'pic50_to_ic50',
