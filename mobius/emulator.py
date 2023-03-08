@@ -26,8 +26,28 @@ class _Emulator(ABC):
 
 
 class FindMe(_Emulator):
+    """
+    The FindMe emulator where the goal is to find the target sequence provided
+    during at the initialization. This is for benchmarking purpose only.
+    """
 
-    def __init__(self, target_sequence, input_type='helm', kernel=None, data_transformer=None):
+    def __init__(self, target_sequence, input_type='helm', kernel=None, input_transformer=None):
+        """
+        Initialize the FindMe emulator.
+        
+        Parameters
+        ----------
+        target_sequence : str
+            Sequence of the polymer to find.
+        input_type : str, default : 'helm'
+            Format of the target polymer, either FASTA or HELM.
+        kernel : kernel
+            The kernel function used to calculate distance between polymer sequences.
+            If not defined, the tanimoto kernel will be used.
+        input_transformer : input transformer, default : None
+            Function that transforms the input into data for the kernel method.
+            If not defined, the MAP4 fingerprint method will be used.
+        """
         if data_transformer != 'precomputed':
             assert input_type.lower() in ['fasta', 'helm'], 'Format (%s) not handled. Please use FASTA or HELM format.'
 
@@ -41,23 +61,39 @@ class FindMe(_Emulator):
         else:
             self._kernel = kernel
 
-        if data_transformer is None:
-            self._data_transformer = Map4Fingerprint()
-        elif data_transformer == 'precomputed':
-            self._data_transformer = 'precomputed'
+        if input_transformer is None:
+            self._input_transformer = Map4Fingerprint()
+        elif input_transformer == 'precomputed':
+            self._input_transformer = 'precomputed'
         else:
-            self._data_transformer = data_transformer
+            self._input_transformer = input_transformer
 
-        if self._data_transformer != 'precomputed':
-            target_sequence_transformed = self._data_transformer.transform(target_sequence)
+        if self._input_transformer != 'precomputed':
+            target_sequence_transformed = self._input_transformer.transform(target_sequence)
         else:
             target_sequence_transformed = self._target_sequence
 
         self._target_sequence_transformed = torch.from_numpy(np.asarray(target_sequence_transformed)).float()
 
     def predict(self, sequences, input_type='helm'):
+        """
+        Score the input sequences according to the unknown target sequences using the
+        kernel function and the input transformer.
+        
+        Parameters
+        ----------
+        sequences : list of str
+            List of all the polymer sequences to score.
+        input_type : str, default : 'helm'
+            Format of the input polymer sequences, either FASTA or HELM.
+
+        Returns
+        -------
+        d : ndarray of shape (n_sequences,)
+            Scores of all the input polymer sequences.
+        """
         # If the input sequences are precomputed, no need to check for the format
-        if self._data_transformer != 'precomputed':
+        if self._input_transformer != 'precomputed':
             assert input_type.lower() in ['fasta', 'helm'], 'Format (%s) not handled. Please use FASTA or HELM format.'
 
             if input_type == 'fasta':
@@ -66,8 +102,8 @@ class FindMe(_Emulator):
         if not isinstance(sequences, (list, tuple, np.ndarray)):
             sequences = [sequences]
 
-        if self._data_transformer != 'precomputed':
-            sequences_transformed = self._data_transformer.transform(sequences)
+        if self._input_transformer != 'precomputed':
+            sequences_transformed = self._input_transformer.transform(sequences)
 
         sequences_transformed = torch.from_numpy(np.asarray(sequences_transformed)).float()
 
@@ -78,8 +114,23 @@ class FindMe(_Emulator):
 
 
 class LinearPeptideEmulator(_Emulator):
+    """
+    The LinearPeptideEmulator emulator where the goal is to minimize or maximize the score
+    based a defined Position Specific Scoring Matrix (PSSM).
+    """
     
     def __init__(self, pssm_files, score_cutoff=None):
+        """
+        Initialize the LinearPeptideEmulator emulator.
+        
+        Parameters
+        ----------
+        pssm_files : str
+            Path of the PSSM file.
+        score_cutoff : int or float, default : None
+            If specified, scores superior than `score_cutoff` will be set to zero.
+            It is one way to simulate a non-binding event.
+        """
         self._pssm = {}
         self._intercept = {}
         self._score_cutoff = score_cutoff
@@ -90,7 +141,22 @@ class LinearPeptideEmulator(_Emulator):
             self._pssm[len(pssm.columns)] = pssm
             self._intercept[len(pssm.columns)] = intercept
 
-    def predict(self, sequences, use_cutoff_score=True, input_type='helm'):
+    def predict(self, sequences, input_type='helm'):
+        """
+        Score the input sequences using the previously defined PSSM.
+        
+        Parameters
+        ----------
+        sequences : list of str
+            List of all the polymer sequences to score.
+        input_type : str, default : 'helm'
+            Format of the input polymer sequences, either FASTA or HELM.
+
+        Returns
+        -------
+        scores : ndarray of shape (n_sequences,)
+            Scores of all the input polymer sequences.
+        """
         assert input_type.lower() in ['fasta', 'helm'], 'Format (%s) not handled. Please use FASTA or HELM format.'
 
         # Score peptides using those PSSM
@@ -119,13 +185,36 @@ class LinearPeptideEmulator(_Emulator):
 
         scores = np.array(scores)
 
-        if self._score_cutoff is not None and use_cutoff_score is True:
+        if self._score_cutoff is not None:
             scores[scores > self._energy_score] = 0.
 
         return scores
 
-    def generate_random_peptides(self, n_peptides, peptide_lengths, score_bounds=None, use_cutoff_score=True, 
-                                 monomer_symbols=None, output_format='helm'):
+    def generate_random_peptides(self, n_peptides, peptide_lengths, low_score=None, high_score=None, monomer_symbols=None):
+        """
+        Generate random linear polymers of a certain lengths and scores.
+        
+        Parameters
+        ----------
+        n_peptides : int
+            Number of polymer sequences to generate.
+        peptide_lengths : list of int
+            Sizes of the polymer sequences to generate.
+        low_score : int or float, default: None
+            Lowest score allowed for the randomly generated polymer sequences.
+        high_score : int or float, default: None
+            Highest score allowed for the randomly generated polymer sequences.
+        monomer_symbols : list of str, default : None
+            Symbol (1 letter) of the monomers that are going to be used during the search. 
+            Per default, only the 20 natural amino acids will be used.
+
+        Returns
+        -------
+        random_peptides : ndarray of shape (n_peptides, )
+            Randomly generated polymer sequences.
+        random_peptide_scores : ndarray of shape (n_peptides, )
+            Scores of the randomly generated polymer sequences.
+        """
         random_peptides = []
         random_peptide_scores = []
 
@@ -138,13 +227,19 @@ class LinearPeptideEmulator(_Emulator):
         else:
             monomer_symbols = monomer_symbols
 
+        if low_score is None:
+            low_score = -np.inf
+
+        if high_score is None:
+            high_score = np.inf
+
         if not isinstance(peptide_lengths, (list, tuple)):
             peptide_lengths = [peptide_lengths]
 
         while True:
             peptide_length = np.random.choice(peptide_lengths)
             p = ''.join(np.random.choice(monomer_symbols, peptide_length))
-            s = self.predict([p], use_cutoff_score=use_cutoff_score, input_type='FASTA')[0]
+            s = self.predict([p], input_type='FASTA')[0]
 
             if score_bounds is not None:
                 if score_bounds[0] <= s <= score_bounds[1]:
@@ -157,8 +252,7 @@ class LinearPeptideEmulator(_Emulator):
             if len(random_peptides) == n_peptides:
                 break
 
-        if output_format.lower() == 'helm':
-            random_peptides = [build_helm_string({'PEPTIDE1': p}, []) for p in random_peptides]
+        random_peptides = [build_helm_string({'PEPTIDE1': p}, []) for p in random_peptides]
 
         sorted_index = np.argsort(random_peptide_scores)
         random_peptides = np.asarray(random_peptides)[sorted_index]
