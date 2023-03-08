@@ -104,8 +104,32 @@ class _ExactGPModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchMod
 
 
 class GPModel(_SurrogateModel):
+    """
+    Class for the Gaussian Process Regressor (GPR) surrogate model.
 
-    def __init__(self, kernel=None, input_transformer=None):
+    Attributes
+    ----------
+    X_train : array-like of shape (n_samples, n_features)
+        The training dataset obtained after transformation.
+    X_train_original : array-like of shape (n_samples, n_features)
+        The original training dataset before transformation.
+    y_train : array-like of shape (n_smaples, )
+        The target values.
+
+    """
+
+    def __init__(self, kernel, input_transformer=None):
+        """
+        Initialization of the Gaussian Process (GP) surrogate model.
+
+        Parameters
+        ----------
+        kernel : kernel
+            The kernel specifying the covariance function of the GPR model.
+        input_transformer : input transformer, default : None
+            Function that transforms the input into data exploitable by the GP model.
+
+        """
         self._kernel = kernel
         self._input_transformer = input_transformer
         self._likelihood = None
@@ -139,6 +163,17 @@ class GPModel(_SurrogateModel):
         return self._y_train
 
     def fit(self, X_train, y_train):
+        """
+        Fit Gaussian Process Regression (GPR) model.
+
+        Parameters
+        ----------
+        X_train : array-like of shape (n_samples, n_features)
+            Input training dataset.
+        y_train : array-like of shape (n_samples,)
+            Target values.
+
+        """
         # Make sure that inputs are numpy arrays, keep a persistant copy
         self._X_train_original = np.asarray(X_train).copy()
         self._y_train = np.asarray(y_train).copy()
@@ -171,6 +206,22 @@ class GPModel(_SurrogateModel):
         fit_gpytorch_model(mll)
 
     def predict(self, X_test):
+        """
+        Predict using the Gaussian Process Regressor (GPR) model.
+
+        Parameters
+        ----------
+        X_test : array-like of shape (n_samples, n_features)
+            Query points where the GPR is evaluated.
+
+        Returns
+        -------
+        mu : array-like of shape (n_samples,)
+            Mean of predictive distribution at query points.
+        sigma : array-like of shape (n_samples,)
+            Standard deviation of predictive distribution at query points.
+
+        """
         if self._model is None:
             msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
@@ -196,13 +247,56 @@ class GPModel(_SurrogateModel):
         return mu, sigma
 
     def score(self, X_test, y_test):
+        """
+        Returns the coefficient of determination :math:`R^2`.
+        
+        Parameters
+        ----------
+        X_test : array-like of shape (n_samples, n_features)
+            Query points where the GPR is evaluated.
+        y_test : array-like of shape (n_samples,)
+            True values of `X_test`.
+
+        Returns
+        -------
+        score : float
+            Coefficient of determination :math:`R^2`.
+
+        """
         mu, _ = self.predict(X_test)
         return r2_score(y_test, mu)
 
 
 class RFModel(_SurrogateModel):
+    """
+    Class for the Random Forest Regressor (RFR) surrogate model.
+
+    Attributes
+    ----------
+    X_train : array-like of shape (n_samples, n_features)
+        The training dataset obtained after transformation.
+    X_train_original : array-like of shape (n_samples, n_features)
+        The original training dataset before transformation.
+    y_train : array-like of shape (n_smaples, )
+        The target values.
+
+    """
     
     def __init__(self, input_transformer=None, **kwargs):
+        """
+        Initialization of the Random Forest Regressor (RFR) surrogate model.
+
+        Parameters
+        ----------
+        input_transformer : input transformer, default : None
+            Function that transforms the input into data exploitable by the GP model.
+        **kwargs
+            All the other keyword arguments are passed on to the internal `RFR` 
+            model from the scikit-learn package. The default parameters are
+            `n_estimators=500`, `max_features='sqrt'`, `max_depth=None`, 
+            `oob_Score=True`, `bootstrap=True` and `max_samples=None`.
+
+        """
         self._input_transformer = input_transformer
         self._model = None
         self._X_train = None
@@ -243,6 +337,17 @@ class RFModel(_SurrogateModel):
         return self._y_train
     
     def fit(self, X_train, y_train):
+        """
+        Fit Random Forest Regressor (RFR) model.
+
+        Parameters
+        ----------
+        X_train : array-like of shape (n_samples, n_features)
+            Input training dataset.
+        y_train : array-like of shape (n_samples,)
+            Target values.
+
+        """
         # Make sure that inputs are numpy arrays, keep a persistant copy
         self._X_train_original = np.asarray(X_train).copy()
         self._y_train = np.asarray(y_train).copy()
@@ -257,6 +362,22 @@ class RFModel(_SurrogateModel):
         self._model.fit(self._X_train, self._y_train)
     
     def predict(self, X_test):
+        """
+        Predict using the Random Forest Regressor (RFR) model.
+
+        Parameters
+        ----------
+        X_test : array-like of shape (n_samples, n_features)
+            Query points where the GPR is evaluated.
+
+        Returns
+        -------
+        mu : array-like of shape (n_samples,)
+            Mean of predictive distribution at query points.
+        sigma : array-like of shape (n_samples,)
+            Standard deviation of predictive distribution at query points.
+
+        """
         if self._model is None:
             msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
@@ -274,5 +395,21 @@ class RFModel(_SurrogateModel):
         return mu, sigma
     
     def score(self, X_test, y_test):
+        """
+        Returns the coefficient of determination :math:`R^2`.
+        
+        Parameters
+        ----------
+        X_test : array-like of shape (n_samples, n_features)
+            Query points where the GPR is evaluated.
+        y_test : array-like of shape (n_samples,)
+            True values of `X_test`.
+
+        Returns
+        -------
+        score : float
+            Coefficient of determination :math:`R^2`.
+
+        """
         mu, _ = self.predict(X_test)
         return r2_score(y_test, mu)

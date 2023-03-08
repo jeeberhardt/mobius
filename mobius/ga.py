@@ -251,10 +251,44 @@ class _GeneticAlgorithm(ABC):
 
 
 class SequenceGA(_GeneticAlgorithm):
+    """
+    Use GA to search for new sequence candidates using the acquisition function
+    for scoring.
+    """
 
     def __init__(self, n_gen=1000, n_children=500, temperature=0.01, elitism=True, total_attempts=50,
                  cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=1, monomer_symbols=None,
                  **kwargs):
+        """
+        Initialize the SequenceGA optimization.
+        
+        Parameters
+        ----------
+        n_gen : int, default : 1000
+            Number of GA generation to run.
+        n_children : int, default : 500
+            Number of children generated at each generation.
+        temperature : float, default : 0.01
+            Numerical temperature for the Boltzmann weighting selection.
+        elitism : bool, default : True
+            Use elistism strategy during the search. Best parents will be carried
+            over to the next generation along side the new children.
+        total_attempt : int, default : 50
+            Stopping criteria. Number of attempt before stopping the search. If no
+            improvement is observed after `total_attempt` generations, we stop.
+        cx_points : int, default : 2
+            Number of crossing over during the mating step.
+        pm : float, default : 0.1
+            Probability of mutation.
+        minimum_mutations : int, default : 1
+            Minimal number of mutations introduced in the new child.
+        maximum_mutations: int, default : 1
+            Maximal number of mutations introduced in the new child.
+        monomer_symbols : list of str, default : None
+            Symbol (1 letter) of the monomers that are going to be used during the search. 
+            Per default, only the 20 natural amino acids will be used.
+
+        """
         self.sequences = None
         self.scores = None
         # Parameters
@@ -291,6 +325,26 @@ class SequenceGA(_GeneticAlgorithm):
         return new_pop
 
     def run(self, acquisition_function, sequences, scores):
+        """
+        Run the SequenceGA search.
+        
+        Parameters
+        ----------
+        acquisition_function : AcquisitionFunction
+            The acquisition function that will be used to score the polymer.
+        sequences : list of str
+            List of all the polymers in HELM format.
+        scores : array-like of shape (n_samples, )
+            List of all the value associated to each polymer.
+
+        Returns
+        -------
+        sequences : array-like of shape (n_samples,)
+            All the sequences found during the GA search.
+        scores : array-like of shape (n_samples,)
+            All the scores for each sequences found.
+
+        """
         _, group_indices = _group_by_scaffold(sequences, return_index=True)
 
         if len(group_indices) > 1:
@@ -305,10 +359,51 @@ class SequenceGA(_GeneticAlgorithm):
 
 
 class ParallelSequenceGA(_GeneticAlgorithm):
+    """
+    Parallel version of the SequenceGA to search for new sequence candidates using the 
+    acquisition function for scoring.
+    
+    This version handle datasets containing polymers with different scaffolds. A SequenceGA
+    search will be performed independently for each scaffold. Each SequenceGA search will 
+    use 1 cpu-core.
+
+    """
 
     def __init__(self, n_gen=1000, n_children=500, temperature=0.01, elitism=True, total_attempts=50,
                  cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=1, monomer_symbols=None, 
                  n_process=-1, **kwargs):
+        """
+        Initialize the ParallelSequenceGA optimization.
+        
+        Parameters
+        ----------
+        n_gen : int, default : 1000
+            Number of GA generation to run.
+        n_children : int, default : 500
+            Number of children generated at each generation.
+        temperature : float, default : 0.01
+            Numerical temperature for the Boltzmann weighting selection.
+        elitism : bool, default : True
+            Use elistism strategy during the search. Best parents will be carried
+            over to the next generation along side the new children.
+        total_attempt : int, default : 50
+            Stopping criteria. Number of attempt before stopping the search. If no
+            improvement is observed after `total_attempt` generations, we stop.
+        cx_points : int, default : 2
+            Number of crossing over during the mating step.
+        pm : float, default : 0.1
+            Probability of mutation.
+        minimum_mutations : int, default : 1
+            Minimal number of mutations introduced in the new child.
+        maximum_mutations: int, default : 1
+            Maximal number of mutations introduced in the new child.
+        monomer_symbols : list of str, default : None
+            Symbol (1 letter) of the monomers that are going to be used during the search. 
+            Per default, only the 20 natural amino acids will be used.
+        n_process : int, default : -1
+            Number of process to run in parallel. Per default, use all the available core.
+
+        """
         self.sequences = None
         self.scores = None
         # Parameters
@@ -326,6 +421,26 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         raise NotImplementedError()
 
     def run(self, acquisition_function, sequences, scores):
+        """
+        Run the ParallelSequenceGA search.
+        
+        Parameters
+        ----------
+        acquisition_function : AcquisitionFunction
+            The acquisition function that will be used to score the polymer.
+        sequences : list of str
+            List of all the polymers in HELM format.
+        scores : array-like of shape (n_samples, )
+            List of all the value associated to each polymer.
+
+        Returns
+        -------
+        sequences : array-like of shape (n_samples,)
+            All the sequences found during the GA search.
+        scores : array-like of shape (n_samples,)
+            All the scores for each sequences found.
+
+        """
         all_sequences = []
         all_sequence_scores = []
         
@@ -373,10 +488,42 @@ class ParallelSequenceGA(_GeneticAlgorithm):
 
 
 class ScaffoldGA(_GeneticAlgorithm):
+    """
+    Use GA to search for new sequence candidates using the acquisition function
+    for scoring.
+    """
 
     def __init__(self, n_gen=1, n_children=1000, temperature=0.1, elitism=True, total_attempts=50,
                  only_terminus=True, minimum_size=None, maximum_size=None, monomer_symbols=None,
                  **kwargs):
+        """
+        Initialize the ScaffoldGA optimization.
+        
+        Parameters
+        ----------
+        n_gen : int, default : 1000
+            Number of GA generation to run.
+        n_children : int, default : 500
+            Number of children generated at each generation.
+        temperature : float, default : 0.01
+            Numerical temperature for the Boltzmann weighting selection.
+        elitism : bool, default : True
+            Use elistism strategy during the search. Best parents will be carried
+            over to the next generation along side the new children.
+        total_attempt : int, default : 50
+            Stopping criteria. Number of attempt before stopping the search. If no
+            improvement is observed after `total_attempt` generations, we stop.
+        only_terminus : bool, default : True
+            If `True`, only add new monomer at the polymer terminus.
+        minimum_size : int, default : 1
+            Minimal size of the polymers explored during the search.
+        maximum_size: int, default : 1
+            Maximal size of the polymers explored during the search.
+        monomer_symbols : list of str, default : None
+            Symbol (1 letter) of the monomers that are going to be used during the search. 
+            Per default, only the 20 natural amino acids will be used.
+
+        """
         self.sequences = None
         self.scores = None
         # Parameters
@@ -411,7 +558,27 @@ class ScaffoldGA(_GeneticAlgorithm):
 
         return new_pop
 
-    def run(self, acquisition_function, sequences, scores=None):
+    def run(self, acquisition_function, sequences, scores):
+        """
+        Run the ScaffoldGA search.
+        
+        Parameters
+        ----------
+        acquisition_function : AcquisitionFunction
+            The acquisition function that will be used to score the polymer.
+        sequences : list of str
+            List of all the polymers in HELM format.
+        scores : array-like of shape (n_samples, )
+            List of all the value associated to each polymer.
+
+        Returns
+        -------
+        sequences : array-like of shape (n_samples,)
+            All the sequences found during the GA search.
+        scores : array-like of shape (n_samples,)
+            All the scores for each sequences found.
+
+        """
         self.sequences, self.scores = super().run(acquisition_function, sequences, scores)
 
         print('End Scaffold GA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
@@ -420,9 +587,32 @@ class ScaffoldGA(_GeneticAlgorithm):
 
 
 class RandomGA():
+    """
+    The RandomGA is for benchmark purpose only. It generates random liner polymer sequences.
+    """
 
-    def __init__(self, n_process=-1, n_gen=1000, n_children=500, minimum_size=1, maximum_size=1, 
-                 monomer_symbols=None, **kwargs):
+    def __init__(self, n_gen=1000, n_children=500, minimum_size=1, maximum_size=1, 
+                 monomer_symbols=None, n_process=-1, **kwargs):
+        """
+        Initialize the RandomGA "optimization".
+        
+        Parameters
+        ----------
+        n_gen : int, default : 1000
+            Number of GA generation to run.
+        n_children : int, default : 500
+            Number of children generated at each generation.
+        minimum_size : int, default : 1
+            Minimal size of the polymers explored during the search.
+        maximum_size: int, default : 1
+            Maximal size of the polymers explored during the search.
+        monomer_symbols : list of str, default : None
+            Symbol (1 letter) of the monomers that are going to be used during the search. 
+            Per default, only the 20 natural amino acids will be used.
+        n_process : int, default : -1
+            Number of process to run in parallel. Per default, use all the available core.
+
+        """
         self.sequences = None
         self.scores = None
         # Parameters
@@ -433,6 +623,26 @@ class RandomGA():
         self._helmgo = HELMGeneticOperators(monomer_symbols=monomer_symbols)
 
     def run(self, acquisition_function, sequences=None, scores=None):
+        """
+        Run the RandomGA "search".
+        
+        Parameters
+        ----------
+        acquisition_function : AcquisitionFunction (RandomImprovement)
+            The acquisition function that will be used to score the polymer.
+        sequences : list of str
+            List of all the polymers in HELM format.
+        scores : array-like of shape (n_samples, )
+            List of all the value associated to each polymer.
+
+        Returns
+        -------
+        sequences : array-like of shape (n_samples,)
+            All the sequences found during the GA search.
+        scores : array-like of shape (n_samples,)
+            All the scores for each sequences found.
+
+        """
         peptide_lengths = list(range(self._minimum_size, self._maximum_size + 1))
 
         # Generate (n_children * n_gen) sequences and random score them!
@@ -443,7 +653,9 @@ class RandomGA():
         all_scores = np.asarray(all_scores)
 
         # Sort sequences by scores in the decreasing order (best to worst)
-        sorted_indices = np.argsort(all_scores)
+        # The scores are scaled to be sure that the best has the lowest score
+        # This scaling factor is based on the acquisition function nature
+        sorted_indices = np.argsort(acquisition_function.scaling_factor * scores)
 
         self.sequences = all_sequences[sorted_indices]
         self.scores = all_scores[sorted_indices]
