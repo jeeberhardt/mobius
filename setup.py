@@ -36,7 +36,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=['numpy>=1.18'],
-    python_requires='>=3.5.*',
+    python_requires='>=3.5',
     license="Apache-2.0",
     keywords=["drug design"],
     classifiers=[
@@ -47,7 +47,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
         'Operating System :: MacOS :: MacOS X',
-        #'Operating System :: Microsoft :: Windows',
         'Operating System :: OS Independent',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: C++',
@@ -56,6 +55,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Topic :: Scientific/Engineering :: Chemistry',
         'Topic :: Software Development :: Libraries'
