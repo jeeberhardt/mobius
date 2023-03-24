@@ -113,7 +113,8 @@ class GeneticOperators:
         
     def insert(self, input_sequence, n=10, only_terminus=False, maximum_size=None):
         """
-        Apply the insertion genetic operator on the input sequence.
+        Apply the insertion genetic operator on the input sequence. The 
+        insert genetic operator is only implemented for linear polymers.
 
         Parameters
         ----------
@@ -130,6 +131,11 @@ class GeneticOperators:
         -------
         List of str
             Mutated sequences in HELM format.
+
+        Raises
+        ------
+        NotImplementedError
+            If the input sequence contains connections.
 
         """
         mutant_sequences = []
@@ -198,7 +204,8 @@ class GeneticOperators:
 
     def delete(self, helm_string, n=10, only_terminus=False, minimum_size=None):
         """
-        Apply the delete genetic operator on the input sequence.
+        Apply the delete genetic operator on the input sequence. The 
+        delete genetic operator is only implemented for linear polymers.
 
         Parameters
         ----------
@@ -215,6 +222,11 @@ class GeneticOperators:
         -------
         List of str
             Mutated sequences in HELM format.
+
+        Raises
+        ------
+        NotImplementedError
+            If the input sequence contains connections.
 
         """
         mutant_sequences = []

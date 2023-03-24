@@ -84,8 +84,8 @@ class CosineSimilarityKernel(gpytorch.kernels.Kernel):
         """
         Computes the cosine similarity coefficient between two input tensors.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
          x1 : torch.Tensor
             Input tensor of shape `(batch_size_1, n_features)` containing `batch_size_1` data points,
             each with `n_features` features.
@@ -95,14 +95,14 @@ class CosineSimilarityKernel(gpytorch.kernels.Kernel):
        eps : float, default : 1e-6
             A small constant to add to the denominator for numerical stability.
             
-        Returns:
-        --------
+        Returns
+        -------
         torch.Tensor
             A tensor of shape `(batch_size_1, batch_size_2)` representing the 
             Tanimoto similarity coefficient between each pair of data points.
 
-        Notes:
-        ------
+        Notes
+        -----
         This function is adapted from https://stackoverflow.com/questions/50411191/
 
         """

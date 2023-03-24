@@ -291,20 +291,20 @@ def convert_HELM_to_FASTA(helm_sequences, ignore_connections=False):
     """
     Converts one or more HELM sequences to FASTA format.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     helm_sequences : str, list of str, or numpy.ndarray of str
         A HELM sequence or list/array of HELM sequences.
     ignore_connections : bool, default : False
         Whether to ignore connections in HELM sequences.
 
-    Returns:
-    --------
+    Returns
+    -------
     list of str
         A list of sequences in FASTA format.
 
-    Raises:
-    -------
+    Raises
+    ------
     ValueError
         If a polymer contains connections or more than one sequence.
 
@@ -423,7 +423,7 @@ def parse_helm(helm_string):
     return polymers, connections, hydrogen_bonds, attributes
 
 
-def get_scaffold_from_helm(input_sequence):
+def get_scaffold_from_helm_string(input_sequence):
     """
     Give the scaffold version of the HELM sequence.
 
@@ -437,8 +437,8 @@ def get_scaffold_from_helm(input_sequence):
     str
         The scaffold version of the input sequence in HELM format.
 
-    Example
-    -------
+    Examples
+    --------
         input_sequence : PEPTIDE1{A.C.A.A.A}|PEPTIDE2{A.A.A.A}$PEPTIDE1,PEPTIDE2,1:R3-1:R3$$$V2.0
         scaffold       : PEPTIDE1{X.C.X.X.X}|PEPTIDE2{X.A.X.X}$PEPTIDE1,PEPTIDE2,1:R3-1:R3$$$V2.0
 
@@ -470,17 +470,17 @@ def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
     """
     Generate a list of RDKit molecules from HELM strings.
     
-    Parameters:
-    -----------
-    HELM_strings : str or list or tuple or numpy.ndarray
+    Parameters
+    ----------
+    HELM_strings : str or List or tuple or numpy.ndarray
         The input HELM string(s) to convert to RDKit molecules.
     HELMCoreLibrary_filename : str, default : None
         The filename of the HELM core library JSON file. 
         If not provided, the default HELMCoreLibrary JSON file will be used.
     
-    Returns:
-    --------
-    list
+    Returns
+    -------
+    List
         A list of RDKit molecules.
 
     """

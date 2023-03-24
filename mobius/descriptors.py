@@ -340,8 +340,8 @@ class SequenceDescriptors:
         """
          Constructs a new instance of the SequenceDescriptors class.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         descriptors: pandas DataFrame
             A pandas DataFrame containing the sequence descriptors 
             for the 20 natural amino acids. The first column of the DataFrame 
