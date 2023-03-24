@@ -9,11 +9,41 @@ import gpytorch
 
 
 class TanimotoSimilarityKernel(gpytorch.kernels.Kernel):
+    """
+    A class omputing the Tanimoto similarity coefficient between input data points.
+
+    """
+
     # this kernel is non-stationary
     is_stationary = False
 
     # this is the kernel function
     def forward(self, x1, x2, diag=False, last_dim_is_batch=False, eps=1e-6, **params):
+        """
+        Computes the Tanimoto similarity kernel between two input tensors.
+
+        Parameters
+        ----------
+        x1 : torch.Tensor
+            Input tensor of shape `(batch_size_1, n_features)` containing `batch_size_1` data points,
+            each with `n_features` features.
+        x2 : torch.Tensor
+            Input tensor of shape `(batch_size_2, n_features)` containing `batch_size_2` data points,
+            each with `n_features` features.
+        diag : bool, default : False
+            If True, return the diagonal of the kernel matrix.
+        last_dim_is_batch : bool, default : False
+            If True, treat the last dimension of the input tensors as a batch dimension.
+        eps : float, default : 1e-6
+            A small constant to add to the denominator for numerical stability.
+
+        Returns
+        -------
+        torch.Tensor
+            A tensor of shape `(batch_size_1, batch_size_2)` representing the 
+            Tanimoto similarity coefficient between each pair of data points.
+
+        """
         if last_dim_is_batch:
             # Not tested
             x1 = x1.transpose(-1, -2).unsqueeze(-1)
@@ -41,12 +71,41 @@ class TanimotoSimilarityKernel(gpytorch.kernels.Kernel):
 
 
 class CosineSimilarityKernel(gpytorch.kernels.Kernel):
+    """
+    A class for computing Cosine similarity coefficient.
+
+    """
+
     # this kernel is non-stationary
     is_stationary = False
 
     # this is the kernel function
     def forward(self, x1, x2, eps=1e-6, **params):
-        # Source: https://stackoverflow.com/questions/50411191/how-to-compute-the-cosine-similarity-in-pytorch-for-all-rows-in-a-matrix-with-re
+        """
+        Computes the cosine similarity coefficient between two input tensors.
+        
+        Parameters:
+        -----------
+         x1 : torch.Tensor
+            Input tensor of shape `(batch_size_1, n_features)` containing `batch_size_1` data points,
+            each with `n_features` features.
+        x2 : torch.Tensor
+            Input tensor of shape `(batch_size_2, n_features)` containing `batch_size_2` data points,
+            each with `n_features` features.
+       eps : float, default : 1e-6
+            A small constant to add to the denominator for numerical stability.
+            
+        Returns:
+        --------
+        torch.Tensor
+            A tensor of shape `(batch_size_1, batch_size_2)` representing the 
+            Tanimoto similarity coefficient between each pair of data points.
+
+        Notes:
+        ------
+        This function is adapted from https://stackoverflow.com/questions/50411191/
+
+        """
         # Normalize the rows, before computing their dot products via transposition
         x1_n = x1.norm(dim=1)[:, None]
         x2_n = x2.norm(dim=1)[:, None]

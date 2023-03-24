@@ -107,24 +107,15 @@ class GPModel(_SurrogateModel):
     """
     Class for the Gaussian Process Regressor (GPR) surrogate model.
 
-    Attributes
-    ----------
-    X_train : array-like of shape (n_samples, n_features)
-        The training dataset obtained after transformation.
-    X_train_original : array-like of shape (n_samples, n_features)
-        The original training dataset before transformation.
-    y_train : array-like of shape (n_smaples, )
-        The target values.
-
     """
 
     def __init__(self, kernel, input_transformer=None):
         """
-        Initialization of the Gaussian Process (GP) surrogate model.
+        Initializes the Gaussian Process Regressor (GPR) surrogate model.
 
         Parameters
         ----------
-        kernel : kernel
+        kernel : `gpytorch.kernels.Kernel`
             The kernel specifying the covariance function of the GPR model.
         input_transformer : input transformer, default : None
             Function that transforms the input into data exploitable by the GP model.
@@ -140,6 +131,15 @@ class GPModel(_SurrogateModel):
 
     @property
     def X_train(self):
+        """
+        Returns the training dataset after transformation.
+        
+        Raises
+        ------
+        RuntimeError
+            If the GPModel instance is not fitted yet.
+
+        """
         if self._X_train is None:
             msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
@@ -148,6 +148,15 @@ class GPModel(_SurrogateModel):
 
     @property
     def X_train_original(self):
+        """
+        Returns the original training dataset before transformation.
+        
+        Raises
+        ------
+        RuntimeError
+            If the GPModel instance is not fitted yet.
+
+        """
         if self._X_train_original is None:
             msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
@@ -156,6 +165,15 @@ class GPModel(_SurrogateModel):
 
     @property
     def y_train(self):
+        """
+        Returns the target values.
+        
+        Raises
+        ------
+        RuntimeError
+            If the GPModel instance is not fitted yet.
+
+        """
         if self._y_train is None:
             msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
@@ -164,7 +182,7 @@ class GPModel(_SurrogateModel):
 
     def fit(self, X_train, y_train):
         """
-        Fit Gaussian Process Regression (GPR) model.
+        Fits the Gaussian Process Regressor (GPR) model.
 
         Parameters
         ----------
@@ -207,7 +225,7 @@ class GPModel(_SurrogateModel):
 
     def predict(self, X_test):
         """
-        Predict using the Gaussian Process Regressor (GPR) model.
+        Predicts using the Gaussian Process Regressor (GPR) model.
 
         Parameters
         ----------
@@ -220,6 +238,11 @@ class GPModel(_SurrogateModel):
             Mean of predictive distribution at query points.
         sigma : array-like of shape (n_samples,)
             Standard deviation of predictive distribution at query points.
+
+        Raises
+        ------
+        RuntimeError
+            If instance is not fitted yet.
 
         """
         if self._model is None:
@@ -248,8 +271,8 @@ class GPModel(_SurrogateModel):
 
     def score(self, X_test, y_test):
         """
-        Returns the coefficient of determination :math:`R^2`.
-        
+        Returns the coefficient of determination R^2.
+
         Parameters
         ----------
         X_test : array-like of shape (n_samples, n_features)
@@ -260,7 +283,7 @@ class GPModel(_SurrogateModel):
         Returns
         -------
         score : float
-            Coefficient of determination :math:`R^2`.
+            Coefficient of determination R^2.
 
         """
         mu, _ = self.predict(X_test)
@@ -271,15 +294,6 @@ class RFModel(_SurrogateModel):
     """
     Class for the Random Forest Regressor (RFR) surrogate model.
 
-    Attributes
-    ----------
-    X_train : array-like of shape (n_samples, n_features)
-        The training dataset obtained after transformation.
-    X_train_original : array-like of shape (n_samples, n_features)
-        The original training dataset before transformation.
-    y_train : array-like of shape (n_smaples, )
-        The target values.
-
     """
     
     def __init__(self, input_transformer=None, **kwargs):
@@ -288,8 +302,8 @@ class RFModel(_SurrogateModel):
 
         Parameters
         ----------
-        input_transformer : input transformer, default : None
-            Function that transforms the input into data exploitable by the GP model.
+        input_transformer : input_transformer, default : None
+            Function that transforms the input into data exploitable by the RFR model.
         **kwargs
             All the other keyword arguments are passed on to the internal `RFR` 
             model from the scikit-learn package. The default parameters are
@@ -314,6 +328,20 @@ class RFModel(_SurrogateModel):
         
     @property
     def X_train(self):
+        """
+        Returns the training dataset obtained after transformation.
+        
+        Returns
+        -------
+        X_train : array-like of shape (n_samples, n_features)
+            The training dataset obtained after transformation.
+
+        Raises
+        ------
+        RuntimeError
+            If the model is not fitted yet.
+
+        """
         if self._X_train is None:
             msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
@@ -322,6 +350,20 @@ class RFModel(_SurrogateModel):
 
     @property
     def X_train_original(self):
+        """
+        Returns the original training dataset before transformation.
+        
+        Returns
+        -------
+        X_train_original : array-like of shape (n_samples, n_features)
+            The original training dataset before transformation.
+
+        Raises
+        ------
+        RuntimeError
+            If the model is not fitted yet.
+
+        """
         if self._X_train_original is None:
             msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
@@ -330,6 +372,20 @@ class RFModel(_SurrogateModel):
 
     @property
     def y_train(self):
+        """
+        Returns the target values.
+        
+        Returns
+        -------
+        y_train : array-like of shape (n_smaples, )
+            The target values.
+        
+        Raises
+        ------
+        RuntimeError
+            If the model is not fitted yet.
+
+        """
         if self._y_train is None:
             msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
@@ -377,6 +433,17 @@ class RFModel(_SurrogateModel):
         sigma : array-like of shape (n_samples,)
             Standard deviation of predictive distribution at query points.
 
+        Raises
+        ------
+        RuntimeError
+            If the instance is not fitted yet.
+
+        Notes
+        -----
+        The uncertainty is estimated by calcutating the standard deviations from the
+        predictions of each individual trees in the RFR model. It should not be done 
+        this way: https://stats.stackexchange.com/questions/490514
+
         """
         if self._model is None:
             msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
@@ -387,8 +454,6 @@ class RFModel(_SurrogateModel):
             X_test = self._input_transformer.transform(X_test)
         
         mu = self._model.predict(X_test)
-        # Just a test. The uncertainty estimations should not be done this way.
-        # https://stats.stackexchange.com/questions/490514/is-it-valid-to-use-the-distribution-of-individual-tree-predictions-in-a-random-f
         estimations = np.stack([t.predict(X_test) for t in self._model.estimators_])
         sigma = np.std(estimations, axis=0)
         
@@ -397,7 +462,7 @@ class RFModel(_SurrogateModel):
     def score(self, X_test, y_test):
         """
         Returns the coefficient of determination :math:`R^2`.
-        
+
         Parameters
         ----------
         X_test : array-like of shape (n_samples, n_features)
@@ -409,6 +474,11 @@ class RFModel(_SurrogateModel):
         -------
         score : float
             Coefficient of determination :math:`R^2`.
+
+        Raises
+        ------
+        RuntimeError
+            If the instance is not fitted yet.
 
         """
         mu, _ = self.predict(X_test)

@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from .utils import energy_to_affinity_binding, affinity_binding_to_energy
+from .utils import affinity_binding_to_energy
 
 
 def plot_results(df, run_name):

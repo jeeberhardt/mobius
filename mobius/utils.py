@@ -8,13 +8,10 @@ import json
 import os
 from importlib import util
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import torch
 from rdkit import Chem
-from rdkit.Chem import molzip
 from rdkit import RDLogger
 
 # Disable Warnings for MolFromHELM function
@@ -24,6 +21,21 @@ lg.setLevel(RDLogger.ERROR)
 
 
 def path_module(module_name):
+    """
+    Given a module name, return the path of the directory where the module is located.
+    Returns None if the module does not exist.
+
+    Parameters
+    ----------
+    module_name : str
+        Name of the module.
+
+    Returns
+    -------
+    path : str or None
+        Path of the directory where the module is located, or None if the module does not exist.
+
+    """
     specs = util.find_spec(module_name)
     if specs is not None:
         return specs.submodule_search_locations[0]
@@ -31,36 +43,152 @@ def path_module(module_name):
 
 
 def function_equal(func_1, func_2):
+    """
+    Compare two functions to see if they are identical.
+
+    Parameters
+    ----------
+    func_1 : function
+        The first function to compare.
+    func_2 : function
+        The second function to compare.
+
+    Returns
+    -------
+    bool
+        True if the two functions are identical, False otherwise.
+
+    """
     return func_1.__code__.co_code == func_2.__code__.co_code
 
 
 def opposite_signs(x, y):
+    """
+    Return True if x and y have opposite signs, otherwise False.
+
+    Parameters
+    ----------
+    x : float or int
+        First number to compare.
+    y : float or int
+        Second number to compare.
+
+    Returns
+    -------
+    bool
+        True if x and y have opposite signs, False otherwise.
+
+    """
     return ((x ^ y) < 0)
 
 
 def affinity_binding_to_energy(value, unit='nM', temperature=300.):
+    """
+    Convert affinity binding to energy.
+
+    Parameters
+    ----------
+    value : float
+        Value of the affinity binding.
+    unit : str, default: 'nM'
+        Unit of the affinity binding.
+    temperature : float, default: 300.
+        Temperature at which to calculate the energy.
+
+    Returns
+    -------
+    float
+        Value of the energy corresponding to the given affinity binding.
+
+    """
     unit_converter = {'pM': 1e-12, 'nM': 1e-9, 'uM': 1e-6, 'mM': 1e-3, 'M': 1}
     RT = 0.001987 * temperature
     return RT * np.log(value * unit_converter[unit])
 
 
 def energy_to_affinity_binding(value, unit='nM', temperature=300.):
+    """
+    Convert energy to affinity binding.
+
+    Parameters
+    ----------
+    value : float
+        Value of the energy.
+    unit : str, default: 'nM'
+        Unit of the affinity binding.
+    temperature : float, default: 300.
+        Temperature at which to calculate the affinity binding.
+
+    Returns
+    -------
+    float
+        Value of the affinity binding corresponding to the given energy.
+
+    """
     unit_converter = {'pM': 1e-12, 'nM': 1e9, 'uM': 1e6, 'mM': 1e3, 'M': 1}
     RT = 0.001987 * temperature
     return np.exp(value / RT) * unit_converter[unit]
 
 
 def ic50_to_pic50(value, unit=None):
+    """
+    Convert IC50 to pIC50.
+
+    Parameters
+    ----------
+    value : float
+        Value of the IC50.
+    unit : str or None, default: None
+        Unit of the IC50.
+
+    Returns
+    -------
+    float
+        Value of the pIC50 corresponding to the given IC50.
+
+    """
     unit_converter = {'pM': 1e-12, 'nM': 1e-9, 'uM': 1e-6, 'mM': 1e-3, 'M': 1, None: 1}
     return np.log10(value * unit_converter[unit])
 
 
 def pic50_to_ic50(value, unit=None):
+    """
+    Converts a pIC50 value to IC50 value.
+
+    Parameters
+    ----------
+    value : float
+        The pIC50 value to be converted.
+    unit : str, default : None
+        The unit of the IC50 value.
+
+    Returns
+    -------
+    float
+        The IC50 value after the conversion.
+
+    """
     unit_converter = {'pM': 1e12, 'nM': 1e9, 'uM': 1e6, 'mM': 1e3, 'M': 1, None: 1}
     return 10**value * unit_converter[unit]
 
 
 def split(n, k):
+    """
+    Splits a number into k parts with each part as close to the same size as possible.
+
+    Parameters
+    ----------
+    n : int
+        The number to be split.
+    k : int
+        The number of parts to split the number into.
+
+    Returns
+    -------
+    ndarray
+        ndarray containing the parts of the split.
+
+    """
     d, r = divmod(n, k)
     s = [d + 1] * r + [d] * (k - r)
     np.random.shuffle(s)
@@ -75,24 +203,56 @@ def get_device():
     if torch.cuda.is_available():
         device = torch.device("cuda")
     elif torch.backends.mps.is_available():
-        device = torhc.device("mps")
+        device = torch.device("mps")
     else:
         device = torch.device("cpu")
     
     return device
 
 
-def generate_random_linear_peptides(n_peptides, peptide_lengths, monomer_symbols, output_format='helm'):
-    random_peptides = []
+def generate_random_linear_peptides(n_peptides, peptide_lengths, monomers=None, output_format='helm'):
+    """
+    Generates random linear peptides.
 
-    assert output_format.lower() in ['fasta', 'helm'], 'Format (%s) not handled. Please use FASTA or HELM format.'
+    Parameters
+    ----------
+    n_peptides : int
+        Number of random peptides to generate.
+    peptide_lengths : list, tuple or numpy.ndarray
+        List of peptide lengths to sample from.
+    monomers : list of str, default : None
+        A list of monomers to substitute at each allowed position. If not provided, 
+        defaults to the 20 natural amino acids.
+    output_format : str, default : 'helm'
+        Output format. Can be 'fasta' or 'helm'.
+
+    Returns
+    -------
+    list
+        List of generated peptides.
+
+    Raises
+    ------
+        AssertionError: If output format is not 'fasta' or 'helm'.
+
+    """
+    msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
+    assert output_format.lower() in ['fasta', 'helm'], msg_error
+
+    if monomers is None:
+        # Default to the 20 natural amino acids
+        monomerss = ["A", "R", "N", "D", "C", "E", "Q", "G", 
+                    "H", "I", "L", "K", "M", "F", "P", "S", 
+                    "T", "W", "Y", "V"]
 
     if not isinstance(peptide_lengths, (list, tuple, np.ndarray)):
         peptide_lengths = [peptide_lengths]
 
+    random_peptides = []
+
     while True:
         peptide_length = np.random.choice(peptide_lengths)
-        p = ''.join(np.random.choice(monomer_symbols, peptide_length))
+        p = ''.join(np.random.choice(monomers, peptide_length))
 
         if output_format.lower() == 'helm':
             helm_string = build_helm_string({'PEPTIDE1': p}, [])
@@ -107,6 +267,20 @@ def generate_random_linear_peptides(n_peptides, peptide_lengths, monomer_symbols
 
 
 def convert_FASTA_to_HELM(fasta_sequences):
+    """
+    Converts one or more FASTA sequences to HELM format.
+
+    Parameters
+    ----------
+    fasta_sequences : str, list of str, or numpy.ndarray of str
+        A FASTA sequence or list/array of FASTA sequences.
+
+    Returns
+    -------
+    list of str
+        A list of sequences in HELM format.
+
+    """
     if not isinstance(fasta_sequences, (list, tuple, np.ndarray)):
         fasta_sequences = [fasta_sequences]
 
@@ -114,6 +288,27 @@ def convert_FASTA_to_HELM(fasta_sequences):
 
 
 def convert_HELM_to_FASTA(helm_sequences, ignore_connections=False):
+    """
+    Converts one or more HELM sequences to FASTA format.
+
+    Parameters:
+    -----------
+    helm_sequences : str, list of str, or numpy.ndarray of str
+        A HELM sequence or list/array of HELM sequences.
+    ignore_connections : bool, default : False
+        Whether to ignore connections in HELM sequences.
+
+    Returns:
+    --------
+    list of str
+        A list of sequences in FASTA format.
+
+    Raises:
+    -------
+    ValueError
+        If a polymer contains connections or more than one sequence.
+
+    """
     if not isinstance(helm_sequences, (list, tuple, np.ndarray)):
         helm_sequences = [helm_sequences]
 
@@ -123,10 +318,12 @@ def convert_HELM_to_FASTA(helm_sequences, ignore_connections=False):
         polymers, connections, _, _ = parse_helm(helm_sequence)
 
         if ignore_connections is False and connections:
-            raise ValueError('Polymer %s cannot be converted to FASTA string. It contains connections.' % helm_sequence)
+            msg_error = 'Polymer %s cannot be converted to FASTA string. It contains connections.'
+            raise ValueError(msg_error % helm_sequence)
 
         if len(polymers.keys()) > 1:
-            raise ValueError('Polymer %s cannot be converted to FASTA string. It contains more than one sequence.' % helm_sequence)
+            msg_error = 'Polymer %s cannot be converted to FASTA string. It contains more than one sequence.'
+            raise ValueError(msg_error % helm_sequence)
 
         fasta_sequences.append(''.join(polymers[list(polymers.keys())[0]]))
 
@@ -134,6 +331,25 @@ def convert_HELM_to_FASTA(helm_sequences, ignore_connections=False):
 
 
 def build_helm_string(polymers, connections=None):
+    """
+    Build a HELM string from a dictionary of polymers and a list of connections.
+
+    Parameters
+    ----------
+    polymers : dict
+        A dictionary of polymers, where keys are the polymer types 
+        and values are lists of monomer symbols.
+    connections : list, default : None
+        A list of connections, where each connection is represented 
+        as a tuple with six elements: (start_polymer, start_monomer, start_attachment, 
+        end_polymer, end_monomer, end_attachment).
+
+    Returns
+    -------
+    str
+        The generated HELM string.
+
+    """
     sequences = []
 
     for p, s in polymers.items():
@@ -153,6 +369,29 @@ def build_helm_string(polymers, connections=None):
 
 
 def parse_helm(helm_string):
+    """
+    Parses a HELM string and returns the relevant information.
+
+    Parameters
+    ----------
+    helm_string (str)
+        A string in HELM format.
+
+    Returns
+    -------
+    polymers : dict
+        A dictionary with polymer IDs as keys and sequences as values.
+    connections : numpy.ndarray
+        An array with dtype [('SourcePolymerID', 'U20'), ('TargetPolymerID', 'U20'),
+                             ('SourceMonomerPosition', 'i4'), ('SourceAttachment', 'U2'),
+                             ('TargetMonomerPosition', 'i4'), ('TargetAttachment', 'U2')].
+        Each row represents a connection between two monomers in the polymers.
+    hydrogen_bonds : str
+        A string containing information about any hydrogen bonds in the HELM string.
+    attributes : str
+        A string containing any additional attributes in the HELM string.
+
+    """
     dtype = [('SourcePolymerID', 'U20'), ('TargetPolymerID', 'U20'),
              ('SourceMonomerPosition', 'i4'), ('SourceAttachment', 'U2'),
              ('TargetMonomerPosition', 'i4'), ('TargetAttachment', 'U2')]
@@ -184,7 +423,67 @@ def parse_helm(helm_string):
     return polymers, connections, hydrogen_bonds, attributes
 
 
+def get_scaffold_from_helm(input_sequence):
+    """
+    Give the scaffold version of the HELM sequence.
+
+    Parameters
+    ----------
+    input_sequence : str
+        A sequence in HELM format.
+
+    Returns
+    -------
+    str
+        The scaffold version of the input sequence in HELM format.
+
+    Example
+    -------
+        input_sequence : PEPTIDE1{A.C.A.A.A}|PEPTIDE2{A.A.A.A}$PEPTIDE1,PEPTIDE2,1:R3-1:R3$$$V2.0
+        scaffold       : PEPTIDE1{X.C.X.X.X}|PEPTIDE2{X.A.X.X}$PEPTIDE1,PEPTIDE2,1:R3-1:R3$$$V2.0
+
+    """
+    polymers, connections, _, _ = parse_helm(input_sequence)
+
+    for polymer_id in polymers.keys():
+        if connections.size > 0:
+            # Get all the connections in this polymer
+            attachment_positions1 = connections[connections['SourcePolymerID'] == polymer_id]['SourceMonomerPosition']
+            attachment_positions2 = connections[connections['TargetPolymerID'] == polymer_id]['TargetMonomerPosition']
+            attachment_positions = np.concatenate([attachment_positions1, attachment_positions2])
+            # Build scaffold polymer sequence (X represents an unknown monomer in the HELM notation)
+            scaffold_sequence = np.array(['X'] * len(polymers[polymer_id]))
+            scaffold_sequence[attachment_positions - 1] = np.array(polymers[polymer_id])[attachment_positions - 1]
+            # Replace polymer sequence by scaffold sequence
+            polymers[polymer_id] = scaffold_sequence
+        else:
+            # Replace polymer sequence by scaffold sequence (but faster version since no connections)
+            # (X represents an unknown monomer in the HELM notation)
+            polymers[polymer_id] = 'X' * len(polymers[polymer_id])
+
+    scaffold_sequence = build_helm_string(polymers, connections)
+
+    return scaffold_sequence
+
+
 def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
+    """
+    Generate a list of RDKit molecules from HELM strings.
+    
+    Parameters:
+    -----------
+    HELM_strings : str or list or tuple or numpy.ndarray
+        The input HELM string(s) to convert to RDKit molecules.
+    HELMCoreLibrary_filename : str, default : None
+        The filename of the HELM core library JSON file. 
+        If not provided, the default HELMCoreLibrary JSON file will be used.
+    
+    Returns:
+    --------
+    list
+        A list of RDKit molecules.
+
+    """
     peptides = []
 
     if not isinstance(HELM_strings, (list, tuple, np.ndarray)):
@@ -346,6 +645,24 @@ def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
 
 
 def read_pssm_file(pssm_file):
+    """
+    Reads a PSSM (position-specific scoring matrix) file and 
+    returns a pandas DataFrame containing the data and the
+    intercept value.
+
+    Parameters
+    ----------
+    pssm_file : str
+        The path to the PSSM file to be read.
+
+    Returns
+    -------
+    pssm : pandas.DataFrame
+        A DataFrame containing the data from the PSSM file.
+    intercept : float
+        The intercept value from the PSSM file.
+
+    """
     data = []
     intercept = np.nan
     AA = []

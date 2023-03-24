@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# HELM
+# Genetic Operators
 #
 
 import json
@@ -18,50 +18,76 @@ from .utils import build_helm_string, parse_helm
 
 
 def constrained_sum_sample_pos(n, total):
-    """Return a randomly chosen list of n positive integers summing to total.
-    Each such list is equally likely to occur.
-    
-    Source: https://stackoverflow.com/questions/3589214/generate-random-numbers-summing-to-a-predefined-value
+    """
+    Return a randomly chosen list of n positive integers summing to total.
+
+    Parameters
+    ----------
+    n : int
+        The number of positive integers to generate.
+    total : int
+        The total sum of the generated integers.
+
+    Returns
+    -------
+    ndarray
+        A 1D numpy array of n positive integers summing to total.
+
+    Notes
+    -----
+    https://stackoverflow.com/questions/3589214
 
     """
-
     dividers = sorted(random.sample(range(1, total), n - 1))
     return np.array([a - b for a, b in zip(dividers + [total], [0] + dividers)])
 
 
 def constrained_sum_sample_nonneg(n, total):
-    """Return a randomly chosen list of n nonnegative integers summing to total.
-    Each such list is equally likely to occur.
+    """
+    Return a randomly chosen list of n nonnegative integers summing to total.
 
-    Source: https://stackoverflow.com/questions/3589214/generate-random-numbers-summing-to-a-predefined-value
+    Parameters
+    ----------
+    n : int
+        Number of nonnegative integers in the list.
+    total : int
+        The sum of the nonnegative integers in the list.
+
+    Returns
+    -------
+    ndarray
+        A 1D numpy array of n nonnegative integers summing to total.
+
+    Notes
+    -----
+    https://stackoverflow.com/questions/3589214
 
     """
-
     return np.array([x - 1 for x in constrained_sum_sample_pos(n, total + n)])
 
 
-def compute_probability_matrix(smiles):
-    probability_matrix = []
+class GeneticOperators:
+    """
+    A class for applying genetic operators on sequences in HELM format.
 
-    map4calc = Map4Fingerprint(input_type='smiles')
-    fps = torch.from_numpy(map4calc.transform(smiles)).float()
-    
-    t = TanimotoSimilarityKernel()
-    similarity_matrix = t.forward(fps, fps).numpy()
-
-    for aa in similarity_matrix:
-        tmp = aa.copy()
-        tmp[tmp == 1.0] = 0
-        probability_matrix.append(tmp / np.sum(tmp))
-
-    probability_matrix = np.array(probability_matrix)
-    
-    return probability_matrix
-
-
-class HELMGeneticOperators:
+    """
     
     def __init__(self, monomer_symbols=None, HELMCoreLibrary=None, seed=None):
+        """
+        Initialize the GeneticOperators class.
+
+        Parameters
+        ----------
+        monomer_symbols : List, default : None
+            List of monomer symbols to use for the mutations. If not provided, 
+            the 20 canonical amino acids will be used.
+        HELMCoreLibrary: str, default : None
+            File path to the HELMCore library JSON file. If not provided, the default 
+            HELMCore library will be used.
+        seed: int, default : None
+            Seed value for the random number generator.
+
+        """
         if monomer_symbols is None:
             # If we do not provide any monomer symbols, the 20 canonical amino acids will be used
             self._monomer_symbols = ["A", "R", "N", "D", "C", "E", "Q", "G", "H", "I", 
@@ -78,12 +104,6 @@ class HELMGeneticOperators:
 
         with open(helmcorelibrary_filename) as f:
             helm_core_library = json.load(f)
-
-        # Get SMILES from all monomers, only peptide
-        smiles = [x['smiles'] for x in helm_core_library if x['symbol'] in self._monomer_symbols and x['polymerType'] == 'PEPTIDE']
-
-        # Compute probability matrix
-        self._probability_matrix = compute_probability_matrix(smiles)
         
         self._random_seed = seed
         self._rng = np.random.default_rng(self._random_seed)
@@ -91,10 +111,30 @@ class HELMGeneticOperators:
                                    ('SourceMonomerPosition', 'i4'), ('SourceAttachment', 'U2'),
                                    ('TargetMonomerPosition', 'i4'), ('TargetAttachment', 'U2')]
         
-    def insert(self, helm_string, n=10, only_terminus=False, maximum_size=None):
-        mutant_helm_strings = []
+    def insert(self, input_sequence, n=10, only_terminus=False, maximum_size=None):
+        """
+        Apply the insertion genetic operator on the input sequence.
+
+        Parameters
+        ----------
+        input_sequence: str
+            Input sequence in HELM format.
+        n: int, default : 10
+            Total number of sequences to generate.
+        only_terminus: bool, default : False
+            Whether to insert mutations only at the N or C terminus.
+        maximum_size: int, de fault : None
+            Maximum size of the new mutated sequences.
+
+        Returns
+        -------
+        List of str
+            Mutated sequences in HELM format.
+
+        """
+        mutant_sequences = []
         
-        polymers, connections, _, _ = parse_helm(helm_string)
+        polymers, connections, _, _ = parse_helm(input_sequence)
 
         if connections:
             raise NotImplementedError('Can only insert new monomers in linear polymers.')
@@ -149,15 +189,35 @@ class HELMGeneticOperators:
 
             if total_mutations > 0:
                 # Reconstruct the HELM string
-                mutant_helm_string = build_helm_string({p: s[0] for p, s in mutant_polymers.items()})
-                mutant_helm_strings.append(mutant_helm_string)
+                mutant_sequence = build_helm_string({p: s[0] for p, s in mutant_polymers.items()})
+                mutant_sequences.append(mutant_sequence)
             else:
-                mutant_helm_strings.append(helm_string)
+                mutant_sequences.append(input_sequence)
         
-        return mutant_helm_strings
+        return mutant_sequences
 
     def delete(self, helm_string, n=10, only_terminus=False, minimum_size=None):
-        mutant_helm_strings = []
+        """
+        Apply the delete genetic operator on the input sequence.
+
+        Parameters
+        ----------
+        helm_string: str
+            Input sequence in HELM format.
+        n: int, default : 10
+            Total number of sequences to generate.
+        only_terminus: bool, default : False
+            Whether to delete mutations only at the N or C terminus.
+        minimum_size: int, default : None
+            Minimum size of the new mutated sequences.
+
+        Returns
+        -------
+        List of str
+            Mutated sequences in HELM format.
+
+        """
+        mutant_sequences = []
         
         polymers, connections, _, _ = parse_helm(helm_string)
 
@@ -215,17 +275,41 @@ class HELMGeneticOperators:
 
             if total_mutations > 0:
                 # Reconstruct the HELM string
-                mutant_helm_string = build_helm_string({p: s[0] for p, s in mutant_polymers.items()})
-                mutant_helm_strings.append(mutant_helm_string)
+                mutant_sequence = build_helm_string({p: s[0] for p, s in mutant_polymers.items()})
+                mutant_sequences.append(mutant_sequence)
             else:
-                mutant_helm_strings.append(helm_string)
+                mutant_sequences.append(helm_string)
         
-        return mutant_helm_strings
+        return mutant_sequences
 
-    def mutate(self, helm_string, n=10, minimum_mutations=1, maximum_mutations=None, keep_connections=True):
-        mutant_helm_strings = []
+    def mutate(self, input_sequence, n=10, minimum_mutations=1, maximum_mutations=None, keep_connections=True):
+        """
+        Apply the mutation genetic operator on the input sequence.
+
+        Parameters
+        ----------
+        input_sequence : str
+            Input sequence in HELM format.
+        n : int, default : 10
+            Total number of sequences to generate.
+        minimum_mutations : int, default : 1
+            The minimum number of monomers to mutate in each sequence.
+        maximum_mutations : int, default : None
+            The maximum number of monomers to mutate in each sequence.
+        keep_connections : bool, default : True
+            If True, monomers involved in a connection won't be mutated. If False, 
+            monomers involved in a connection can be mutated. As consequence, the
+            connections will be deleted.
+
+        Returns
+        -------
+        List of str
+            Mutated sequences in HELM format.
+
+        """
+        mutant_sequences = []
         
-        polymers, connections, _, _ = parse_helm(helm_string)
+        polymers, connections, _, _ = parse_helm(input_sequence)
         
         # Generate mutants...
         for i in range(n):
@@ -261,16 +345,8 @@ class HELMGeneticOperators:
                     monomer_symbol = mutated_sequence[mutation_position]
                     
                     # Force mutation!
-                    while monomer_symbol == mutated_sequence[mutation_position]:
-                        # Instead of mutating to random monomer, the selection will be
-                        # based on the probability matrix
-                        if self._probability_matrix is not None:
-                            index_symbol = self._monomer_symbols.index(monomer_symbol)
-                            p = self._probability_matrix[index_symbol]
-                        else:
-                            p = None
-                        
-                        chosen_monomer = self._rng.choice(self._monomer_symbols, p=p)
+                    while monomer_symbol == mutated_sequence[mutation_position]:                        
+                        chosen_monomer = self._rng.choice(self._monomer_symbols)
                         mutated_sequence[mutation_position] = chosen_monomer
                 
                 mutant_polymers[pid] = (mutated_sequence, mutation_positions)
@@ -291,20 +367,44 @@ class HELMGeneticOperators:
                     connections_to_keep = list(range(connections.shape[0]))
 
                 # Reconstruct the HELM string
-                mutant_helm_string = build_helm_string({p: s[0] for p, s in mutant_polymers.items()}, connections[connections_to_keep])
-                mutant_helm_strings.append(mutant_helm_string)
+                mutant_sequence = build_helm_string({p: s[0] for p, s in mutant_polymers.items()}, connections[connections_to_keep])
+                mutant_sequences.append(mutant_sequence)
             else:
-                mutant_helm_strings.append(helm_string)
+                mutant_sequences.append(input_sequence)
         
-        return mutant_helm_strings
+        return mutant_sequences
 
-    def crossover(self, helm_string1, helm_string2, cx_points=2):
+    def crossover(self, input_sequence1, input_sequence2, cx_points=2):
+        """
+        Apply crossover genetic operator on the input sequence.
+
+        Parameters
+        ----------
+        input_sequence1 : str
+            The first parent sequence in HELM format.
+        input_sequence2 : str
+            The second parent sequence in HELM format.
+        cx_points : int, default : 2
+            The number of crossover points.
+
+        Returns
+        -------
+        List of str
+            Two mutated sequences (children) in HELM format.
+
+        Raises
+        ------
+        ValueError
+            If polymers in the two input HELM strings have different polymer ids or different lengths, 
+            or if the scaffold (connections) in the two input HELM strings are different.
+
+        """
         mutant1_polymers = {}
         mutant2_polymers = {}
-        mutant_helm_strings = []
+        mutant_sequences = []
             
-        polymers1, connections1, _, _ = parse_helm(helm_string1)
-        polymers2, connections2, _, _ = parse_helm(helm_string2)
+        polymers1, connections1, _, _ = parse_helm(input_sequence1)
+        polymers2, connections2, _, _ = parse_helm(input_sequence2)
 
         if polymers1.keys() != polymers2.keys():
             raise ValueError('Polymers do not contain the same polymer ids.')
@@ -331,7 +431,7 @@ class HELMGeneticOperators:
             mutant1_polymers[pid] = ''.join(ind1)
             mutant2_polymers[pid] = ''.join(ind2)
             
-        mutant_helm_strings.extend([build_helm_string(mutant1_polymers, connections1),
+        mutant_sequences.extend([build_helm_string(mutant1_polymers, connections1),
                                     build_helm_string(mutant2_polymers, connections2)])
         
-        return mutant_helm_strings
+        return mutant_sequences

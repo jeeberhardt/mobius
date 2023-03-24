@@ -8,8 +8,6 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from .helm_genetic_operators import HELMGeneticOperators
-
 
 class _Sampler(ABC):
 
@@ -43,8 +41,8 @@ class PolymerSampler(_Sampler):
 
         Parameters
         ----------
-        acquisition_function : AcquisitionFunction
-            The acquisition function that will be used to score the polymer.
+        acquisition_function : `AcquisitionFunction`
+            The acquisition function that will be used to score the polymer/peptide.
         search_protocol : Dictionary
             Search/sampling protocol describing all the sampling blocks.
 
@@ -77,22 +75,22 @@ class PolymerSampler(_Sampler):
 
     def ask(self, batch_size=None):
         """
-        Function to suggest new polymers based on previous experiments
+        Function to suggest new polymers/peptides based on previous experiments.
 
         Parameters
         ----------
         batch_size : int, default: None
-            Total number of new polymers that will be returned. If not provided,
-            it will return all the polymers sampled during the optimization.
+            Total number of new polymers/peptides that will be returned. If not 
+            provided, it will return all the polymers sampled during the optimization.
 
         Returns
         -------
-        suggested_polymers : ndarray
-            All the suggested polymers. The returned number of polymers will
-            be equal to `batch_size`.
+        polymers : ndarray
+            Suggested polymers/peptides. The returned number of polymers 
+            will be equal to `batch_size`.
         values : ndarray
-            All the predicted values for each suggested polymers. The returned number
-            will be equal to `batch_size`
+            Predicted values for each suggested polymers/peptides. The 
+            returned number will be equal to `batch_size`.
 
         """
         # Use the training set from the surrogate model as inputs for the optimization
@@ -117,40 +115,40 @@ class PolymerSampler(_Sampler):
 
     def tell(self, polymers, values):
         """
-        Function to fit the surrogate model using data from past experiments
+        Function to fit the surrogate model using data from past experiments.
 
         Parameters
         ----------
         polymers : list of str
-            List of all the polymers in HELM format for which there are experimental data.
+            Polymers/peptides in HELM format.
         values : list of int of float
-            List of all the value associated to each polymer.
+            Values associated to each polymer/peptide.
 
         """
         self._acq_fun.surrogate_model.fit(polymers, values)
 
     def recommand(self, polymers, values, batch_size=None):
         """
-        Function to suggest new polymers based on existing/previous data.
+        Function to suggest new polymers/peptides based on existing/previous data.
 
         Parameters
         ----------
         polymers : list of str
-            List of all the polymers in HELM format for which there are experimental data.
+            Polymers/peptides in HELM format.
         values : list of int of float
-            List of all the value associated to each polymer
+            Value associated to each polymer/peptide.
         batch_size : int, default: None
-            Total number of new polymers that will be returned. If not provided,
-            it will return all the polymers sampled during the optimization.
+            Total number of new polymers/peptides that will be returned. If not 
+            provided, it will return all the polymers sampled during the optimization.
 
         Returns
         -------
-        suggested_polymers : ndarray
-            All the suggested polymers. The returned number of polymers will
-            be equal to `batch_size`.
+        polymers : ndarray
+            Suggested polymers/peptides. The returned number of 
+            polymers/peptides will be equal to `batch_size`.
         values : ndarray
-            All the predicted values for each suggested polymers. The returned number
-            will be equal to `batch_size`
+            Predicted values for each suggested polymers/peptides. The 
+            returned number will be equal to `batch_size`.
 
         """
         self.tell(polymers, values)
@@ -160,25 +158,26 @@ class PolymerSampler(_Sampler):
 
     def optimize(self, emulator, num_iter, batch_size):
         """
-        Function to optimize polymers based on an emulator/oracle.
+        Function to optimize polymers/peptides based on an emulator/oracle.
         
         Parameters
         ----------
-        emulator : Emulator
-            Emulator/Oracle used to simulate actual lab experiments
+        emulator : `Emulator`
+            Emulator (oracle) used to simulate actual lab experiments.
         num_iter : int
-            Total number of optimization cycles
+            Total number of optimization cycles.
         batch_size : int
-            Size of the batches, number of polymers returned after each optimization cycle
+            Size of the batches, number of polymers/peptides returned after 
+            each optimization cycle.
         
         Returns
         -------
-        suggested_polymers : ndarray
-            All the suggested polymers during the optimization process and sorted based 
-            on `values` obtained from `emulator`.
+        polymers : ndarray
+            Suggested polymers/peptides during the optimization process and sorted 
+            based on `values` obtained from `Emulator`.
         values : ndarray
-            All the values for each polymers suggested during the optimization process and 
-            sorted based on the values obtained from `emulator`.
+            Values for each polymers/peptides suggested during the optimization 
+            process and sorted based on the values obtained from `Emulator`.
 
         """
         # Use the training set from the surrogate model as inputs for the optimization

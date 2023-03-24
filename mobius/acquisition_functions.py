@@ -7,7 +7,6 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
-import torch
 import ray
 from scipy.stats import norm
 
@@ -49,8 +48,8 @@ class RandomImprovement(_AcquisitionFunction):
 
     Attributes
     ----------
-    surrogate_model : _SurrogateModel
-        The surrogate model used by the acquisition function (DummyModel).
+    surrogate_model : `_SurrogateModel`
+        Surrogate model used by the acquisition function (`DummyModel`).
     maximize : bool
         Tell if the goal to maximize (True) or minimize (False) the acquisition function.
     scaling_factor : int
@@ -60,14 +59,16 @@ class RandomImprovement(_AcquisitionFunction):
 
     def __init__(self, low=0, high=1, maximize=True):
         """
-        Random acquisition function
+        Random acquisition function.
 
         Parameters
         ----------
         low : int, default : 0
-            Lower boundary of the output interval. All values generated will be greater than or equal to low.
+            Lower boundary of the output interval. All values generated 
+            will be greater than or equal to low.
         high : int, default : 1
-            Upper boundary of the output interval. All values generated will be less than or equal to high.
+            Upper boundary of the output interval. All values generated 
+            will be less than or equal to high.
         maximize : bool, default : True
             Indicates whether the function is to be maximised.
 
@@ -119,12 +120,13 @@ class Greedy(_AcquisitionFunction):
 
     Attributes
     ----------
-    surrogate_model : _SurrogateModel
+    surrogate_model : `_SurrogateModel`
         The surrogate model used by the acquisition function.
     maximize : bool
-        Tell if the goal to maximize (True) or minimize (False) the acquisition function.
+        Tell if the goal to maximize (True) or minimize (False) 
+        the acquisition function.
     scaling_factor : int
-        Scaling factor used by the Bolzmann weigthing function in the GA
+        Scaling factor used by the Bolzmann weigthing function in the GA.
 
     """
 
@@ -134,7 +136,7 @@ class Greedy(_AcquisitionFunction):
 
         Parameters
         ----------
-        surrogate_model: _SurrogateModel
+        surrogate_model: `_SurrogateModel`
             The surrogate model to be used by the acquisition function.
         maximize : bool, default : False
             Indicates whether the function is to be maximised.
@@ -184,12 +186,12 @@ class ExpectedImprovement(_AcquisitionFunction):
 
     Attributes
     ----------
-    surrogate_model : _SurrogateModel
+    surrogate_model : `_SurrogateModel`
         The surrogate model used by the acquisition function.
     maximize : bool
         Tell if the goal to maximize (True) or minimize (False) the acquisition function.
     scaling_factor : int
-        Scaling factor used by the Bolzmann weigthing function in the GA
+        Scaling factor used by the Bolzmann weigthing function in the GA.
 
     """
 
@@ -197,11 +199,9 @@ class ExpectedImprovement(_AcquisitionFunction):
         """
         Expected improvement acquisition function.
 
-        Source: https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
-
         Parameters
         ----------
-        surrogate_model: _SurrogateModel
+        surrogate_model: `_SurrogateModel`
             The surrogate model to be used by the acquisition function.
         maximize : bool, default : False
             Indicates whether the function is to be maximised.
@@ -209,6 +209,10 @@ class ExpectedImprovement(_AcquisitionFunction):
             Exploitation-exploration trade-off parameter.
         eps : float, default : 1e-9
             Small number to avoid numerical instability.
+
+        Notes
+        -----
+        https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
 
         """
         self._surrogate_model = surrogate_model
@@ -268,12 +272,13 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
 
     Attributes
     ----------
-    surrogate_model : _SurrogateModel
+    surrogate_model : `_SurrogateModel`
         The surrogate model used by the acquisition function.
     maximize : bool
-        Tell if the goal to maximize (True) or minimize (False) the acquisition function.
+        Tell if the goal to maximize (True) or minimize (False) 
+        the acquisition function.
     scaling_factor : int
-        Scaling factor used by the Bolzmann weigthing function in the GA
+        Scaling factor used by the Bolzmann weigthing function in the GA.
 
     """
 
@@ -283,7 +288,7 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
 
         Parameters
         ----------
-        surrogate_model: _SurrogateModel
+        surrogate_model: `_SurrogateModel`
             The surrogate model to be used by the acquisition function.
         maximize : bool, default : False
             Indicates whether the function is to be maximised.

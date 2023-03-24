@@ -14,44 +14,45 @@ from collections import defaultdict
 import numpy as np
 import ray
 
-from .acquisition_functions import parallel_acq
-from .helm_genetic_operators import HELMGeneticOperators
-from .utils import parse_helm, build_helm_string
+from .genetic_operators import GeneticOperators
+from .utils import parse_helm, build_helm_string, get_scaffold_from_helm_string
 from .utils import generate_random_linear_peptides
 
 
 def _group_by_scaffold(helm_sequences, return_index=False):
-    """Group helm strings by scaffold.
+    """
+    Groups a list of HELM sequences by their scaffolds.
 
-    Example:
-        helm_sequence : PEPTIDE1{A.A.A.A.A}|PEPTIDE2{A.A.A.A}$PEPTIDE1,PEPTIDE2,1:R1-1:R1$$$V2.0
-        scaffold      : PEPTIDE1{X.A.X.X.X}|PEPTIDE2{X.A.X.X}$PEPTIDE1,PEPTIDE2,1:R1-1:R1$$$V2.0
+    Parameters
+    ----------
+    helm_sequences : List of str
+        List of input sequences to group in HELM format.
+    return_index : bool, default : False
+        Whether to return also the original index of the grouped sequences.
 
+    Returns
+    -------
+    groups : Dict[str, List of str]
+        A dictionary with scaffold sequences as keys and 
+        lists of grouped sequences as values.
+    group_indices : Dict[str, List of int]
+        If `return_index` is True, a dictionary with scaffold sequences 
+        as keys and lists of indices of the original sequences.
+
+    Examples
+    --------
+    >>> sequences = ['PEPTIDE1{A.A.R}$$$$V2.0', 'PEPTIDE1{A.A}$$$$V2.0', 'PEPTIDE1{R.G}$$$$V2.0']
+    >>> groups = _group_by_scaffold(sequences)
+    >>> print(groups)
+    {'X$PEPTIDE1{$X.X.X$}$V2.0': ['PEPTIDE1{A.A.R}$$$$V2.0'], 
+     'X$PEPTIDE1{$X.X$}$V2.0': ['PEPTIDE1{A.A}$$$$V2.0', 'PEPTIDE1{R.G}$$$$V2.0']}
+    
     """
     groups = defaultdict(list)
     group_indices = defaultdict(list)
 
     for i, helm_sequence in enumerate(helm_sequences):
-        polymers, connections, _, _ = parse_helm(helm_sequence)
-
-        for polymer_id in polymers.keys():
-            if connections.size > 0:
-                # Get all the connections in this polymer
-                attachment_positions1 = connections[connections['SourcePolymerID'] == polymer_id]['SourceMonomerPosition']
-                attachment_positions2 = connections[connections['TargetPolymerID'] == polymer_id]['TargetMonomerPosition']
-                attachment_positions = np.concatenate([attachment_positions1, attachment_positions2])
-                # Build scaffold polymer sequence (X represents an unknown monomer in the HELM notation)
-                scaffold_sequence = np.array(['X'] * len(polymers[polymer_id]))
-                scaffold_sequence[attachment_positions - 1] = np.array(polymers[polymer_id])[attachment_positions - 1]
-                # Replace polymer sequence by scaffold sequence
-                polymers[polymer_id] = scaffold_sequence
-            else:
-                # Replace polymer sequence by scaffold sequence (but faster version since no connections)
-                # (X represents an unknown monomer in the HELM notation)
-                polymers[polymer_id] = 'X' * len(polymers[polymer_id])
-
-        scaffold_sequence = build_helm_string(polymers, connections)
-
+        scaffold_sequence = get_scaffold_from_helm_string(helm_sequence)
         groups[scaffold_sequence].append(helm_sequence)
         group_indices[scaffold_sequence].append(i)
 
@@ -61,15 +62,36 @@ def _group_by_scaffold(helm_sequences, return_index=False):
         return groups
 
 
-def _boltzmann_probability(values, temperature=300.):
+def _boltzmann_probability(scores, temperature=300.):
+    """
+    Computes the Boltzmann probability of each value based on their energy.
+
+    Parameters
+    ----------
+    scores : array-like
+        Scores to be used to compute the Boltzmann probabilities.
+    temperature : float, default: 300
+        Temperature of the system (without unit).
+
+    Returns
+    -------
+    probabilities : array-like
+        Boltzmann probability of each score.
+
+    Raises
+    ------
+    ValueError
+        If the computed probabilities contain NaN values.
+    
+    """
     # On way to avoid probabilities that do not sum to 1: https://stackoverflow.com/a/65384032
-    p = np.exp(-np.around(np.asarray(values), decimals=3) / temperature).astype('float64')
+    p = np.exp(-np.around(np.asarray(scores), decimals=3) / temperature).astype('float64')
     p /= np.sum(p)
 
     if np.isnan(p).any():
         error_msg = 'Boltzmann probabilities contains NaN.\n'
         error_msg += 'Temperature: %.5f\n' % temperature
-        error_msg += 'Values: %s\n' % values
+        error_msg += 'Values: %s\n' % scores
         error_msg += 'Probabilities: %s' % p
         raise ValueError(error_msg)
 
@@ -79,6 +101,7 @@ def _boltzmann_probability(values, temperature=300.):
 def _number_of_children_to_generate_per_parent(parent_scores, n_children, temperature):
     """Compute the number of children generated by each parent sequence 
     based on their acquisition score using Boltzmann weighting.
+
     """
     # Boltzmann weighting
     children_per_parent = np.floor(n_children * _boltzmann_probability(parent_scores, temperature)).astype(int)
@@ -108,6 +131,7 @@ def _number_of_children_to_generate_per_parent(parent_scores, n_children, temper
 def _generate_mating_couples(parent_sequences, parent_scores, n_children, temperature):
     """Generate mating couples based on their acquisition score of each parent 
     using Boltzmann weighting.
+
     """
     mating_couples = []
     n_couples = int(n_children / 2)
@@ -158,7 +182,10 @@ def parallel_ga(gao, acquisition_function, sequences, scores):
 
 
 class _GeneticAlgorithm(ABC):
-    """Abstract class for genetic algorithm brick"""
+    """
+    Abstract class for genetic algorithm brick
+    
+    """
 
     @abstractmethod
     def _generate_new_population(self, sequences, scores):
@@ -254,6 +281,7 @@ class SequenceGA(_GeneticAlgorithm):
     """
     Use GA to search for new sequence candidates using the acquisition function
     for scoring.
+
     """
 
     def __init__(self, n_gen=1000, n_children=500, temperature=0.01, elitism=True, total_attempts=50,
@@ -297,7 +325,7 @@ class SequenceGA(_GeneticAlgorithm):
         self._temperature = temperature
         self._elitism = elitism
         self._total_attempts = total_attempts
-        self._helmgo = HELMGeneticOperators(monomer_symbols=monomer_symbols)
+        self._helmgo = GeneticOperators(monomer_symbols=monomer_symbols)
         # Parameters specific to SequenceGA
         self._cx_points = cx_points
         self._pm = pm
@@ -491,6 +519,7 @@ class ScaffoldGA(_GeneticAlgorithm):
     """
     Use GA to search for new sequence candidates using the acquisition function
     for scoring.
+
     """
 
     def __init__(self, n_gen=1, n_children=1000, temperature=0.1, elitism=True, total_attempts=50,
@@ -532,7 +561,7 @@ class ScaffoldGA(_GeneticAlgorithm):
         self._temperature = temperature
         self._elitism = elitism
         self._total_attempts = total_attempts
-        self._helmgo = HELMGeneticOperators(monomer_symbols=monomer_symbols)
+        self._helmgo = GeneticOperators(monomer_symbols=monomer_symbols)
         # Parameters specific to ScaffoldGA
         self._only_terminus = only_terminus
         self._minimum_size = minimum_size
@@ -589,6 +618,7 @@ class ScaffoldGA(_GeneticAlgorithm):
 class RandomGA():
     """
     The RandomGA is for benchmark purpose only. It generates random liner polymer sequences.
+
     """
 
     def __init__(self, n_gen=1000, n_children=500, minimum_size=1, maximum_size=1, 
@@ -620,7 +650,7 @@ class RandomGA():
         self._n_children = n_children
         self._minimum_size = minimum_size
         self._maximum_size = maximum_size
-        self._helmgo = HELMGeneticOperators(monomer_symbols=monomer_symbols)
+        self._helmgo = GeneticOperators(monomer_symbols=monomer_symbols)
 
     def run(self, acquisition_function, sequences=None, scores=None):
         """

@@ -19,29 +19,31 @@ class Mobius:
     
     def run(self, polymers, values, emulator, sampler, num_iter=5, batch_size=96):
         """
-        Function for running the benchmark optimization process for polymers against one
-        emulator/oracle.
+        Function for running the benchmark optimization process for polymers/peptides 
+        against the `Emulator` (oracle).
 
         Parameters
         ----------
             polymers : list of str
-                List of polymers in HELM format
+                Polymers/peptides in HELM format.
             values : list of int or float
-                List of values associated to each polymer
-            emulator : Emulator
-                Emulator/Oracle used to simulate actual lab experiments
-            sampler : Sampler
-                Protocol used for sampling the polymer sequence space
+                Values associated to each polymer/peptide.
+            emulator : `Emulator`
+                Emulator (oracle) used to simulate actual lab experiments.
+            sampler : Sampler`
+                Protocol used for sampling the polymer/peptide sequence space.
             num_iter : int, default: 5
-                Total number of optimization cycles
+                Total number of optimization cycles.
             batch_size : int, default: 96
-                Size of the batches, number of polymers returned after each optimization cycle
+                Size of the batches, number of polymers/peptides returned after 
+                each optimization cycle
 
         Returns
         -------
         results : pd.DataFrame
-            Pandas DataFrame containing all the results from the optimization process with
-            the following columns: ['iter', 'polymer', 'exp_value', 'pred_value']
+            Pandas DataFrame containing all the results from the optimization 
+            process with the following columns: ['iter', 'polymer', 'exp_value', 
+            'pred_value']
 
         """
         data = []
@@ -71,25 +73,28 @@ class Mobius:
 
     def benchmark(self, polymers, values, emulator, samplers, num_iter=5, batch_size=96, num_independent_run=5):
         """
-        Function to benchmark multiple sampling strategies for polymers optimization against
-        one emulator/oracle.
+        Function to benchmark multiple sampling strategies for polymers/peptide 
+        optimization against the `Emulator` (oracle).
 
         Parameters
         ----------
             polymers : list of str
-                List of polymers in HELM format
+                Polymers/peptides in HELM format.
             values : list of int or float
-                List of values associated to each polymer
-            emulator : Emulator
-                Emulator/Oracle used to simulate actual lab experiments
-            samplers : dict of Sampler
-                Dictionary of protocols used for sampling the polymer sequence space
+                Values associated to each polymer/peptide.
+            emulator : `Emulator`
+                Emulator (oracle) used to simulate actual lab experiments.
+            samplers : dict of `Sampler`
+                Dictionary of protocols used for sampling the polymer/peptide 
+                sequence space.
             num_iter : int, default: 5
-                Total number of optimization cycles
+                Total number of optimization cycles.
             batch_size : int, default: 96
-                Size of the batches, number of polymers returned after each optimization cycle
+                Size of the batches, number of polymers/peptides returned after 
+                each optimization cycle.
             num_independent_run :, int, default: 5
-                Total number of independent runs to execute for each sampling protocol
+                Total number of independent runs to execute for each sampling 
+                protocol.
 
         Returns
         -------
