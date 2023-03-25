@@ -9,12 +9,8 @@ import os
 import random
 
 import numpy as np
-import torch
 
-from . import utils
-from .descriptors import Map4Fingerprint
-from .kernels import TanimotoSimilarityKernel
-from .utils import build_helm_string, parse_helm
+from .utils import path_module, build_helm_string, parse_helm
 
 
 def constrained_sum_sample_pos(n, total):
@@ -97,7 +93,7 @@ class GeneticOperators:
 
         # Load HELMCore library
         if HELMCoreLibrary is None:
-            d = utils.path_module("mobius")
+            d = path_module("mobius")
             helmcorelibrary_filename = os.path.join(d, "data/HELMCoreLibrary.json")
         else:
             helmcorelibrary_filename = HELMCoreLibrary
