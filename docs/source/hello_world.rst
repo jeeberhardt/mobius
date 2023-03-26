@@ -1,0 +1,158 @@
+.. _hello_world:
+
+Hello, world!
+=============
+
+This example shows the basic usage of Mobius, and how to use Bayesian Optimisation (BO) to 
+optimize peptides against the MHC class I HLA-A*02:01. Starting from a single peptide sequence
+with a low binding affinity, the goal is to improve the binding afffinity in only few DMT 
+iterations.
+
+First, import the required modules and functions from the Mobius package, as well as NumPy:
+
+.. code-block:: python
+
+    import numpy as np
+
+    from mobius import PolymerSampler, SequenceGA
+    from mobius import Map4Fingerprint
+    from mobius import GPModel, ExpectedImprovement, TanimotoSimilarityKernel
+    from mobius import LinearPeptideEmulator
+    from mobius import homolog_scanning, alanine_scanning
+    from mobius import convert_FASTA_to_HELM
+
+Now, create a simple linear peptide emulator for MHC class I HLA-A*02:01.
+
+.. note::
+    This is for benchmarking or demonstration purposes only and should be replaced 
+    with actual lab experiments. See list of other available emulators in the 
+    :ref:`mobius` section.
+
+.. code-block:: python
+
+    pssm_files = ['data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-8.txt',
+                  'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-9.txt',
+                  'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-10.txt',
+                  'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-11.txt']
+    lpe = LinearPeptideEmulator(pssm_files)
+
+Define the peptide sequence to optimize, and convert it to HELM format. Mobius uses internally
+the HELM notation to encode peptide sequences. The HELM format is a standard format for 
+representing peptides and other complex biomolecules. See documentation from the 
+`Pistollia Alliance <https://www.pistoiaalliance.org/helm-notation/>`_ to know more about the
+HELM notation.
+
+.. warning::
+    Mobius can only handle peptides or equivalent polymers. RNA and oligonucleotides are not supported.
+
+.. code-block:: python
+
+    lead_peptide = convert_FASTA_to_HELM('HMTEVVRRC')[0]
+
+Generate the initial seed library of 96 peptides using a combination of 
+alanine scanning and homolog scanning sequence-based strategies:
+
+.. note::
+    Other peptide scanning strategies are available. See list of the other available
+    scanning strategies in the :ref:`mobius` section.
+
+.. code-block:: python
+
+    seed_library = [lead_peptide]
+
+    for seq in alanine_scanning(lead_peptide):
+        seed_library.append(seq)
+        
+    for seq in homolog_scanning(lead_peptide):
+        seed_library.append(seq)
+
+        if len(seed_library) >= 96:
+            print('Reach max. number of peptides allowed.')
+            break
+
+Virtually test the seed library using the linear peptide emulator. It outputs
+the pIC50 value for each tested peptides. A pic50 value of 0 correspond to 
+an IC50 of 1 nM, a pIC50 of 1 corresponds to an IC50 of 10 nM, etc.
+
+.. note::
+    This is for benchmarking or demonstration purposes only and should be replaced 
+    with actual lab experiments.
+
+.. code-block:: python
+
+    pic50_seed_library = lpe.predict(seed_library)
+
+Now that we have results from the initial lab experiment, we can start the Bayesian 
+Optimization. Define the molecular fingerprint, the surrogate model (Gaussian Process), 
+and the acquisition function (Expected Improvement):
+
+.. note::
+    Other molecular fingerprints, surrogate models and acquisitions functions are available. 
+    See list of the other available molecular fingerprints and surrogate models in the 
+    :ref:`mobius` section.
+
+.. code-block:: python
+
+    map4 = Map4Fingerprint(input_type='helm_rdkit', dimensions=4096, radius=1)
+    gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
+    ei = ExpectedImprovement(gpmodel, maximize=False)
+
+Define the search protocol that will be used to search/sample peptide sequences 
+optimizing the acquisition function:
+
+.. code-block:: python
+
+    search_protocol = {
+        'SequenceGA': {
+            'function': SequenceGA,
+            'parameters': {
+                'n_process': -1,
+                'n_gen': 1000,
+                'n_children': 500,
+                'temperature': 0.01,
+                'elitism': True,
+                'total_attempts': 50,
+                'cx_points': 2,
+                'pm': 0.1,
+                'minimum_mutations': 1,
+                'maximum_mutations': 5
+            }
+        }
+    }
+
+    ps = PolymerSampler(ei, search_protocol)
+
+Run three Design-Make-Test cycles, iterating through the following steps:
+
+- Recommend 96 new peptides based on existing data using the Bayesian optimization.
+- Optionally, apply additional filtering methods to the suggested peptides.
+- Virtually test the suggested peptides using the MHC emulator (replace with actual lab experiments).
+- Update the list of tested peptides and their pIC50 scores.
+
+.. code-block:: python
+
+    peptides = list(seed_library)[:]
+    pic50_scores = list(pic50_seed_library)[:]
+
+    for i in range(3):
+        suggested_peptides, _ = ps.recommand(peptides, pic50_scores, batch_size=96)
+
+        # Here you can add whatever methods you want to further filter out peptides
+
+        # Virtually test the suggested peptides using the MHC emulator
+        # You know the drill now, this is for benchmarking or demonstration 
+        # purposes only and should be replaced with actual lab experiments.
+        pic50_suggested_peptides = lpe.predict(suggested_peptides)
+        
+        peptides.extend(list(suggested_peptides))
+        pic50_scores.extend(list(pic50_suggested_peptides))
+        
+        best_seq = peptides[np.argmin(pic50_scores)]
+        best_pic50 = np.min(pic50_scores)
+        print('Best peptide found so far: %s / %.3f' % (best_seq, best_pic50))
+        print('')
+
+By the end of the optimization loop, the best peptide sequence and its pIC50 score 
+will be printed. This tutorial demonstrates how to use Bayesian optimization for 
+peptide sequence optimization in a Design-Make-Test closed-loop platform. Remember 
+to replace the emulator steps with actual lab experiments in a real-world application.

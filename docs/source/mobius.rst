@@ -3,70 +3,75 @@
 Mobius
 ======
 
-mobius.mobius
--------------
+This section contains the API documentation for Mobius. The API is split into several modules, each 
+of which is documented below. The API is designed to be as simple as possible, and the documentation 
+is intended to be as self-explanatory as possible. If you have any questions, please feel free 
+to contact us.
+
+Mobius
+------
 
 .. automodule:: mobius.mobius
     :members:
 
-mobius.sampler
---------------
+Sampler
+-------
 
 .. automodule:: mobius.sampler
     :members:
     :special-members:
 
-mobius.surrogate_model
-----------------------
-
-.. automodule:: mobius.surrogate_model
-    :members:
-    :special-members:
-
-mobius.kernels
---------------
-
-.. automodule:: mobius.kernels
-    :members:
-    :special-members:
-
-mobius.acquisition_functions
-----------------------------
-
-.. automodule:: mobius.acquisition_functions
-    :members:
-    :special-members:
-
-mobius.descriptors
-------------------
+Descriptors
+-----------
 
 .. automodule:: mobius.descriptors
     :members:
     :special-members:
 
-mobius.ga
----------
-
-.. automodule:: mobius.ga
-    :members:
-    :special-members:
-
-mobius.emulator
----------------
-
-.. automodule:: mobius.emulator
-    :members:
-    :special-members:
-
-mobius.generators
------------------
+Combinatorial scanning strategies
+---------------------------------
 
 .. automodule:: mobius.generators
     :members:
     :special-members:
 
-mobius.utils
-------------
+Surrogate models
+----------------
+
+.. automodule:: mobius.surrogate_model
+    :members:
+    :special-members:
+
+Kernel functions
+----------------
+
+.. automodule:: mobius.kernels
+    :members:
+    :special-members:
+
+Acquisition functions
+---------------------
+
+.. automodule:: mobius.acquisition_functions
+    :members:
+    :special-members:
+
+Genetic algorithm
+-----------------
+
+.. automodule:: mobius.genetic_algorithm
+    :members:
+    :special-members:
+
+Emulators
+---------
+
+.. automodule:: mobius.emulator
+    :members:
+    :special-members:
+
+Utils
+-----
 
 .. automodule:: mobius.utils
     :members:
