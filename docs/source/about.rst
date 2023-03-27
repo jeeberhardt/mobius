@@ -3,7 +3,7 @@
 About Mobius
 ============
 
-Mobius was designed as a generalized Bayesian optimization (BO) approach to 
+Mobius attempts to offer a generalized Bayesian optimization (BO) approach to 
 support the design and optimization of peptides in a fully automated closed-loop 
 Design-Make-Test (DMT) pipeline context. 
 

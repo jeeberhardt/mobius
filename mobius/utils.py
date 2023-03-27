@@ -12,12 +12,6 @@ import numpy as np
 import pandas as pd
 import torch
 from rdkit import Chem
-from rdkit import RDLogger
-
-# Disable Warnings for MolFromHELM function
-# It just removes annoying "WARNING: not removing hydrogen atom with dummy atom neighbors" messages...
-lg = RDLogger.logger()
-lg.setLevel(RDLogger.ERROR)
 
 
 def path_module(module_name):
@@ -218,9 +212,9 @@ def generate_random_linear_peptides(n_peptides, peptide_lengths, monomers=None, 
     ----------
     n_peptides : int
         Number of random peptides to generate.
-    peptide_lengths : list, tuple or numpy.ndarray
+    peptide_lengths : List, tuple or numpy.ndarray
         List of peptide lengths to sample from.
-    monomers : list of str, default : None
+    monomers : List of str, default : None
         A list of monomers to substitute at each allowed position. If not provided, 
         defaults to the 20 natural amino acids.
     output_format : str, default : 'helm'
@@ -228,7 +222,7 @@ def generate_random_linear_peptides(n_peptides, peptide_lengths, monomers=None, 
 
     Returns
     -------
-    list
+    List
         List of generated peptides.
 
     Raises
@@ -272,12 +266,12 @@ def convert_FASTA_to_HELM(fasta_sequences):
 
     Parameters
     ----------
-    fasta_sequences : str, list of str, or numpy.ndarray of str
-        A FASTA sequence or list/array of FASTA sequences.
+    fasta_sequences : str, List of str, or ndarray of str
+        A FASTA sequence or list/ndarray of FASTA sequences.
 
     Returns
     -------
-    list of str
+    List of str
         A list of sequences in HELM format.
 
     """
@@ -293,14 +287,14 @@ def convert_HELM_to_FASTA(helm_sequences, ignore_connections=False):
 
     Parameters
     ----------
-    helm_sequences : str, list of str, or numpy.ndarray of str
+    helm_sequences : str, List of str, or numpy.ndarray of str
         A HELM sequence or list/array of HELM sequences.
     ignore_connections : bool, default : False
         Whether to ignore connections in HELM sequences.
 
     Returns
     -------
-    list of str
+    List of str
         A list of sequences in FASTA format.
 
     Raises
@@ -339,7 +333,7 @@ def build_helm_string(polymers, connections=None):
     polymers : dict
         A dictionary of polymers, where keys are the polymer types 
         and values are lists of monomer symbols.
-    connections : list, default : None
+    connections : List, default : None
         A list of connections, where each connection is represented 
         as a tuple with six elements: (start_polymer, start_monomer, start_attachment, 
         end_polymer, end_monomer, end_attachment).
@@ -382,8 +376,8 @@ def parse_helm(helm_string):
     polymers : dict
         A dictionary with polymer IDs as keys and sequences as values.
     connections : numpy.ndarray
-        An array with dtype [('SourcePolymerID', 'U20'), ('TargetPolymerID', 'U20'),
-                             ('SourceMonomerPosition', 'i4'), ('SourceAttachment', 'U2'),
+        An array with dtype [('SourcePolymerID', 'U20'), ('TargetPolymerID', 'U20'),\
+                             ('SourceMonomerPosition', 'i4'), ('SourceAttachment', 'U2'),\
                              ('TargetMonomerPosition', 'i4'), ('TargetAttachment', 'U2')].
         Each row represents a connection between two monomers in the polymers.
     hydrogen_bonds : str

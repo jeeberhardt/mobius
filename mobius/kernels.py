@@ -86,13 +86,13 @@ class CosineSimilarityKernel(gpytorch.kernels.Kernel):
         
         Parameters
         ----------
-         x1 : torch.Tensor
+        x1 : torch.Tensor
             Input tensor of shape `(batch_size_1, n_features)` containing `batch_size_1` data points,
             each with `n_features` features.
         x2 : torch.Tensor
             Input tensor of shape `(batch_size_2, n_features)` containing `batch_size_2` data points,
             each with `n_features` features.
-       eps : float, default : 1e-6
+        eps : float, default : 1e-6
             A small constant to add to the denominator for numerical stability.
             
         Returns

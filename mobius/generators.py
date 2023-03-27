@@ -462,11 +462,6 @@ def properties_scanning(input_sequence, properties=None, input_type='helm', posi
         A dictionary of properties to scan for, where keys are the name of the property, 
         and values are lists of amino acid codes that have that property. 
         Default is None, which will scan for the following properties:
-            {'polar_pos': ['R', 'H', 'K'],
-            'polar_neg': ['E', 'D'],
-            'polar_neutral': ['Q', 'T', 'G', 'C', 'N', 'S'],
-            'polar_aro': ['Y', 'W', 'F'],
-            'polar_nonaro': ['I', 'A', 'L', 'P', 'V', 'M']}
     input_type : str, default : 'helm'
         The format of the input sequence. Must be either 'fasta' or 'helm'. 
     positions : Dict[str, List of int], default : None
@@ -482,6 +477,21 @@ def properties_scanning(input_sequence, properties=None, input_type='helm', posi
     ------
     AssertionError
         If the input_type is not 'helm' or 'fasta'.
+
+    Examples
+    --------
+    >>> from mobius import properties_scanning
+    >>> from mobius.utils import convert_FASTA_to_HELM
+    >>> input_sequence = convert_FASTA_to_HELM('HMTEVVRRC')[0]
+    >>> properties = {
+    …    'polar_pos' : ['R', 'H', 'K'],
+    …    'polar_neg' : ['E', 'D'],
+    …    'polar_neutral' : ['Q', 'T', 'G', 'C', 'N', 'S'],
+    …    'polar_aro' : ['Y', 'W', 'F'],
+    …    'polar_nonaro' : ['I', 'A', 'L', 'P', 'V', 'M']
+    }
+    >>> for sequence in properties_scanning(input_sequence, properties=properties):
+    …    print(sequence)
 
     """
     msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
