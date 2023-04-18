@@ -10,11 +10,11 @@ from collections import defaultdict
 import numpy as np
 from mhfp.encoder import MHFPEncoder
 from rdkit import Chem
-from rdkit.Chem import AllChem
 from rdkit.Chem import rdmolops
+from rdkit.Chem import rdFingerprintGenerator
 from rdkit.Chem.rdmolops import GetDistanceMatrix
 
-from .utils import convert_HELM_to_FASTA, MolFromHELM
+from .utils import MolFromHELM
 
 
 class MAP4Calculator:
@@ -323,8 +323,8 @@ class MorganFingerprint:
             print('Error: there are issues with the input molecules')
             print(sequences)
 
-        GMFABV = AllChem.GetMorganFingerprintAsBitVect
-        fps = [GMFABV(m, useChirality=True, useFeatures=True, radius=self._radius, nBits=self._dimensions) for m in mols]
+        fpg = rdFingerprintGenerator.GetMorganGenerator(includeChirality=True, radius=self._radius, fpSize=self._dimensions)
+        fps = [fpg.GetFingerprintAsNumPy(m) for m in mols]
         fps = np.asarray(fps)
 
         return fps
