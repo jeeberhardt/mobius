@@ -133,7 +133,7 @@ class LinearPeptideEmulator(_Emulator):
 
     """
     
-    def __init__(self, pssm_files, score_cutoff=None):
+    def __init__(self, pssm_files):
         """
         Initialize the LinearPeptideEmulator `Emulator`.
         
@@ -141,14 +141,10 @@ class LinearPeptideEmulator(_Emulator):
         ----------
         pssm_files : str
             Path of the PSSM file to read.
-        score_cutoff : int or float, default : None
-            If specified, scores superior than `score_cutoff` will be set to zero.
-            It is one way to simulate a non-binding event.
 
         """
         self._pssm = {}
         self._intercept = {}
-        self._score_cutoff = score_cutoff
 
         # Read PSS Matrices
         for pssm_file in pssm_files:
@@ -204,10 +200,7 @@ class LinearPeptideEmulator(_Emulator):
             score += intercept
             scores.append(score)
 
-        scores = np.array(scores)
-
-        if self._score_cutoff is not None:
-            scores[scores > self._energy_score] = 0.
+        scores = np.asarray(scores)
 
         return scores
 
