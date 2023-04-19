@@ -10,7 +10,6 @@ Mobius requires a number of Python packages, notably:
 
 * botorch
 * gpytorch
-* map4
 * matplotlib
 * mhfp
 * numpy
@@ -32,7 +31,7 @@ clean python environnment. To install everything properly with `conda`, you just
     conda create -n mobius -c conda-forge python=3 mkl numpy scipy pandas matplotlib \
         rdkit seaborn sklearn torch botorch gpytorch sphinx sphinx_rtd_theme
     conda activate mobius
-    pip install ray mhfp git+https://github.com/reymond-group/map4@v1.0
+    pip install ray mhfp
 
 We can now install the `mobius` package
 

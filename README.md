@@ -5,7 +5,6 @@ Python package for optimizing peptide sequences using Bayesian optimization (BO)
 ## Requirements
 * botorch
 * gpytorch
-* map4
 * matplotlib
 * mhfp
 * numpy
