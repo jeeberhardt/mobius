@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import torch
 
-from .descriptors import Map4Fingerprint
+from .fingerprints import Map4Fingerprint
 from .kernels import TanimotoSimilarityKernel
 from .utils import build_helm_string
 from .utils import read_pssm_file
