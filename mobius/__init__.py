@@ -13,11 +13,11 @@ from .sampler import PolymerSampler
 from .descriptors import SequenceDescriptors
 from .fingerprints import MHFingerprint, Map4Fingerprint, MorganFingerprint
 from .genetic_algorithm import SequenceGA, ParallelSequenceGA, ScaffoldGA, RandomGA
-from .surrogate_model import GPModel, DummyModel, RFModel
+from .surrogate_models import GPModel, DummyModel, RFModel
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning, SubstitutionMatrix
 from .genetic_operators import GeneticOperators
 from .kernels import TanimotoSimilarityKernel
-from .emulator import LinearPeptideEmulator, FindMe
+from .emulators import LinearPeptideEmulator, FindMe
 from .plotting import plot_results
 from .utils import parse_helm, build_helm_string, get_scaffold_from_helm_string, read_pssm_file
 from .utils import affinity_binding_to_energy, energy_to_affinity_binding, generate_random_linear_peptides, ic50_to_pic50, pic50_to_ic50

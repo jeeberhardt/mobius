@@ -12,13 +12,13 @@ to contact us.
    :maxdepth: 1
 
    ./modules/mobius
+   ./modules/emulators
    ./modules/sampler
-   ./modules/emulator
+   ./modules/genetic_algorithm
+   ./modules/surrogate_models
+   ./modules/acquisition_functions
+   ./modules/kernels
    ./modules/generators
-   ./modules/surrogate_model
    ./modules/fingerprints
    ./modules/descriptors
-   ./modules/kernel
-   ./modules/acquisition_functions
-   ./modules/genetic_algorithm
    ./modules/utils

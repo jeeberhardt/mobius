@@ -10,7 +10,7 @@ import numpy as np
 import ray
 from scipy.stats import norm
 
-from .surrogate_model import DummyModel
+from .surrogate_models import DummyModel
 
 
 @ray.remote

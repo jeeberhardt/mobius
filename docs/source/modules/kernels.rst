@@ -1,5 +1,5 @@
-Kernel functions
-----------------
+Kernels
+-------
 
 .. automodule:: mobius.kernels
     :members:

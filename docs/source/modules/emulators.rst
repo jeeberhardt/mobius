@@ -1,6 +1,6 @@
 Emulators
 ---------
 
-.. automodule:: mobius.emulator
+.. automodule:: mobius.emulators
     :members:
     :special-members:
