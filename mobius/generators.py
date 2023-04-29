@@ -15,107 +15,6 @@ import pandas as pd
 from . import utils
 
 
-class SubstitutionMatrix:
-    """
-    A class for managing substitution matrices.
-
-    """
-
-    def __init__(self, matrix_filename):
-        """
-        Initialize a SubstitutionMatrix object.
-
-        Parameters
-        ----------
-        matrix_filename : str
-            The name of the file containing the substitution matrix.
-
-        """
-        self._matrix = self._read_matrix(matrix_filename)
-
-    def _read_matrix(self, matrix_filename):
-        """
-        Read a substitution matrix from a file.
-
-        Parameters
-        ----------
-        matrix_filename : str
-            The name of the file containing the substitution matrix.
-
-        Returns
-        -------
-        pd.DataFrame
-            A Pandas DataFrame representing the substitution matrix.
-
-        """
-        data = []
-        columns = None
-
-        with open(matrix_filename) as f:
-            lines = f.readlines()
-
-            for line in lines:
-                if not line.startswith('#'):
-                    if columns is None:
-                        columns = [x.strip() for x in line.split(' ') if x]
-                    else:
-                        data.append([x.strip() for x in line.split(' ') if x][1:])
-
-        data = np.array(data).astype(int)
-
-        df = pd.DataFrame(data=data, columns=columns, index=columns)
-        return df
-
-    @property
-    def shape(self):
-        """
-        Get the shape of the substitution matrix.
-
-        Returns
-        -------
-        tuple
-            A tuple representing the shape of the substitution matrix.
-
-        """
-        return self._matrix.shape
-
-    def substitutes(self, monomer_symbol, include=False, ascending_order=False):
-        """
-        Get the substitution monomers for a given monomer symbol based on the substition matrix scoresÒ.
-
-        Parameters
-        ----------
-        monomer_symbol : str
-            The monomer symbol for which to get the substitution scores.
-        include : bool, optional, default : False
-            Whether to include the given monomer symbol in the output, by default False.
-        ascending_order : bool, optional, default : False
-            Whether to sort the output in ascending order, by default False.
-
-        Returns
-        -------
-        ndarray
-            An array of monomer symbols in the resquested order.
-
-        """
-        monomers_to_drop = ['X']
-
-        try:
-            substitutions = self._matrix.loc[monomer_symbol]
-        except KeyError:
-            error_msg = 'Error: Monomer symbol %s not present in the substitution matrix.' % monomer_symbol
-            raise KeyError(error_msg)
-
-        substitutions.sort_values(ascending=ascending_order, inplace=True)
-
-        if not include:
-            monomers_to_drop.append(monomer_symbol)
-
-        substitutions.drop(monomers_to_drop, inplace=True)
-        
-        return substitutions.index.values
-
-
 def homolog_scanning(input_sequence, substitution_matrix=None, input_type='helm', positions=None):
     """
     This function performs the homolog scanning method on a given peptide sequence 
@@ -125,14 +24,18 @@ def homolog_scanning(input_sequence, substitution_matrix=None, input_type='helm'
     ----------
     input_sequence : str
         The input sequence, either in FASTA or HELM format.
-    substitution_matrix : SubstitutionMatrix, optional
-        The substitution matrix to use for scanning. If not provided, it will use the 
-        default matrix 'VTML20.out'.
+    substitution_matrix : pd.DataFrame, optional
+        The substitution matrix to use for the homolog scanning. The substitution matrix is a
+        pandas DataFrame containing a square similarity matrix with indices and columns corresponding 
+        to the monomer names (A, C, D, ... for standard amino acids). If not provided, it will 
+        use the provided amino acid similarity matrix for the 20 standard amino acids (see 
+        mobius/data/AA_similarity_matrix.csv).
     input_type : str, optional, default : 'helm'
         The format of the input sequence. Must be either 'fasta' or 'helm'. 
     positions : Dict[str, List of int], default : None
         The positions to be mutated, in the format {'polymer_id': [pos1, pos2, ...], ...}. 
-        If not provided, all positions in the input sequence will be scanned.
+        The positions are 1-based. If not provided, all positions in the input sequence will 
+        be scanned.
 
     Yields
     ------
@@ -143,6 +46,8 @@ def homolog_scanning(input_sequence, substitution_matrix=None, input_type='helm'
     ------
     AssertionError
         If the input_type is not 'helm' or 'fasta'.
+    KeyError
+        If the monomer symbol is not present in the substitution matrix.
 
     """
     msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
@@ -157,11 +62,11 @@ def homolog_scanning(input_sequence, substitution_matrix=None, input_type='helm'
         polymers = {'PEPTIDE1': list(input_sequence)}
         connections = None
 
-    # If substitution_matrix is not provided, use the default matrix
+    # If substitution_matrix is not provided, use the default similarity matrix
     if substitution_matrix is None:
         d = utils.path_module("mobius")
-        substitution_matrix_filename = os.path.join(d, "data/VTML20.out")
-        substitution_matrix = SubstitutionMatrix(substitution_matrix_filename)
+        substitution_matrix_filename = os.path.join(d, "data/AA_similarity_matrix.csv")
+        substitution_matrix = pd.read_csv(substitution_matrix_filename, index_col=0)
 
     allowed_positions = {}
 
@@ -184,14 +89,27 @@ def homolog_scanning(input_sequence, substitution_matrix=None, input_type='helm'
     # Iterate through all the positions in the allowed positions
     for pid in itertools.cycle(polymers.keys()):
         for position in allowed_positions[pid]:
+            current_monomer = polymers[pid][position]
+
             try:
-                monomer = substitution_matrix.substitutes(polymers[pid][position])[i]
+                substitutions = substitution_matrix.loc[current_monomer].copy()
+            except KeyError:
+                error_msg = 'Error: Monomer symbol %s not present in the substitution matrix.' % current_monomer
+                raise KeyError(error_msg)
+
+            # Sort from the most similar to the least similar amino acid
+            substitutions.sort_values(ascending=True, inplace=True)
+            # Remove the current monomer from the list of substitutions
+            substitutions.drop([current_monomer], inplace=True)
+
+            try:
+                new_monomer = substitutions.index.values[i]
             except IndexError:
                 # It means we reach the end of all the possible substitutions
                 break
 
             new_polymers = copy.deepcopy(polymers)
-            new_polymers[pid][position] = monomer
+            new_polymers[pid][position] = new_monomer
             new_sequence = utils.build_helm_string(new_polymers, connections)
 
             if position == allowed_positions[pid][-1]:
@@ -221,7 +139,8 @@ def monomers_scanning(input_sequence, monomers=None, input_type='helm', position
         The format of the input sequence. Must be either 'fasta' or 'helm'. 
     positions : Dict[str, List of int], default : None
         The positions to be mutated, in the format {'polymer_id': [pos1, pos2, ...], ...}. 
-        If not provided, all positions in the input sequence will be scanned.
+        The positions are 1-based. If not provided, all positions in the input sequence will 
+        be scanned.
     
     Yields
     ------
@@ -301,7 +220,8 @@ def alanine_scanning(input_sequence, repeats=None, input_type='helm', positions=
         The format of the input sequence. Must be either 'fasta' or 'helm'. 
     positions : Dict[str, List of int], default : None
         The positions to be mutated, in the format {'polymer_id': [pos1, pos2, ...], ...}. 
-        If not provided, all positions in the input sequence will be scanned.
+        The positions are 1-based. If not provided, all positions in the input sequence will 
+        be scanned.
 
     Yields
     ------
@@ -392,7 +312,8 @@ def random_monomers_scanning(input_sequence, monomers=None, input_type='helm', p
         The format of the input sequence. Must be either 'fasta' or 'helm'. 
     positions : Dict[str, List of int], default : None
         The positions to be mutated, in the format {'polymer_id': [pos1, pos2, ...], ...}. 
-        If not provided, all positions in the input sequence will be scanned.
+        The positions are 1-based. If not provided, all positions in the input sequence will 
+        be scanned.
 
     Yields
     ------
@@ -466,7 +387,8 @@ def properties_scanning(input_sequence, properties=None, input_type='helm', posi
         The format of the input sequence. Must be either 'fasta' or 'helm'. 
     positions : Dict[str, List of int], default : None
         The positions to be mutated, in the format {'polymer_id': [pos1, pos2, ...], ...}. 
-        If not provided, all positions in the input sequence will be scanned.
+        The positions are 1-based. If not provided, all positions in the input sequence will 
+        be scanned.
 
     Returns
     -------
@@ -552,7 +474,8 @@ def scrumbled_scanning(input_sequence, input_type='helm', positions=None):
         The format of the input sequence. Must be either 'fasta' or 'helm'. 
     positions : Dict[str, List of int], default : None
         The positions to be mutated, in the format {'polymer_id': [pos1, pos2, ...], ...}. 
-        If not provided, all positions in the input sequence will be scanned.
+        The positions are 1-based. If not provided, all positions in the input sequence will 
+        be scanned.
 
     Yields
     ------

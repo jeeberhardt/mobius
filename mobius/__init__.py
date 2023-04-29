@@ -14,7 +14,7 @@ from .descriptors import SequenceDescriptors
 from .fingerprints import MHFingerprint, Map4Fingerprint, MorganFingerprint
 from .genetic_algorithm import SequenceGA, ParallelSequenceGA, ScaffoldGA, RandomGA
 from .surrogate_models import GPModel, DummyModel, RFModel
-from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning, SubstitutionMatrix
+from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning
 from .genetic_operators import GeneticOperators
 from .kernels import TanimotoSimilarityKernel
 from .emulators import LinearPeptideEmulator, FindMe
@@ -33,7 +33,7 @@ __all__ = ['VirtualTarget', 'ForceField',
            'MHFingerprint', 'Map4Fingerprint', 'MorganFingerprint', 'SequenceDescriptors',
            'GeneticOperators', 'SequenceGA', 'ScaffoldGA', 'RandomGA', 'ParallelSequenceGA',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 
-           'scrumbled_scanning', 'homolog_scanning', 'SubstitutionMatrix',
+           'scrumbled_scanning', 'homolog_scanning',
            'plot_results',
            'parse_helm', 'build_helm_string', 'get_scaffold_from_helm_string', 'read_pssm_file', 
            'affinity_binding_to_energy', 'energy_to_affinity_binding', 'generate_random_linear_peptides', 
