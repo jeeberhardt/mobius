@@ -23,10 +23,6 @@ class _Sampler(ABC):
     def recommand(self):
         raise NotImplementedError()
 
-    @abstractmethod
-    def optimize(self):
-        raise NotImplementedError()
-
 
 class PolymerSampler(_Sampler):
     """
