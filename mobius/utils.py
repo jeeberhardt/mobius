@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import torch
 from rdkit import Chem
+from rdkit import RDLogger
 
 
 def path_module(module_name):
@@ -624,6 +625,8 @@ def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
         with Chem.RWMol() as rw_peptide:
             [rw_peptide.InsertMol(molecule) for molecule in molecules_to_zip]
 
+        RDLogger.DisableLog('rdApp.warning')
+
         # Bop-it, Twist-it, Pull-it and Zip-it!
         peptide = Chem.molzip(rw_peptide)
 
@@ -632,6 +635,8 @@ def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
         params = Chem.RemoveHsParameters()
         params.removeDegreeZero = True
         peptide = Chem.RemoveHs(peptide, params)
+
+        RDLogger.EnableLog('rdApp.warning')
 
         peptides.append(peptide)
 
