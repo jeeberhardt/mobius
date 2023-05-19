@@ -4,6 +4,8 @@
 # Mobius - polymer sampler
 #
 
+import yaml
+import importlib
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -24,6 +26,65 @@ class _Sampler(ABC):
         raise NotImplementedError()
 
 
+def _load_samplers_from_config(sampling_config_filename):
+    """
+    Function to load the samplers from the YAML config file.
+
+    Parameters
+    ----------
+    sampling_config_filename : YAML config filename
+        YAML config file containing the sampling protocol.
+
+    Returns
+    -------
+    samplers : list of sampling methods
+        List of sampling methods to use to optimize peptide sequences.
+
+    """
+    samplers = []
+    
+    with open(sampling_config_filename, 'r') as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+
+    try:
+        sampling_methods = config['sampling']
+    except:
+        raise KeyError('No sampling protocol defined in the YAML file')
+
+    for sampling_method in sampling_methods:
+        try:
+            sampler_full_name = sampling_method['class_path']
+        except:
+            raise KeyError('No class path defined for sampler %s' % (sampling_method))
+
+        try:
+            init_args = sampling_method['init_args']
+        except:
+            # If no init args are defined, set it to None
+            # The default arguments defined (if any) for this class will then be used
+            init_args = None
+
+        sampler_module_name, sampler_class_name =  sampler_full_name.rsplit('.', 1)
+
+        try:
+            sampler_module = importlib.import_module(sampler_module_name)
+        except:
+            raise ImportError('Cannot import module %s' % (sampler_module_name))
+        try:
+            sampler_class = getattr(sampler_module, sampler_class_name)
+        except:
+            raise AttributeError('Cannot find class %s in module %s' % (sampler_class_name, sampler_module_name))
+
+        try:
+            sampler = sampler_class(**init_args)
+        except:
+            raise ValueError('Cannot initialize sampler %s' % (sampler_full_name))
+
+        samplers.append(sampler)
+
+    return samplers
+
+
 class PolymerSampler(_Sampler):
     """
     Class for sampling the polymer sequence space using an acquisition function
@@ -31,7 +92,7 @@ class PolymerSampler(_Sampler):
 
     """
 
-    def __init__(self, acquisition_function, search_protocol):
+    def __init__(self, acquisition_function, sampling_config_filename):
         """
         Initialize the polymer sampler.
 
@@ -39,35 +100,37 @@ class PolymerSampler(_Sampler):
         ----------
         acquisition_function : `AcquisitionFunction`
             The acquisition function that will be used to score the polymer/peptide.
-        search_protocol : Dictionary
-            Search/sampling protocol describing all the sampling blocks.
+        sampling_config_filename : str
+            Path of the YAML config file containing the sampling protocol for 
+            optimizing polymers/peptides.
 
         Examples
         --------
-        >>> from mobius import PolymerSampler, SequenceGA
-        >>> # Define a search protocol using the SequenceGA optimizer
-        >>> search_protocol = {
-        …    'SequenceGA': {
-        …        'function': SequenceGA,
-        …        'parameters': {
-        …            'n_process': -1,
-        …            'n_gen': 1000,
-        …            'n_children': 500,
-        …            'temperature': 0.01,
-        …            'elitism': True,
-        …            'total_attempts': 50,
-        …            'cx_points': 2,
-        …            'pm': 0.1,
-        …            'minimum_mutations': 1,
-        …            'maximum_mutations': 5
-        …        }
-        …    }
-        }
-        >>> ps = PolymerSampler(acq_fun, search_protocol)
+
+        >>> from mobius import PolymerSampler
+        >>> ps = PolymerSampler(acq_fun, sampling_config_filename='config.yaml')
+
+        Content of the `config.yaml` with the path of the SequenceGA sampling method 
+        defined and the arguments used to initialize it.
+    
+        .. code:: yaml
+        
+            sampling:
+              - class_path: mobius.SequenceGA
+                init_args:
+                  n_gen: 1000
+                  n_children: 500
+                  temperature: 0.01
+                  elitism: True
+                  total_attempts: 50
+                  cx_points: 2
+                  pm: 0.1
+                  minimum_mutations: 1
+                  maximum_mutations: 5
 
         """
         self._acq_fun = acquisition_function
-        self._search_protocol = search_protocol
+        self._samplers = _load_samplers_from_config(sampling_config_filename)
 
     def ask(self, batch_size=None):
         """
@@ -93,9 +156,7 @@ class PolymerSampler(_Sampler):
         suggested_polymers = self._acq_fun.surrogate_model.X_train_original.copy()
         values = self._acq_fun.surrogate_model.y_train.copy()
 
-        samplers = [s['function'](**s['parameters']) for name_sampler, s in self._search_protocol.items()]
-
-        for sampler in samplers:
+        for sampler in self._samplers:
             suggested_polymers, values = sampler.run(self._acq_fun, suggested_polymers, values)
 
         # Sort sequences by scores in the decreasing order (best to worst)
