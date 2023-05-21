@@ -10,6 +10,8 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+from .utils import parse_helm
+
 
 class _Sampler(ABC):
 
@@ -26,63 +28,161 @@ class _Sampler(ABC):
         raise NotImplementedError()
 
 
-def _load_samplers_from_config(sampling_config_filename):
+def _load_design_from_config(config_filename):
     """
-    Function to load the samplers from the YAML config file.
+    Function to load the design protocol from the YAML config file.
 
     Parameters
     ----------
-    sampling_config_filename : YAML config filename
+    config_filename : YAML config filename
         YAML config file containing the sampling protocol.
 
     Returns
     -------
-    samplers : list of sampling methods
-        List of sampling methods to use to optimize peptide sequences.
+    designs : list of designs
+        List of designs to use to optimize polymer sequences.
 
     """
-    samplers = []
+    designs = {}
+    # If no monomers are defined later, the 20 natural amino acids will be used
+    monomers = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
+                'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+
+    with open(config_filename, 'r') as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
     
-    with open(sampling_config_filename, 'r') as f:
+    try:
+        design = config['design']
+    except:
+        # No design protocol defined
+        return monomers, designs
+    
+    try:
+        monomers = []
+        for _, monomers_collection in design['monomers'].items():
+            monomers.extend(monomers_collection)
+    except:
+        pass
+
+    for scaffold_design in design['scaffolds']:
+        try:
+            scaffold_sequence = list(scaffold_design.keys())[0]
+            scaffold_instructions = scaffold_design[scaffold_sequence]
+        except:
+            scaffold_sequence = scaffold_design
+            scaffold_instructions = {}
+        
+        polymers, _, _, _ = parse_helm(scaffold_sequence)
+
+        for pid, sequence in polymers.items():
+            scaffold_instructions.setdefault(pid, {})
+
+            for i, monomer in enumerate(sequence):
+                if monomer == 'X':
+                    scaffold_instructions[pid].setdefault(i + 1, monomers)
+                else:
+                    scaffold_instructions[pid].setdefault(i + 1, [monomer])
+        
+        designs[scaffold_sequence] = scaffold_instructions
+    
+    return monomers, designs
+
+
+def _load_methods_from_config(config_filename, yaml_key):
+    """
+    Function to load the method from the YAML config file.
+
+    Parameters
+    ----------
+    config_filename : YAML config filename
+        YAML config file containing the methods to load.
+    yaml_key : str
+        Key of the YAML config file containing the methods to load.
+
+    Returns
+    -------
+    method : list of methods
+        List of methods loaded from the YAML config file.
+
+    """
+    methods = []
+    
+    with open(config_filename, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
     try:
-        sampling_methods = config['sampling']
+        method_configs = config[yaml_key]
     except:
-        raise KeyError('No sampling protocol defined in the YAML file')
+        return methods
 
-    for sampling_method in sampling_methods:
+    for method_config in method_configs:
         try:
-            sampler_full_name = sampling_method['class_path']
+            method_full_name = method_config['class_path']
         except:
-            raise KeyError('No class path defined for sampler %s' % (sampling_method))
+            raise KeyError('No class path defined for %s %s' % (yaml_key, method_config))
 
         try:
-            init_args = sampling_method['init_args']
+            init_args = method_config['init_args']
         except:
             # If no init args are defined, set it to None
             # The default arguments defined (if any) for this class will then be used
             init_args = None
 
-        sampler_module_name, sampler_class_name =  sampler_full_name.rsplit('.', 1)
+        method_module_name, method_class_name =  method_full_name.rsplit('.', 1)
 
         try:
-            sampler_module = importlib.import_module(sampler_module_name)
+            method_module = importlib.import_module(method_module_name)
         except:
-            raise ImportError('Cannot import module %s' % (sampler_module_name))
+            raise ImportError('Cannot import module %s' % (method_module_name))
         try:
-            sampler_class = getattr(sampler_module, sampler_class_name)
+            method_class = getattr(method_module, method_class_name)
         except:
-            raise AttributeError('Cannot find class %s in module %s' % (sampler_class_name, sampler_module_name))
+            raise AttributeError('Cannot find class %s in module %s' % (method_class_name, method_module_name))
 
         try:
-            sampler = sampler_class(**init_args)
+            method = method_class(**init_args)
         except:
-            raise ValueError('Cannot initialize sampler %s' % (sampler_full_name))
+            raise ValueError('Cannot initialize %s %s' % (yaml_key, method_full_name))
 
-        samplers.append(sampler)
+        methods.append(filter)
 
-    return samplers
+    return methods
+
+
+def _load_filters_from_config(config_filename):
+    """
+    Function to load the filter methods from the YAML config file.
+
+    Parameters
+    ----------
+    config_filename : YAML config filename
+        YAML config file containing the sampling protocol.
+
+    Returns
+    -------
+    filters : list of filter methods
+        List of filter methods to use at the end of the polymer optimization.
+
+    """
+    return _load_methods_from_config(config_filename, yaml_key='filters')
+
+
+def _load_samplers_from_config(config_filename):
+    """
+    Function to load the sampler methods from the YAML config file.
+
+    Parameters
+    ----------
+    config_filename : YAML config filename
+        YAML config file containing the sampling protocol.
+
+    Returns
+    -------
+    samplers : list of sampling methods
+        List of sampling methods to use to optimize polymer sequences.
+
+    """
+    return _load_methods_from_config(config_filename, yaml_key='samplers')
 
 
 class PolymerSampler(_Sampler):
@@ -92,7 +192,7 @@ class PolymerSampler(_Sampler):
 
     """
 
-    def __init__(self, acquisition_function, sampling_config_filename):
+    def __init__(self, acquisition_function, config_filename):
         """
         Initialize the polymer sampler.
 
@@ -100,15 +200,15 @@ class PolymerSampler(_Sampler):
         ----------
         acquisition_function : `AcquisitionFunction`
             The acquisition function that will be used to score the polymer/peptide.
-        sampling_config_filename : str
-            Path of the YAML config file containing the sampling protocol for 
-            optimizing polymers/peptides.
+        config_filename : str
+            Path of the YAML config file containing the design, sampling and filters 
+            protocols for optimizing polymers/peptides.
 
         Examples
         --------
 
         >>> from mobius import PolymerSampler
-        >>> ps = PolymerSampler(acq_fun, sampling_config_filename='config.yaml')
+        >>> ps = PolymerSampler(acq_fun, config_filename='config.yaml')
 
         Content of the `config.yaml` with the path of the SequenceGA sampling method 
         defined and the arguments used to initialize it.
@@ -130,7 +230,9 @@ class PolymerSampler(_Sampler):
 
         """
         self._acq_fun = acquisition_function
-        self._samplers = _load_samplers_from_config(sampling_config_filename)
+        self._samplers = _load_samplers_from_config(config_filename)
+        self._designs = _load_design_from_config(config_filename)
+        self._filters = _load_filters_from_config(config_filename)
 
     def ask(self, batch_size=None):
         """
