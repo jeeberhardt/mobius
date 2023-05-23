@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from .utils import parse_helm
+from .utils import parse_helm, get_scaffold_from_helm_string
 
 
 class _Sampler(ABC):
@@ -44,9 +44,9 @@ def _load_design_from_config(config_filename):
 
     """
     designs = {}
-    # If no monomers are defined later, the 20 natural amino acids will be used
-    monomers = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
-                'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+    monomers_collections = {}
+    default_monomers = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
+                        'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
 
     with open(config_filename, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
@@ -55,12 +55,18 @@ def _load_design_from_config(config_filename):
         design = config['design']
     except:
         # No design protocol defined
-        return monomers, designs
+        return designs
     
     try:
-        monomers = []
-        for _, monomers_collection in design['monomers'].items():
-            monomers.extend(monomers_collection)
+        monomers_collections = design['monomers']
+    except:
+        pass
+
+    try:
+        # Get the default monomers collection if redefined by the user
+        # otherwise we use the default monomers collection defined above
+        # composed of the 20 natural amino acids.
+        default_monomers = design['monomers']['default']
     except:
         pass
 
@@ -79,13 +85,36 @@ def _load_design_from_config(config_filename):
 
             for i, monomer in enumerate(sequence):
                 if monomer == 'X':
-                    scaffold_instructions[pid].setdefault(i + 1, monomers)
+                    try:
+                        user_defined_monomers = scaffold_instructions[pid][i + 1]
+                    except:
+                        # Use natural amino acids set for positions that are not defined.
+                        scaffold_instructions[pid][i + 1] = default_monomers
+                        continue
+
+                    if not isinstance(user_defined_monomers, list):
+                        user_defined_monomers = [user_defined_monomers]
+
+                    # if one the monomer is monomers collection, replace it by the monomers collection
+                    # The monomers collection must be defined in the YAML config file, otherwise it will be
+                    # considered as a monomer. 
+                    if set(user_defined_monomers).issubset(monomers_collections.keys()):
+                        for j, m in enumerate(user_defined_monomers):
+                            if m in monomers_collections:
+                                user_defined_monomers[j:j+1] = monomers_collections[m]
+
+                    scaffold_instructions[pid][i + 1] = user_defined_monomers
                 else:
-                    scaffold_instructions[pid].setdefault(i + 1, [monomer])
+                    # We could had used the setdefault function here, but we will have
+                    # the issue when the user defined monomers for that position, but in the
+                    # scaffold the monomer defined is not X. In that case, we use the monomer
+                    # from the scaffold.
+                    scaffold_instructions[pid][i + 1] = [monomer]
         
-        designs[scaffold_sequence] = scaffold_instructions
+        scaffold = get_scaffold_from_helm_string(scaffold_sequence)
+        designs[scaffold] = scaffold_instructions
     
-    return monomers, designs
+    return designs
 
 
 def _load_methods_from_config(config_filename, yaml_key):
@@ -144,7 +173,7 @@ def _load_methods_from_config(config_filename, yaml_key):
         except:
             raise ValueError('Cannot initialize %s %s' % (yaml_key, method_full_name))
 
-        methods.append(filter)
+        methods.append(method)
 
     return methods
 
@@ -182,7 +211,7 @@ def _load_samplers_from_config(config_filename):
         List of sampling methods to use to optimize polymer sequences.
 
     """
-    return _load_methods_from_config(config_filename, yaml_key='samplers')
+    return _load_methods_from_config(config_filename, yaml_key='sampling')
 
 
 class PolymerSampler(_Sampler):
@@ -230,8 +259,8 @@ class PolymerSampler(_Sampler):
 
         """
         self._acq_fun = acquisition_function
-        self._samplers = _load_samplers_from_config(config_filename)
         self._designs = _load_design_from_config(config_filename)
+        self._samplers = _load_samplers_from_config(config_filename)
         self._filters = _load_filters_from_config(config_filename)
 
     def ask(self, batch_size=None):
@@ -259,7 +288,7 @@ class PolymerSampler(_Sampler):
         values = self._acq_fun.surrogate_model.y_train.copy()
 
         for sampler in self._samplers:
-            suggested_polymers, values = sampler.run(self._acq_fun, suggested_polymers, values)
+            suggested_polymers, values = sampler.run(suggested_polymers, values, self._acq_fun, self._designs)
 
         # Sort sequences by scores in the decreasing order (best to worst)
         # We want the best score to be the lowest, so we apply a scaling 

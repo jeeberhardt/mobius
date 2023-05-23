@@ -6,6 +6,7 @@
 
 import json
 import os
+import random
 from importlib import util
 
 import numpy as np
@@ -13,6 +14,55 @@ import pandas as pd
 import torch
 from rdkit import Chem
 from rdkit import RDLogger
+
+
+def constrained_sum_sample_pos(n, total):
+    """
+    Return a randomly chosen list of n positive integers summing to total.
+
+    Parameters
+    ----------
+    n : int
+        The number of positive integers to generate.
+    total : int
+        The total sum of the generated integers.
+
+    Returns
+    -------
+    ndarray
+        A 1D numpy array of n positive integers summing to total.
+
+    Notes
+    -----
+    https://stackoverflow.com/questions/3589214
+
+    """
+    dividers = sorted(random.sample(range(1, total), n - 1))
+    return np.array([a - b for a, b in zip(dividers + [total], [0] + dividers)])
+
+
+def constrained_sum_sample_nonneg(n, total):
+    """
+    Return a randomly chosen list of n nonnegative integers summing to total.
+
+    Parameters
+    ----------
+    n : int
+        Number of nonnegative integers in the list.
+    total : int
+        The sum of the nonnegative integers in the list.
+
+    Returns
+    -------
+    ndarray
+        A 1D numpy array of n nonnegative integers summing to total.
+
+    Notes
+    -----
+    https://stackoverflow.com/questions/3589214
+
+    """
+    return np.array([x - 1 for x in constrained_sum_sample_pos(n, total + n)])
 
 
 def path_module(module_name):
@@ -205,16 +255,16 @@ def get_device():
     return device
 
 
-def generate_random_linear_peptides(n_peptides, peptide_lengths, monomers=None, output_format='helm'):
+def generate_random_linear_polymers(n_polymers, polymers_lengths, monomers=None, output_format='helm'):
     """
-    Generates random linear peptides.
+    Generates random linear polymers.
 
     Parameters
     ----------
-    n_peptides : int
-        Number of random peptides to generate.
-    peptide_lengths : List, tuple or numpy.ndarray
-        List of peptide lengths to sample from.
+    n_polymers : int
+        Number of random polymers to generate.
+    polymers_lengths : List, tuple or numpy.ndarray
+        List of polymers lengths to sample from.
     monomers : List of str, default : None
         A list of monomers to substitute at each allowed position. If not provided, 
         defaults to the 20 natural amino acids.
@@ -224,7 +274,7 @@ def generate_random_linear_peptides(n_peptides, peptide_lengths, monomers=None, 
     Returns
     -------
     List
-        List of generated peptides.
+        List of generated polymers.
 
     Raises
     ------
@@ -240,25 +290,164 @@ def generate_random_linear_peptides(n_peptides, peptide_lengths, monomers=None, 
                     "H", "I", "L", "K", "M", "F", "P", "S", 
                     "T", "W", "Y", "V"]
 
-    if not isinstance(peptide_lengths, (list, tuple, np.ndarray)):
-        peptide_lengths = [peptide_lengths]
+    if not isinstance(polymers_lengths, (list, tuple, np.ndarray)):
+        polymers_lengths = [polymers_lengths]
 
-    random_peptides = []
+    random_polymers = []
 
     while True:
-        peptide_length = np.random.choice(peptide_lengths)
-        p = ''.join(np.random.choice(monomers, peptide_length))
+        polymer_length = np.random.choice(polymers_lengths)
+        p = ''.join(np.random.choice(monomers, polymer_length))
 
         if output_format.lower() == 'helm':
             helm_string = build_helm_string({'PEPTIDE1': p}, [])
-            random_peptides.append(helm_string)
+            random_polymers.append(helm_string)
         else:
-            random_peptides.append(p)
+            random_polymers.append(p)
 
-        if len(random_peptides) == n_peptides:
+        if len(random_polymers) == n_polymers:
             break
 
-    return random_peptides
+    return random_polymers
+
+
+def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
+    """
+    Generates random polymers using scaffold_designs.
+
+    Parameters
+    ----------
+    n_polymers : int
+        Number of random polymers to generate.
+    scaffold_designs : dictionary
+        Dictionary with scaffold sequences and defined set of monomers 
+        to use for each position.
+
+    Returns
+    -------
+    List
+        List of generated polymers.
+
+    """
+    random_polymers = []
+    n_polymers_per_scaffold = constrained_sum_sample_nonneg(len(scaffold_designs), n_polymers)
+
+    for scaffold, design in scaffold_designs.items():
+        i = 0
+
+        polymers, connections, _, _ = parse_helm(scaffold)
+
+        for _ in range(n_polymers_per_scaffold[i]):
+            mutant_polymers = {}
+
+            for pid, sequence in polymers.items():
+                mutated_sequence = list(sequence)
+
+                for i, monomer in enumerate(sequence):
+                    if monomer == 'X':
+                        mutated_sequence[i] = np.random.choice(design[pid][i + 1])
+                
+                mutant_polymers[pid] = mutated_sequence
+            
+            mutant_sequence = build_helm_string(mutant_polymers, connections)
+            random_polymers.append(mutant_sequence)
+
+        i += 1
+
+    return random_polymers
+
+
+def check_polymers_with_designs(polymer_sequences, designs):
+    """
+    Checks if the given polymers are valid based on the designs.
+
+    Parameters
+    ----------
+    polymer_sequences : List
+        List of polymer sequences in HELM format.
+    designs : dictionary
+        Dictionary with scaffold sequences and defined set of monomers
+        to use for each position.
+
+    Returns
+    -------
+    ndarray
+        ndarray of boolean values indicating whether the 
+        polymers are valid or not based on the designs.
+
+    """
+    validity = np.ones(shape=(len(polymer_sequences),), dtype=bool)
+
+    for i, polymer_sequence in enumerate(polymer_sequences):
+        scaffold = get_scaffold_from_helm_string(polymer_sequence)
+
+        try:
+            scaffold_design = designs[scaffold]
+        except:
+            validity[i] = False
+            continue
+
+        polymers, _, _, _ = parse_helm(polymer_sequence)
+
+        for pid, sequence in polymers.items():
+            for i, monomer in enumerate(sequence):
+                if monomer not in scaffold_design[pid][i + 1]:
+                    validity[i] = False
+                    break
+
+    return validity
+
+
+def adjust_polymers_to_designs(polymer_sequences, designs):
+    """
+    Modify polymers to fit the given designs.
+
+    Parameters
+    ----------
+    polymer_sequences : List
+        List of polymer sequences in HELM format.
+    designs : dictionary
+        Dictionary with scaffold sequences and defined set of monomers
+        to use for each position.
+
+    Returns
+    -------
+    List
+        List of polymer sequences in HELM format.
+    ndarray
+        ndarray of boolean values indicating whether the 
+        polymers was modified or not.
+
+    """
+    modified_sequences = []
+    modified = np.zeros(shape=(len(polymer_sequences),), dtype=bool)
+
+    for i, polymer_sequence in enumerate(polymer_sequences):
+        scaffold = get_scaffold_from_helm_string(polymer_sequence)
+
+        try:
+            scaffold_design = designs[scaffold]
+        except KeyError:
+            msg_error = 'Scaffold %s corresponding to %s not found in the scaffold designs.' % (scaffold, polymer_sequence)
+            raise KeyError(msg_error)
+
+        sequences, connections, _, _ = parse_helm(polymer_sequence)
+
+        for sid, sequence in sequences.items():
+            modified_polymers = {}
+            modified_sequence = list(sequence)
+
+            for j, monomer in enumerate(sequence):
+                if monomer not in scaffold_design[sid][j + 1]:
+                    modified_sequence[j] = np.random.choice(scaffold_design[sid][j + 1])
+                    modified[i] = True
+
+            modified_polymers[sid] = modified_sequence
+
+        modified_sequence = build_helm_string(modified_polymers, connections)
+        modified_sequences.append(modified_sequence)
+
+    return modified_sequences, modified
 
 
 def convert_FASTA_to_HELM(fasta_sequences):

@@ -15,7 +15,8 @@ import ray
 
 from .genetic_operators import GeneticOperators
 from .utils import get_scaffold_from_helm_string
-from .utils import generate_random_linear_peptides
+from .utils import generate_random_polymers_from_designs
+from .utils import adjust_polymers_to_designs
 
 
 def _group_by_scaffold(helm_sequences, return_index=False):
@@ -97,52 +98,6 @@ def _boltzmann_probability(scores, temperature=300.):
     return p
 
 
-def _number_of_children_to_generate_per_parent(parent_scores, n_children, temperature):
-    """
-    Calculate the number of children to generate per parent 
-    based on their scores and the temperature. This function is
-    used by the ScaffoldGA class.
-
-    Parameters
-    ----------
-    parent_scores: array-like
-        Scores of the parents used to calculate the number of children to generate.
-    n_children: int
-        Total number of children to generate.
-    temperature: float
-       Temperature used for the Boltzmann weighting.
-
-    Returns
-    -------
-    children_per_parent: ndarray
-        Array of integers with the number of children to generate per parent.
-
-    """
-    # Boltzmann weighting
-    children_per_parent = np.floor(n_children * _boltzmann_probability(parent_scores, temperature)).astype(int)
-
-    current_n_children = np.sum(children_per_parent)
-
-    # In the case, none of the parents are producing children
-    # The best parent generate all the children
-    if current_n_children == 0:
-        i = np.argmax(parent_scores)
-        children_per_parent[i] = n_children
-
-        return children_per_parent
-
-    # We are going to add 1 until the number of children is equal to n_children
-    # but only when the number of children is higher than zero   
-    if current_n_children < n_children:
-        # Get indices of parents that will have children and sort in descending order
-        nonzero_parent_indices = np.argwhere(children_per_parent > 0).flatten()
-        parent_indices = np.argsort(children_per_parent[nonzero_parent_indices])[::-1]
-
-        children_per_parent[parent_indices[:np.sum(children_per_parent) - n_children]] += 1
-
-    return children_per_parent
-
-
 def _generate_mating_couples(parent_sequences, parent_scores, n_children, temperature):
     """
     Generate mating couples for parent sequences based on their scores
@@ -210,8 +165,8 @@ def _generate_mating_couples(parent_sequences, parent_scores, n_children, temper
 
 
 @ray.remote
-def parallel_ga(gao, acquisition_function, sequences, scores):
-    return gao.run(acquisition_function, sequences, scores)
+def parallel_ga(gao, sequences, scores, acquisition_function, scaffold_designs):
+    return gao.run(sequences, scores, acquisition_function, scaffold_designs)
 
 
 class _GeneticAlgorithm(ABC):
@@ -221,11 +176,11 @@ class _GeneticAlgorithm(ABC):
     """
 
     @abstractmethod
-    def _generate_new_population(self, sequences, scores):
+    def _generate_new_population(self, sequences, scores, scaffold_designs):
         raise NotImplementedError()
 
     @abstractmethod
-    def run(self, acquisition_function, sequences, scores):
+    def run(self, sequences, scores, acquisition_function, scaffold_designs):
         attempts = 0
         best_sequence_seen = None
         # Store all the sequences seen so far...
@@ -247,12 +202,12 @@ class _GeneticAlgorithm(ABC):
                 if acquisition_function.maximize:
                     scores = -scores
 
-                sequences = self._generate_new_population(sequences, scores)
+                sequences = self._generate_new_population(sequences, scores, scaffold_designs)
             else:
                 # Inverse the sign of the scores from the acquisition function so that
                 # the best score is always the lowest, necessary for the Boltzmann weights
                 # The scaling factor depends of the acquisition function nature
-                sequences = self._generate_new_population(sequences, scaling_factor * scores)
+                sequences = self._generate_new_population(sequences, scaling_factor * scores, scaffold_designs)
 
             # Keep only unseen sequences. We don't want to reevaluate known sequences...
             sequences_to_evaluate = list(set(sequences).difference(sequences_cache.keys()))
@@ -322,8 +277,7 @@ class SequenceGA(_GeneticAlgorithm):
     """
 
     def __init__(self, n_gen=1000, n_children=500, temperature=0.01, elitism=True, total_attempts=50,
-                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=1, monomer_symbols=None,
-                 **kwargs):
+                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=1, **kwargs):
         """
         Initialize the SequenceGA optimization.
         
@@ -349,9 +303,6 @@ class SequenceGA(_GeneticAlgorithm):
             Minimal number of mutations introduced in the new child.
         maximum_mutations: int, default : 1
             Maximal number of mutations introduced in the new child.
-        monomer_symbols : list of str, default : None
-            Symbol (1 letter) of the monomers that are going to be used during the search. 
-            Per default, only the 20 natural amino acids will be used.
 
         """
         self.sequences = None
@@ -362,14 +313,14 @@ class SequenceGA(_GeneticAlgorithm):
         self._temperature = temperature
         self._elitism = elitism
         self._total_attempts = total_attempts
-        self._helmgo = GeneticOperators(monomer_symbols=monomer_symbols)
+        self._helmgo = GeneticOperators()
         # Parameters specific to SequenceGA
         self._cx_points = cx_points
         self._pm = pm
         self._minimum_mutations = minimum_mutations
         self._maximum_mutations = maximum_mutations
 
-    def _generate_new_population(self, sequences, scores):
+    def _generate_new_population(self, sequences, scores, scaffold_designs):
         new_pop = []
 
         mating_couples = _generate_mating_couples(sequences, scores, self._n_children, self._temperature)
@@ -384,23 +335,26 @@ class SequenceGA(_GeneticAlgorithm):
 
             for child in children:
                 if self._pm <= np.random.uniform():
-                    child = self._helmgo.mutate(child, 1, self._minimum_mutations, self._maximum_mutations)[0]
+                    child = self._helmgo.mutate(child, scaffold_designs, 1, self._minimum_mutations, self._maximum_mutations)[0]
                 new_pop.append(child)
 
         return new_pop
 
-    def run(self, acquisition_function, sequences, scores):
+    def run(self, sequences, scores, acquisition_function, scaffold_designs):
         """
         Run the SequenceGA search.
         
         Parameters
         ----------
-        acquisition_function : AcquisitionFunction
-            The acquisition function that will be used to score the polymer.
         sequences : list of str
             List of all the polymers in HELM format.
         scores : array-like of shape (n_samples, )
             List of all the value associated to each polymer.
+        acquisition_function : AcquisitionFunction
+            The acquisition function that will be used to score the polymer.
+        scaffold_designs : dictionary
+            Dictionary with scaffold sequences and defined set of monomers to use 
+            for each position.
 
         Returns
         -------
@@ -410,13 +364,23 @@ class SequenceGA(_GeneticAlgorithm):
             All the scores for each sequences found.
 
         """
-        _, group_indices = _group_by_scaffold(sequences, return_index=True)
+        # Make sure that inputs are numpy arrays
+        sequences = np.asarray(sequences)
+        scores = np.asarray(scores)
+
+        groups, group_indices = _group_by_scaffold(sequences, return_index=True)
 
         if len(group_indices) > 1:
             msg = 'presence of polymers with different scaffolds. Please use ParallelSequenceGA.'
             raise RuntimeError(msg)
+        
+        # Check that the scaffold is defined
+        assert set(groups.keys()).issubset(scaffold_designs.keys()), 'The scaffold %s is not defined.' % groups.keys()[0]
 
-        self.sequences, self.scores = super().run(acquisition_function, sequences, scores)
+        # Automatically adjust the input polymers to the scaffold designs
+        sequences, _ = adjust_polymers_to_designs(sequences, scaffold_designs)
+
+        self.sequences, self.scores = super().run(sequences, scores, acquisition_function, scaffold_designs)
 
         print('End Sequence GA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
 
@@ -435,8 +399,7 @@ class ParallelSequenceGA(_GeneticAlgorithm):
     """
 
     def __init__(self, n_gen=1000, n_children=500, temperature=0.01, elitism=True, total_attempts=50,
-                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=1, monomer_symbols=None, 
-                 n_process=-1, **kwargs):
+                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=1, n_process=-1, **kwargs):
         """
         Initialize the ParallelSequenceGA optimization.
         
@@ -462,9 +425,6 @@ class ParallelSequenceGA(_GeneticAlgorithm):
             Minimal number of mutations introduced in the new child.
         maximum_mutations: int, default : 1
             Maximal number of mutations introduced in the new child.
-        monomer_symbols : list of str, default : None
-            Symbol (1 letter) of the monomers that are going to be used during the search. 
-            Per default, only the 20 natural amino acids will be used.
         n_process : int, default : -1
             Number of process to run in parallel. Per default, use all the available core.
 
@@ -473,30 +433,34 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         self.scores = None
         # Parameters
         self._n_process = n_process
-        self._parameters = {'n_gen': n_gen, 'n_children': n_children, 
-                            'temperature': temperature, 'elitism': elitism,
+        self._parameters = {'n_gen': n_gen,
+                            'n_children': n_children, 
+                            'temperature': temperature,
+                            'elitism': elitism,
                             'total_attempts': total_attempts, 
-                            'cx_points': cx_points, 'pm': pm,
+                            'cx_points': cx_points, 
+                            'pm': pm,
                             'minimum_mutations': minimum_mutations, 
-                            'maximum_mutations': maximum_mutations,
-                            'monomer_symbols': monomer_symbols}
+                            'maximum_mutations': maximum_mutations}
         self._parameters.update(kwargs)
 
-    def _generate_new_population(self, sequences, scores):
+    def _generate_new_population(self, sequences, scores, scaffold_designs):
         raise NotImplementedError()
 
-    def run(self, acquisition_function, sequences, scores):
+    def run(self, sequences, scores, acquisition_function, scaffold_designs):
         """
         Run the ParallelSequenceGA search.
         
         Parameters
         ----------
-        acquisition_function : AcquisitionFunction
-            The acquisition function that will be used to score the polymer.
         sequences : list of str
             List of all the polymers in HELM format.
         scores : array-like of shape (n_samples, )
             List of all the value associated to each polymer.
+        acquisition_function : AcquisitionFunction
+            The acquisition function that will be used to score the polymer.
+        scaffold_designs : dictionary
+            Dictionary with scaffold sequences and sets of monomers to use for each position.
 
         Returns
         -------
@@ -506,15 +470,24 @@ class ParallelSequenceGA(_GeneticAlgorithm):
             All the scores for each sequences found.
 
         """
-        all_sequences = []
-        all_sequence_scores = []
-        
         # Make sure that inputs are numpy arrays
         sequences = np.asarray(sequences)
         scores = np.asarray(scores)
 
         # Group/cluster peptides by scaffold
-        _, group_indices = _group_by_scaffold(sequences, return_index=True)
+        groups, group_indices = _group_by_scaffold(sequences, return_index=True)
+
+        # Check that all the scaffolds are defined
+        if not set(groups.keys()).issubset(scaffold_designs.keys()):
+            scaffolds_not_present = list(set(groups.keys()).difference(scaffold_designs.keys()))
+
+            msg_error = 'The following scaffolds are not defined: \n'
+            for scaffold_not_present in scaffolds_not_present:
+                msg_error += '- %s\n' % scaffold_not_present
+            raise RuntimeError(msg_error)
+
+        # Automatically adjust the input polymers to the scaffold designs
+        sequences, _ = adjust_polymers_to_designs(sequences, scaffold_designs)
 
         # Take the minimal amount of CPUs needed or available
         if self._n_process == -1:
@@ -524,7 +497,7 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         ray.init(num_cpus=self._n_process, ignore_reinit_error=True)
 
         seq_gao = SequenceGA(**self._parameters)
-        refs = [parallel_ga.remote(seq_gao, acquisition_function, sequences[seq_ids], scores[seq_ids]) for _, seq_ids in group_indices.items()]
+        refs = [parallel_ga.remote(seq_gao, sequences[seq_ids], scores[seq_ids], acquisition_function, scaffold_designs) for _, seq_ids in group_indices.items()]
 
         try:
             results = ray.get(refs)
@@ -552,114 +525,13 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         return self.sequences, self.scores
 
 
-class ScaffoldGA(_GeneticAlgorithm):
-    """
-    Use GA to search for new sequence candidates using the acquisition function
-    for scoring.
-
-    """
-
-    def __init__(self, n_gen=1, n_children=1000, temperature=0.1, elitism=True, total_attempts=50,
-                 only_terminus=True, minimum_size=None, maximum_size=None, monomer_symbols=None,
-                 **kwargs):
-        """
-        Initialize the ScaffoldGA optimization.
-        
-        Parameters
-        ----------
-        n_gen : int, default : 1000
-            Number of GA generation to run.
-        n_children : int, default : 500
-            Number of children generated at each generation.
-        temperature : float, default : 0.01
-            Numerical temperature for the Boltzmann weighting selection.
-        elitism : bool, default : True
-            Use elistism strategy during the search. Best parents will be carried
-            over to the next generation along side the new children.
-        total_attempt : int, default : 50
-            Stopping criteria. Number of attempt before stopping the search. If no
-            improvement is observed after `total_attempt` generations, we stop.
-        only_terminus : bool, default : True
-            If `True`, only add new monomer at the polymer terminus.
-        minimum_size : int, default : 1
-            Minimal size of the polymers explored during the search.
-        maximum_size: int, default : 1
-            Maximal size of the polymers explored during the search.
-        monomer_symbols : list of str, default : None
-            Symbol (1 letter) of the monomers that are going to be used during the search. 
-            Per default, only the 20 natural amino acids will be used.
-
-        """
-        self.sequences = None
-        self.scores = None
-        # Parameters
-        self._n_gen = n_gen
-        self._n_children = n_children
-        self._temperature = temperature
-        self._elitism = elitism
-        self._total_attempts = total_attempts
-        self._helmgo = GeneticOperators(monomer_symbols=monomer_symbols)
-        # Parameters specific to ScaffoldGA
-        self._only_terminus = only_terminus
-        self._minimum_size = minimum_size
-        self._maximum_size = maximum_size
-
-    def _generate_new_population(self, sequences, scores):
-        new_pop = []
-
-        # Compute the number of children generated by each parent sequence based on their acquisition score
-        children_per_parent = _number_of_children_to_generate_per_parent(scores, self._n_children, self._temperature)
-
-        # Generate new population
-        parent_indices = np.argwhere(children_per_parent > 0).flatten()
-
-        for i in parent_indices:
-            if self._elitism:
-                # Carry-on the parents to the next generation
-                new_pop.append(sequences[i])
-
-            actions = np.random.choice(['insert', 'remove'], size=children_per_parent[i])
-            new_pop.extend(self._helmgo.insert(sequences[i], np.sum(actions == "insert"), self._only_terminus, self._maximum_size))
-            new_pop.extend(self._helmgo.delete(sequences[i], np.sum(actions == "remove"), self._only_terminus, self._minimum_size))
-
-        return new_pop
-
-    def run(self, acquisition_function, sequences, scores):
-        """
-        Run the ScaffoldGA search.
-        
-        Parameters
-        ----------
-        acquisition_function : AcquisitionFunction
-            The acquisition function that will be used to score the polymer.
-        sequences : list of str
-            List of all the polymers in HELM format.
-        scores : array-like of shape (n_samples, )
-            List of all the value associated to each polymer.
-
-        Returns
-        -------
-        sequences : array-like of shape (n_samples,)
-            All the sequences found during the GA search.
-        scores : array-like of shape (n_samples,)
-            All the scores for each sequences found.
-
-        """
-        self.sequences, self.scores = super().run(acquisition_function, sequences, scores)
-
-        print('End Scaffold GA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
-
-        return self.sequences, self.scores
-
-
 class RandomGA():
     """
     The RandomGA is for benchmark purpose only. It generates random liner polymer sequences.
 
     """
 
-    def __init__(self, n_gen=1000, n_children=500, minimum_size=1, maximum_size=1, 
-                 monomer_symbols=None, n_process=-1, **kwargs):
+    def __init__(self, n_gen=1000, n_children=500, **kwargs):
         """
         Initialize the RandomGA "optimization".
         
@@ -685,22 +557,22 @@ class RandomGA():
         # Parameters
         self._n_gen = n_gen
         self._n_children = n_children
-        self._minimum_size = minimum_size
-        self._maximum_size = maximum_size
-        self._helmgo = GeneticOperators(monomer_symbols=monomer_symbols)
 
-    def run(self, acquisition_function, sequences=None, scores=None):
+    def run(self, sequences, scores, acquisition_function, scaffold_designs):
         """
         Run the RandomGA "search".
         
         Parameters
         ----------
-        acquisition_function : AcquisitionFunction (RandomImprovement)
-            The acquisition function that will be used to score the polymer.
         sequences : list of str
             List of all the polymers in HELM format.
         scores : array-like of shape (n_samples, )
             List of all the value associated to each polymer.
+        acquisition_function : AcquisitionFunction (RandomImprovement)
+            The acquisition function that will be used to score the polymer.
+        scaffold_designs : dictionary
+            Dictionary with scaffold sequences and defined set of monomers 
+            to use for each position.
 
         Returns
         -------
@@ -710,10 +582,8 @@ class RandomGA():
             All the scores for each sequences found.
 
         """
-        peptide_lengths = list(range(self._minimum_size, self._maximum_size + 1))
-
         # Generate (n_children * n_gen) sequences and random score them!
-        all_sequences = generate_random_linear_peptides(self._n_children * self._n_gen, peptide_lengths, monomer_symbols=self._helmgo._monomer_symbols)
+        all_sequences = generate_random_polymers_from_designs(self._n_children * self._n_gen, scaffold_designs)
         all_scores = acquisition_function.forward(all_sequences)
 
         all_sequences = np.asarray(all_sequences)
