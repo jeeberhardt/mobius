@@ -8,58 +8,14 @@ import itertools
 import os
 import sys
 from abc import ABC, abstractmethod
-from collections import defaultdict
 
 import numpy as np
 import ray
 
 from .genetic_operators import GeneticOperators
-from .utils import get_scaffold_from_helm_string
 from .utils import generate_random_polymers_from_designs
 from .utils import adjust_polymers_to_designs
-
-
-def _group_by_scaffold(helm_sequences, return_index=False):
-    """
-    Groups a list of HELM sequences by their scaffolds.
-
-    Parameters
-    ----------
-    helm_sequences : List of str
-        List of input sequences to group in HELM format.
-    return_index : bool, default : False
-        Whether to return also the original index of the grouped sequences.
-
-    Returns
-    -------
-    groups : Dict[str, List of str]
-        A dictionary with scaffold sequences as keys and 
-        lists of grouped sequences as values.
-    group_indices : Dict[str, List of int]
-        If `return_index` is True, a dictionary with scaffold sequences 
-        as keys and lists of indices of the original sequences.
-
-    Examples
-    --------
-    >>> sequences = ['PEPTIDE1{A.A.R}$$$$V2.0', 'PEPTIDE1{A.A}$$$$V2.0', 'PEPTIDE1{R.G}$$$$V2.0']
-    >>> groups = _group_by_scaffold(sequences)
-    >>> print(groups)
-    {'X$PEPTIDE1{$X.X.X$}$V2.0': ['PEPTIDE1{A.A.R}$$$$V2.0'], 
-     'X$PEPTIDE1{$X.X$}$V2.0': ['PEPTIDE1{A.A}$$$$V2.0', 'PEPTIDE1{R.G}$$$$V2.0']}
-    
-    """
-    groups = defaultdict(list)
-    group_indices = defaultdict(list)
-
-    for i, helm_sequence in enumerate(helm_sequences):
-        scaffold_sequence = get_scaffold_from_helm_string(helm_sequence)
-        groups[scaffold_sequence].append(helm_sequence)
-        group_indices[scaffold_sequence].append(i)
-
-    if return_index:
-        return groups, group_indices
-    else:
-        return groups
+from .utils import group_polymers_by_scaffold
 
 
 def _boltzmann_probability(scores, temperature=300.):
@@ -82,7 +38,7 @@ def _boltzmann_probability(scores, temperature=300.):
     ------
     ValueError
         If the computed probabilities contain NaN values.
-    
+
     """
     # On way to avoid probabilities that do not sum to 1: https://stackoverflow.com/a/65384032
     p = np.exp(-np.around(np.asarray(scores), decimals=3) / temperature).astype('float64')
@@ -247,7 +203,7 @@ class _GeneticAlgorithm(ABC):
                 attempts = 0 
 
             if attempts == self._total_attempts:
-                print('Reached maximum number of attempts (%d), no improvement observed!' % self._total_attempts)
+                print(f'Reached maximum number of attempts {self._total_attempts}, no improvement observed!')
                 break
 
             print('N %03d - Score: %.6f - Seq: %d - %s (%03d/%03d) - New seq: %d' % (i + 1, current_best_score, 
@@ -280,7 +236,7 @@ class SequenceGA(_GeneticAlgorithm):
                  cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=1, **kwargs):
         """
         Initialize the SequenceGA optimization.
-        
+
         Parameters
         ----------
         n_gen : int, default : 1000
@@ -343,7 +299,7 @@ class SequenceGA(_GeneticAlgorithm):
     def run(self, sequences, scores, acquisition_function, scaffold_designs):
         """
         Run the SequenceGA search.
-        
+
         Parameters
         ----------
         sequences : list of str
@@ -368,21 +324,22 @@ class SequenceGA(_GeneticAlgorithm):
         sequences = np.asarray(sequences)
         scores = np.asarray(scores)
 
-        groups, group_indices = _group_by_scaffold(sequences, return_index=True)
+        groups, group_indices = group_polymers_by_scaffold(sequences, return_index=True)
 
         if len(group_indices) > 1:
             msg = 'presence of polymers with different scaffolds. Please use ParallelSequenceGA.'
             raise RuntimeError(msg)
-        
+
         # Check that the scaffold is defined
-        assert set(groups.keys()).issubset(scaffold_designs.keys()), 'The scaffold %s is not defined.' % groups.keys()[0]
+        msg_error = f'The scaffold {groups.keys()[0]} is not defined.'
+        assert set(groups.keys()).issubset(scaffold_designs.keys()), msg_error
 
         # Automatically adjust the input polymers to the scaffold designs
         sequences, _ = adjust_polymers_to_designs(sequences, scaffold_designs)
 
         self.sequences, self.scores = super().run(sequences, scores, acquisition_function, scaffold_designs)
 
-        print('End Sequence GA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
+        print(f'End SequenceGA - Best seq: {self.sequences[0]} - score: {self.scores[0]:5.3f}')
 
         return self.sequences, self.scores
 
@@ -391,7 +348,7 @@ class ParallelSequenceGA(_GeneticAlgorithm):
     """
     Parallel version of the SequenceGA to search for new sequence candidates using the 
     acquisition function for scoring.
-    
+
     This version handle datasets containing polymers with different scaffolds. A SequenceGA
     search will be performed independently for each scaffold. Each SequenceGA search will 
     use 1 cpu-core.
@@ -402,7 +359,7 @@ class ParallelSequenceGA(_GeneticAlgorithm):
                  cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=1, n_process=-1, **kwargs):
         """
         Initialize the ParallelSequenceGA optimization.
-        
+
         Parameters
         ----------
         n_gen : int, default : 1000
@@ -460,7 +417,8 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         acquisition_function : AcquisitionFunction
             The acquisition function that will be used to score the polymer.
         scaffold_designs : dictionary
-            Dictionary with scaffold sequences and sets of monomers to use for each position.
+            Dictionary with scaffold sequences and sets of monomers to 
+            use for each position.
 
         Returns
         -------
@@ -474,20 +432,42 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         sequences = np.asarray(sequences)
         scores = np.asarray(scores)
 
-        # Group/cluster peptides by scaffold
-        groups, group_indices = _group_by_scaffold(sequences, return_index=True)
+        # Starts by automatically adjusting the input polymers to the scaffold designs
+        sequences, _ = adjust_polymers_to_designs(sequences, scaffold_designs)
 
-        # Check that all the scaffolds are defined
-        if not set(groups.keys()).issubset(scaffold_designs.keys()):
-            scaffolds_not_present = list(set(groups.keys()).difference(scaffold_designs.keys()))
+        # Group/cluster them by scaffold
+        groups, group_indices = group_polymers_by_scaffold(sequences, return_index=True)
 
+        # Check that all the scaffold designs are defined for all the polymers
+        scaffolds_not_present = list(set(groups.keys()).difference(scaffold_designs.keys()))
+
+        if scaffolds_not_present:
             msg_error = 'The following scaffolds are not defined: \n'
             for scaffold_not_present in scaffolds_not_present:
                 msg_error += '- %s\n' % scaffold_not_present
+
             raise RuntimeError(msg_error)
 
-        # Automatically adjust the input polymers to the scaffold designs
-        sequences, _ = adjust_polymers_to_designs(sequences, scaffold_designs)
+        # Do the contrary now: check that at least one polymer is defined 
+        # per scaffold. We need to generate at least one polymer per 
+        # scaffold to be able to start the GA optimization. Here we 
+        # generate 10 random polymers per scaffold. We do thzt in the
+        # case we want to explore different scaffolds that are not in
+        # the initial dataset.
+        scaffolds_not_present = list(set(scaffold_designs.keys()).difference(groups.keys()))
+
+        if scaffolds_not_present:
+            tmp_scaffolds_designs = {key: scaffold_designs[key] for key in scaffolds_not_present}
+            # We generate them
+            n_polymers = [10] * len(tmp_scaffolds_designs)
+            new_sequences = generate_random_polymers_from_designs(n_polymers, tmp_scaffolds_designs)
+            # We score them
+            new_scores = acquisition_function.forward(new_sequences)
+            # Add them to the rest
+            sequences = np.concatenate([sequences, new_sequences])
+            scores = np.concatenate([scores, new_scores])
+            # Recluster all of them again (easier than updating the groups)
+            groups, group_indices = group_polymers_by_scaffold(sequences, return_index=True)
 
         # Take the minimal amount of CPUs needed or available
         if self._n_process == -1:
@@ -497,7 +477,8 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         ray.init(num_cpus=self._n_process, ignore_reinit_error=True)
 
         seq_gao = SequenceGA(**self._parameters)
-        refs = [parallel_ga.remote(seq_gao, sequences[seq_ids], scores[seq_ids], acquisition_function, scaffold_designs) for _, seq_ids in group_indices.items()]
+        refs = [parallel_ga.remote(seq_gao, sequences[seq_ids], scores[seq_ids], acquisition_function, scaffold_designs) 
+                for _, seq_ids in group_indices.items()]
 
         try:
             results = ray.get(refs)
@@ -520,7 +501,7 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         self.sequences = sequences[sorted_indices]
         self.scores = scores[sorted_indices]
 
-        print('End SequenceGA - Best score: %.6f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
+        print(f'End SequenceGA - Best seq: {self.sequences[0]} - score: {self.scores[0]:5.3f}')
 
         return self.sequences, self.scores
 
@@ -534,7 +515,7 @@ class RandomGA():
     def __init__(self, n_gen=1000, n_children=500, **kwargs):
         """
         Initialize the RandomGA "optimization".
-        
+
         Parameters
         ----------
         n_gen : int, default : 1000
@@ -561,7 +542,7 @@ class RandomGA():
     def run(self, sequences, scores, acquisition_function, scaffold_designs):
         """
         Run the RandomGA "search".
-        
+
         Parameters
         ----------
         sequences : list of str
@@ -597,6 +578,6 @@ class RandomGA():
         self.sequences = all_sequences[sorted_indices]
         self.scores = all_scores[sorted_indices]
 
-        print('End Random GA opt - Score: %5.3f - Seq: %d - %s' % (self.scores[0], self.sequences[0].count('.'), self.sequences[0]))
+        print(f'End RandomGA - Best seq: {self.sequences[0]} - score: {self.scores[0]:5.3f}')
 
         return self.sequences, self.scores

@@ -75,10 +75,10 @@ class GeneticOperators:
         for i in range(n):
             mutant_polymers = {}
             n_mutations = 0
-            
+
             for pid, sequence in polymers.items():
                 mutated_sequence = list(sequence)
-                
+
                 # Residues involved in a connection within and between peptides won't be mutated
                 if keep_connections and pid in polymers.keys():
                     connection_resids = list(connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition'])
@@ -88,7 +88,7 @@ class GeneticOperators:
                     possible_positions = list(set(range(len(sequence))).difference(connection_resids))
                 else:
                     possible_positions = list(range(len(sequence)))
-                
+
                 # Choose a random number of mutations between min and max
                 if minimum_mutations == maximum_mutations:
                     number_mutations = maximum_mutations
@@ -96,19 +96,19 @@ class GeneticOperators:
                     number_mutations = self._rng.integers(low=minimum_mutations, high=len(sequence))
                 else:
                     number_mutations = self._rng.integers(low=minimum_mutations, high=maximum_mutations)
-                
+
                 # Choose positions to mutate
                 mutation_positions = self._rng.choice(possible_positions, size=number_mutations, replace=False)
-                
+
                 # Do mutations
                 for mutation_position in mutation_positions:
                     # +1 , because positions are 1-based in HELM
                     chosen_monomer = self._rng.choice(scaffold_design[pid][mutation_position + 1])
                     mutated_sequence[mutation_position] = chosen_monomer
-                
+
                 mutant_polymers[pid] = (mutated_sequence, mutation_positions)
                 n_mutations += len(mutation_positions)
-            
+
             if n_mutations > 0:
                 if not keep_connections:
                     connections_to_keep = []
@@ -159,7 +159,7 @@ class GeneticOperators:
         mutant1_polymers = {}
         mutant2_polymers = {}
         mutant_sequences = []
-            
+
         polymers1, connections1, _, _ = parse_helm(input_sequence1)
         polymers2, connections2, _, _ = parse_helm(input_sequence2)
 
@@ -168,27 +168,27 @@ class GeneticOperators:
 
         if connections1 != connections2:
             raise ValueError('Polymers must have the same scaffold (connections are different).')
-        
+
         for pid in polymers1.keys():
             if len(polymers1[pid]) != len(polymers2[pid]):
                 raise ValueError('Polymer sequences with ID %s have different lengths.' % pid)
-            
+
             # Copy parents since we are going to modify the children
             ind1 = list(polymers1[pid])
             ind2 = list(polymers2[pid])
-            
+
             # Choose positions to crossover
             possible_positions = list(range(len(polymers1[pid])))
             cx_positions = self._rng.choice(possible_positions, size=cx_points, replace=False)
             cx_positions = np.sort(cx_positions)
-            
+
             for cx_position in cx_positions:
                 ind1[cx_position:], ind2[cx_position:] = ind2[cx_position:], ind1[cx_position:]
-                
+
             mutant1_polymers[pid] = ''.join(ind1)
             mutant2_polymers[pid] = ''.join(ind2)
-            
+
         mutant_sequences.extend([build_helm_string(mutant1_polymers, connections1),
                                  build_helm_string(mutant2_polymers, connections2)])
-        
+
         return mutant_sequences

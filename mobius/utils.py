@@ -7,6 +7,7 @@
 import json
 import os
 import random
+from collections import defaultdict
 from importlib import util
 
 import numpy as np
@@ -317,8 +318,9 @@ def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
 
     Parameters
     ----------
-    n_polymers : int
-        Number of random polymers to generate.
+    n_polymers : int or list of int
+        Number of random polymers to generate, or list of numbers of 
+        polymers to generate per scaffold.
     scaffold_designs : dictionary
         Dictionary with scaffold sequences and defined set of monomers 
         to use for each position.
@@ -330,7 +332,13 @@ def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
 
     """
     random_polymers = []
-    n_polymers_per_scaffold = constrained_sum_sample_nonneg(len(scaffold_designs), n_polymers)
+
+    if isinstance(n_polymers, int):
+        n_polymers_per_scaffold = constrained_sum_sample_nonneg(len(scaffold_designs), n_polymers)
+    else:
+        msg_error = 'Size of the list of number of polymers per scaffold must be equal to the number of scaffolds designs'
+        assert len(n_polymers) == len(scaffold_designs), msg_error
+        n_polymers_per_scaffold = n_polymers
 
     for scaffold, design in scaffold_designs.items():
         i = 0
@@ -346,9 +354,9 @@ def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
                 for i, monomer in enumerate(sequence):
                     if monomer == 'X':
                         mutated_sequence[i] = np.random.choice(design[pid][i + 1])
-                
+
                 mutant_polymers[pid] = mutated_sequence
-            
+
             mutant_sequence = build_helm_string(mutant_polymers, connections)
             random_polymers.append(mutant_sequence)
 
@@ -448,6 +456,49 @@ def adjust_polymers_to_designs(polymer_sequences, designs):
         modified_sequences.append(modified_sequence)
 
     return modified_sequences, modified
+
+
+def group_polymers_by_scaffold(helm_sequences, return_index=False):
+    """
+    Groups a list of HELM sequences by their scaffolds.
+
+    Parameters
+    ----------
+    helm_sequences : List of str
+        List of input sequences to group in HELM format.
+    return_index : bool, default : False
+        Whether to return also the original index of the grouped sequences.
+
+    Returns
+    -------
+    groups : Dict[str, List of str]
+        A dictionary with scaffold sequences as keys and 
+        lists of grouped sequences as values.
+    group_indices : Dict[str, List of int]
+        If `return_index` is True, a dictionary with scaffold sequences 
+        as keys and lists of indices of the original sequences.
+
+    Examples
+    --------
+    >>> sequences = ['PEPTIDE1{A.A.R}$$$$V2.0', 'PEPTIDE1{A.A}$$$$V2.0', 'PEPTIDE1{R.G}$$$$V2.0']
+    >>> groups = _group_by_scaffold(sequences)
+    >>> print(groups)
+    {'X$PEPTIDE1{$X.X.X$}$V2.0': ['PEPTIDE1{A.A.R}$$$$V2.0'], 
+     'X$PEPTIDE1{$X.X$}$V2.0': ['PEPTIDE1{A.A}$$$$V2.0', 'PEPTIDE1{R.G}$$$$V2.0']}
+
+    """
+    groups = defaultdict(list)
+    group_indices = defaultdict(list)
+
+    for i, helm_sequence in enumerate(helm_sequences):
+        scaffold_sequence = get_scaffold_from_helm_string(helm_sequence)
+        groups[scaffold_sequence].append(helm_sequence)
+        group_indices[scaffold_sequence].append(i)
+
+    if return_index:
+        return groups, group_indices
+    else:
+        return groups
 
 
 def convert_FASTA_to_HELM(fasta_sequences):
@@ -579,18 +630,18 @@ def parse_helm(helm_string):
     dtype = [('SourcePolymerID', 'U20'), ('TargetPolymerID', 'U20'),
              ('SourceMonomerPosition', 'i4'), ('SourceAttachment', 'U2'),
              ('TargetMonomerPosition', 'i4'), ('TargetAttachment', 'U2')]
-    
+
     polymers, connections, hydrogen_bonds, attributes, _ = helm_string.split('$')
-    
+
     # Process sequences
     data = {}
     for polymer in polymers.split('|'):
         pid = polymer.split('{')[0]
         sequence = [monomer.strip("[]") for monomer in polymer[len(pid) + 1:-1].split('.')]
         data[pid] = sequence
-        
+
     polymers = data
-        
+
     # Process connections
     data = []
     if connections:
@@ -601,7 +652,7 @@ def parse_helm(helm_string):
             data.append((source_id, target_id,
                          source_position, source_attachment,
                          target_position, target_attachment))
-        
+
     connections = np.array(data, dtype=dtype)
     
     return polymers, connections, hydrogen_bonds, attributes
@@ -653,7 +704,7 @@ def get_scaffold_from_helm_string(input_sequence):
 def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
     """
     Generate a list of RDKit molecules from HELM strings.
-    
+
     Parameters
     ----------
     HELM_strings : str or List or tuple or numpy.ndarray
@@ -661,7 +712,7 @@ def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
     HELMCoreLibrary_filename : str, default : None
         The filename of the HELM core library JSON file. 
         If not provided, the default HELMCoreLibrary JSON file will be used.
-    
+
     Returns
     -------
     List
@@ -679,7 +730,7 @@ def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
 
     with open(HELMCoreLibrary_filename) as f:
         data = json.load(f)
-    
+
     # Re-organize monomer data in a dictionary for faster access
     HELMCoreLibrary = {monomer['symbol']: monomer for monomer in data}
 

@@ -50,13 +50,13 @@ def _load_design_from_config(config_filename):
 
     with open(config_filename, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-    
+
     try:
         design = config['design']
     except:
         # No design protocol defined
         return designs
-    
+
     try:
         monomers_collections = design['monomers']
     except:
@@ -77,7 +77,7 @@ def _load_design_from_config(config_filename):
         except:
             scaffold_sequence = scaffold_design
             scaffold_instructions = {}
-        
+
         polymers, _, _, _ = parse_helm(scaffold_sequence)
 
         for pid, sequence in polymers.items():
@@ -110,10 +110,10 @@ def _load_design_from_config(config_filename):
                     # scaffold the monomer defined is not X. In that case, we use the monomer
                     # from the scaffold.
                     scaffold_instructions[pid][i + 1] = [monomer]
-        
+
         scaffold = get_scaffold_from_helm_string(scaffold_sequence)
         designs[scaffold] = scaffold_instructions
-    
+
     return designs
 
 
@@ -135,7 +135,7 @@ def _load_methods_from_config(config_filename, yaml_key):
 
     """
     methods = []
-    
+
     with open(config_filename, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -239,11 +239,28 @@ class PolymerSampler(_Sampler):
         >>> from mobius import PolymerSampler
         >>> ps = PolymerSampler(acq_fun, config_filename='config.yaml')
 
-        Content of the `config.yaml` with the path of the SequenceGA sampling method 
-        defined and the arguments used to initialize it.
-    
+        Example of `config.yaml` defining the scaffold design protocol, 
+        as well as the path of the sampling method, here mobius.SequenceGA, 
+        and the arguments used to initialize it. Different filters can 
+        also be defined to filter out polymers/peptides that do not 
+        satisfy certain criteria.
+
         .. code:: yaml
-        
+
+            design:
+                monomers: 
+                    default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
+                    APOLAR: [A, F, G, I, L, P, V, W]
+                    POLAR: [C, D, E, H, K, N, Q, R, K, S, T, M]
+                    AROMATIC: [F, H, W, Y]
+                    POS_CHARGED: [K, R]
+                    NEG_CHARGED: [D, E]
+                scaffolds:
+                    - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
+                        PEPTIDE1:
+                            1: [AROMATIC, NEG_CHARGED]
+                            4: POLAR
+                            8: [C, G, T, S, V, L, M]
             sampling:
               - class_path: mobius.SequenceGA
                 init_args:
@@ -256,6 +273,11 @@ class PolymerSampler(_Sampler):
                   pm: 0.1
                   minimum_mutations: 1
                   maximum_mutations: 5
+            filters:
+                - class_path: filters.SynthesizabilityFilter
+                - class_path: filters.SolubitlityFilter
+                  init_args:
+                    threshold: 0.5
 
         """
         self._acq_fun = acquisition_function
