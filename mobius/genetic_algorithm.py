@@ -458,7 +458,7 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         if scaffolds_not_present:
             tmp_scaffolds_designs = {key: scaffold_designs[key] for key in scaffolds_not_present}
             # We generate them
-            n_polymers = [1] * len(tmp_scaffolds_designs)
+            n_polymers = [42] * len(tmp_scaffolds_designs)
             new_sequences = generate_random_polymers_from_designs(n_polymers, tmp_scaffolds_designs)
             # We score them
             new_scores = acquisition_function.forward(new_sequences)
