@@ -50,23 +50,26 @@ from mobius import GPModel, ExpectedImprovement, TanimotoSimilarityKernel
 from mobius import LinearPeptideEmulator
 from mobius import homolog_scanning, alanine_scanning
 from mobius import convert_FASTA_to_HELM
+```
 
-
-# Simple linear peptide emulator/oracle for MHC class I A*0201
-# WARNING: This is for benchmarking purpose only. This step
-# should be an actual lab experiment.
+Simple linear peptide emulator/oracle for MHC class I A*0201. 
+WARNING: This is for benchmarking purpose only. This step should be an actual lab experiment.
+```python
 pssm_files = ['data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-8.txt',
               'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-9.txt',
               'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-10.txt',
               'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-11.txt']
 lpe = LinearPeptideEmulator(pssm_files)
+```
 
-# Now we define a peptide sequence we want to optimize
+Now we define a peptide sequence we want to optimize
+```python
 lead_peptide = convert_FASTA_to_HELM('HMTEVVRRC')[0]
+```
 
-# Then we generate the first seed library of 96 peptides 
-# using a combination of both alanine scanning and homolog 
-# scanning sequence-based strategies
+Then we generate the first seed library of 96 peptides using a combination of both alanine scanning 
+and homolog scanning sequence-based strategies
+```python
 seed_library = [lead_peptide]
 
 for seq in alanine_scanning(lead_peptide):
@@ -78,46 +81,63 @@ for seq in homolog_scanning(lead_peptide):
     if len(seed_library) >= 96:
         print('Reach max. number of peptides allowed.')
         break
+```
 
-# The seed library is then virtually tested (Make/Test)
-# using the linear peptide emulator we defined earlier.
-# WARNING: This is for benchmarking purpose only. This 
-# step is supposed to be an actual lab experiment.
+The seed library is then virtually tested (Make/Test) using the linear peptide emulator we defined earlier.
+WARNING: This is for benchmarking purpose only. This step is supposed to be an actual lab experiment.
+```python
 pic50_seed_library = lpe.predict(seed_library)
+```
 
-# Once we got results from our first lab experiment
-# we can now start the Bayesian Optimization (BO)
-# First, we define the molecular fingerprint we want to
-# use as well as the surrogate model (Gaussian Process)
-# and the acquisition function (Expected Improvement)
+Once we got results from our first lab experiment we can now start the Bayesian Optimization (BO) First, 
+we define the molecular fingerprint we want to use as well as the surrogate model (Gaussian Process) and 
+the acquisition function (Expected Improvement).
+```python
 map4 = Map4Fingerprint(input_type='helm_rdkit', dimensions=4096, radius=1)
 gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
 ei = ExpectedImprovement(gpmodel, maximize=False)
+```
 
-# ... and also we define the search protocol
-# that will be used to search/sample peptide sequences
-# optimizing the acquisition function
-search_protocol = {
-    'SequenceGA': {
-        'function': SequenceGA,
-        'parameters': {
-            'n_process': -1,
-            'n_gen': 1000,
-            'n_children': 500,
-            'temperature': 0.01,
-            'elitism': True,
-            'total_attempts': 50,
-            'cx_points': 2,
-            'pm': 0.1,
-            'minimum_mutations': 1,
-            'maximum_mutations': 5
-        }
-    }
-}
+... and now let's define the search protocol in a YAML configuration file (`sampling.yaml`) that will be used 
+to optimize peptide sequences using the acquisition function.
+```YAML
+design:
+  monomers: 
+    default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
+    APOLAR: [A, F, G, I, L, P, V, W]
+    POLAR: [C, D, E, H, K, N, Q, R, K, S, T, M]
+    AROMATIC: [F, H, W, Y]
+    POS_CHARGED: [K, R]
+    NEG_CHARGED: [D, E]
+  scaffolds:
+    PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
+      PEPTIDE1:
+      1: [AROMATIC, NEG_CHARGED]
+      4: POLAR
+      8: [C, G, T, S, V, L, M]
+sampling:
+  - class_path: mobius.SequenceGA
+    init_args:
+      n_gen: 1000
+      n_children: 500
+      temperature: 0.01
+      elitism: True
+      total_attempts: 50
+      cx_points: 2
+      pm: 0.1
+      minimum_mutations: 1
+      maximum_mutations: 5
 
-ps = PolymerSampler(ei, search_protocol)
+```
 
-# Now it is time to run the optimization!!
+That YAML config file is now read by the sampler method.
+```python
+ps = PolymerSampler(ei, 'sampling.yaml')
+```
+
+Now it is time to run the optimization!!
+
+```python
 peptides = list(seed_library)[:]
 pic50_scores = list(pic50_seed_library)[:]
 
