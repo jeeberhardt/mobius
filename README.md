@@ -113,13 +113,13 @@ design:
     POS_CHARGED: [K, R]
     NEG_CHARGED: [D, E]
   scaffolds:
-    PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
-      PEPTIDE1:
-      1: [AROMATIC, NEG_CHARGED]
-      4: POLAR
-      9: [A, V, I, L, M, T]
+    - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
+        PEPTIDE1:
+          1: [AROMATIC, NEG_CHARGED]
+          4: POLAR
+          9: [A, V, I, L, M, T]
 sampling:
-  - class_path: mobius.SequenceGA
+  - class_path: mobius.ParallelSequenceGA
     init_args:
       n_gen: 1000
       n_children: 500
