@@ -22,7 +22,7 @@ def find_files(directory):
 
 setup(
     name="mobius",
-    version='0.2',
+    version='0.3',
     author="Jerome Eberhardt, Markus A. Lill, Torsten Schwede",
     author_email="jerome.eberhardt@unibas.ch",
     url="https://git.scicore.unibas.ch/schwede/mobius",
