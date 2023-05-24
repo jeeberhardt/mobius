@@ -99,7 +99,10 @@ ei = ExpectedImprovement(gpmodel, maximize=False)
 ```
 
 ... and now let's define the search protocol in a YAML configuration file (`sampling.yaml`) that will be used 
-to optimize peptide sequences using the acquisition function.
+to optimize peptide sequences using the acquisition function. This YAML configuration file defines the design
+protocol, which includes the peptide scaffold, linear here, and sets of monomers for some positions to be used
+during the optimization. Finally, it defines the optimizer, here SequenceGA, to optimize the peptide sequences
+using the acquisition function / surrogate model initialized earlier.
 ```YAML
 design:
   monomers: 
@@ -114,7 +117,7 @@ design:
       PEPTIDE1:
       1: [AROMATIC, NEG_CHARGED]
       4: POLAR
-      8: [C, G, T, S, V, L, M]
+      9: [A, V, I, L, M, T]
 sampling:
   - class_path: mobius.SequenceGA
     init_args:
