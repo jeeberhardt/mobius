@@ -125,7 +125,7 @@ sampling:
       n_children: 500
       temperature: 0.01
       elitism: True
-      total_attempts: 50
+      total_attempts: 5
       cx_points: 2
       pm: 0.1
       minimum_mutations: 1
