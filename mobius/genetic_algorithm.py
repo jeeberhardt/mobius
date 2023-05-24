@@ -46,9 +46,9 @@ def _boltzmann_probability(scores, temperature=300.):
 
     if np.isnan(p).any():
         error_msg = 'Boltzmann probabilities contains NaN.\n'
-        error_msg += 'Temperature: %.5f\n' % temperature
-        error_msg += 'Values: %s\n' % scores
-        error_msg += 'Probabilities: %s' % p
+        error_msg += f'Temperature: {temperature:.5f}\n'
+        error_msg += f'Values: {scores}\n'
+        error_msg += f'Probabilities: {p}'
         raise ValueError(error_msg)
 
     return p
@@ -206,11 +206,9 @@ class _GeneticAlgorithm(ABC):
                 print(f'Reached maximum number of attempts {self._total_attempts}, no improvement observed!')
                 break
 
-            print('N %03d - Score: %.6f - Seq: %d - %s (%03d/%03d) - New seq: %d' % (i + 1, current_best_score, 
-                                                                                     current_best_sequence.count('.'),
-                                                                                     current_best_sequence, attempts + 1, 
-                                                                                     self._total_attempts,
-                                                                                     len(sequences_to_evaluate)))
+            print(f'N {i + 1:03d} ({attempts + 1:02d}/{self._total_attempts:02d}) '
+                  f'- Score: {current_best_score:5.3f} '
+                  f'- {current_best_sequence} ({current_best_sequence.count(".")})')
 
         all_sequences = np.array(list(sequences_cache.keys()))
         all_sequence_scores = np.fromiter(sequences_cache.values(), dtype=float)
@@ -331,7 +329,7 @@ class SequenceGA(_GeneticAlgorithm):
             raise RuntimeError(msg)
 
         # Check that the scaffold is defined
-        msg_error = f'The scaffold {groups.keys()[0]} is not defined.'
+        msg_error = f'The scaffold {list(groups.keys())[0]} is not defined.'
         assert set(groups.keys()).issubset(scaffold_designs.keys()), msg_error
 
         # Automatically adjust the input polymers to the scaffold designs
@@ -339,7 +337,8 @@ class SequenceGA(_GeneticAlgorithm):
 
         self.sequences, self.scores = super().run(sequences, scores, acquisition_function, scaffold_designs)
 
-        print(f'End SequenceGA - Best seq: {self.sequences[0]} - score: {self.scores[0]:5.3f}')
+        print(f'End SequenceGA - Best score: {self.scores[0]:5.3f}'
+              f' - {self.sequences[0]} ({self.sequences[0].count(".")})')
 
         return self.sequences, self.scores
 
@@ -444,7 +443,7 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         if scaffolds_not_present:
             msg_error = 'The following scaffolds are not defined: \n'
             for scaffold_not_present in scaffolds_not_present:
-                msg_error += '- %s\n' % scaffold_not_present
+                msg_error += f'- {scaffold_not_present}\n'
 
             raise RuntimeError(msg_error)
 
@@ -459,7 +458,7 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         if scaffolds_not_present:
             tmp_scaffolds_designs = {key: scaffold_designs[key] for key in scaffolds_not_present}
             # We generate them
-            n_polymers = [10] * len(tmp_scaffolds_designs)
+            n_polymers = [1] * len(tmp_scaffolds_designs)
             new_sequences = generate_random_polymers_from_designs(n_polymers, tmp_scaffolds_designs)
             # We score them
             new_scores = acquisition_function.forward(new_sequences)
@@ -501,7 +500,8 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         self.sequences = sequences[sorted_indices]
         self.scores = scores[sorted_indices]
 
-        print(f'End SequenceGA - Best seq: {self.sequences[0]} - score: {self.scores[0]:5.3f}')
+        print(f'End SequenceGA - Best score: {self.scores[0]:5.3f}'
+              f' - {self.sequences[0]} ({self.sequences[0].count(".")})')
 
         return self.sequences, self.scores
 
@@ -578,6 +578,7 @@ class RandomGA():
         self.sequences = all_sequences[sorted_indices]
         self.scores = all_scores[sorted_indices]
 
-        print(f'End RandomGA - Best seq: {self.sequences[0]} - score: {self.scores[0]:5.3f}')
+        print(f'End RandomGA - Best score: {self.scores[0]:5.3f}'
+              f' - {self.sequences[0]} ({self.sequences[0].count(".")})')
 
         return self.sequences, self.scores
