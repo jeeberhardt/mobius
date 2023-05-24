@@ -309,7 +309,7 @@ def generate_random_linear_polymers(n_polymers, polymers_lengths, monomers=None,
         if len(random_polymers) == n_polymers:
             break
 
-    return random_polymers
+    return np.asarray(random_polymers)
 
 
 def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
@@ -362,7 +362,7 @@ def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
 
         i += 1
 
-    return random_polymers
+    return np.asarray(random_polymers)
 
 
 def check_polymers_with_designs(polymer_sequences, designs):
@@ -455,7 +455,7 @@ def adjust_polymers_to_designs(polymer_sequences, designs):
         modified_sequence = build_helm_string(modified_polymers, connections)
         modified_sequences.append(modified_sequence)
 
-    return modified_sequences, modified
+    return np.asarray(modified_sequences), modified
 
 
 def group_polymers_by_scaffold(helm_sequences, return_index=False):
