@@ -120,7 +120,7 @@ using the acquisition function / surrogate model initialized earlier.
               4: POLAR
               9: [A, V, I, L, M, T]
     sampling:
-      - class_path: mobius.ParallelSequenceGA
+      - class_path: mobius.SequenceGA
         init_args:
           n_gen: 1000
           n_children: 500
