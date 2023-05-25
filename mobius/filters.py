@@ -100,7 +100,7 @@ class PeptideSolubilityFilter():
         Filter polymers that are not soluble using rule-based approach [1]_:
 
             #. Keep hydrophobic amino acids [AFGILPVW] below 50% of the total sequence
-            #. At least one charged amino acid [DEHKR] for every 5 amino acids
+            #. At least one charged amino acid [DEKR] for every 5 amino acids
 
         Parameters
         ----------
@@ -122,7 +122,7 @@ class PeptideSolubilityFilter():
         NATAA = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
                  'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
         APOLAR = ['A', 'F', 'G', 'I', 'L', 'P', 'V', 'W']
-        AA_CHARGED = ['D', 'E', 'H', 'K', 'R']
+        AA_CHARGED = ['D', 'E', 'K', 'R']
 
         for i, polymer in enumerate(polymers):
             sequences, connections, _, _ = parse_helm(polymer)
