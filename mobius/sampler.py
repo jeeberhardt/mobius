@@ -169,7 +169,10 @@ def _load_methods_from_config(config_filename, yaml_key):
             raise AttributeError('Cannot find class %s in module %s' % (method_class_name, method_module_name))
 
         try:
-            method = method_class(**init_args)
+            if init_args is None:
+                method = method_class()
+            else:
+                method = method_class(**init_args)
         except:
             raise ValueError('Cannot initialize %s %s' % (yaml_key, method_full_name))
 

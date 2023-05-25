@@ -12,15 +12,24 @@ from .utils import parse_helm
 
 
 class PeptideSelfAggregationFilter():
+    """
+    Class for filtering peptides that might self-aggregate.
 
-    def __init__(self):
+    """
+
+    def __init__(self, **kwargs):
+        """
+        Initialize the PeptideSelfAggregationFilter.
+
+        """
         pass
 
-    def apply(self, polymers, **kwargs):
+    def apply(self, polymers):
         """
-        Filter polymers that self-aggregate using rule-based approach _[1]:
-        - No more than 3 consecutive [DRAIENC] amino acids
-        - No more than 3 consecutive [WHGKTS] amino acids
+        Filter polymers that self-aggregate using rule-based approach [1]_:
+
+            #. No more than 3 consecutive [DRAIENC] amino acids
+            #. No more than 3 consecutive [WHGKTS] amino acids
 
         Parameters
         ----------
@@ -66,16 +75,32 @@ class PeptideSelfAggregationFilter():
 
 
 class PeptideSolubilityFilter():
+    """
+    Class for filtering peptides that might not be soluble.
 
-    def __init__(self, hydrophobe_ratio=0.5, charged_per_amino_acids=5.0):
+    """
+
+    def __init__(self, hydrophobe_ratio=0.5, charged_per_amino_acids=5.0, **kwargs):
+        """
+        Initialize the PeptideSolubilityFilter.
+
+        Parameters
+        ----------
+        hydrophobe_ratio : float, default: 0.5
+            Maximum ratio of hydrophobic amino acids allowed in the sequence.
+        charged_per_amino_acids : float, default: 5.0
+            Minimum number of charged amino acids per amino acids.
+
+        """
         self._hydrophobe_ratio = hydrophobe_ratio
         self._charged_per_amino_acids = charged_per_amino_acids
 
-    def apply(self, polymers, **kwargs):
+    def apply(self, polymers):
         """
-        Filter polymers that are not soluble using rule-based approach _[1]:
-        - Keep hydrophobic amino acids to a minimum (less than 50% of the sequence)
-        - At least one charged amino acid (D, E, H, K, R) for every 5 amino acids
+        Filter polymers that are not soluble using rule-based approach [1]_:
+
+            #. Keep hydrophobic amino acids [AFGILPVW] below 50% of the total sequence
+            #. At least one charged amino acid [DEHKR] for every 5 amino acids
 
         Parameters
         ----------
@@ -121,7 +146,10 @@ class PeptideSolubilityFilter():
 
                 charged_monomers = set(sequence).intersection(AA_CHARGED)
 
-                if length / len(charged_monomers) >= self._charged_per_amino_acids:
+                if len(charged_monomers) == 0:
+                    passed[i] = False
+                    break
+                elif length / len(charged_monomers) >= self._charged_per_amino_acids:
                     passed[i] = False
                     break
     
