@@ -21,4 +21,5 @@ to contact us.
    ./modules/generators
    ./modules/fingerprints
    ./modules/descriptors
+   ./modules/filters
    ./modules/utils

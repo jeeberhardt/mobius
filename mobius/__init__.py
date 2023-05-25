@@ -19,6 +19,7 @@ from .genetic_operators import GeneticOperators
 from .kernels import TanimotoSimilarityKernel
 from .emulators import LinearPeptideEmulator, FindMe
 from .plotting import plot_results
+from .filters import PeptideSelfAggregationFilter, PeptideSolubilityFilter
 from .utils import parse_helm, build_helm_string, get_scaffold_from_helm_string, read_pssm_file
 from .utils import affinity_binding_to_energy, energy_to_affinity_binding, ic50_to_pic50, pic50_to_ic50
 from .utils import generate_random_linear_polymers, generate_random_polymers_from_designs
@@ -42,4 +43,5 @@ __all__ = ['VirtualTarget', 'ForceField',
            'generate_random_linear_polymers', 'generate_random_polymers_from_designs ',
            'adjust_polymers_to_designs', 'check_polymers_with_designs',
            'ic50_to_pic50', 'pic50_to_ic50',
+           'PeptideSelfAggregationFilter', 'PeptideSolubilityFilter',
            'convert_FASTA_to_HELM', 'convert_HELM_to_FASTA']

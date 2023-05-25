@@ -312,6 +312,16 @@ class PolymerSampler(_Sampler):
         for sampler in self._samplers:
             suggested_polymers, values = sampler.run(suggested_polymers, values, self._acq_fun, self._designs)
 
+        # Apply filters on the suggested polymers
+        if self._filters:
+            passed = np.ones(len(suggested_polymers), dtype=bool)
+
+            for filter in self._filters:
+                passed = np.logical_and(passed, filter.apply(suggested_polymers))
+
+            suggested_polymers = suggested_polymers[passed]
+            values = values[passed]
+
         # Sort sequences by scores in the decreasing order (best to worst)
         # We want the best score to be the lowest, so we apply a scaling 
         # factor (1 or -1). This scalng factor depends of the acquisition
