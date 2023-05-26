@@ -142,7 +142,8 @@ filters:
 
 ```
 
-That YAML config file is now read by the sampler method.
+Once acquisition function / surrogate model are defined and the parameters set in the YAML 
+configuration file. We can initiate the sampling method.
 ```python
 ps = PolymerSampler(ei, 'sampling.yaml')
 ```
