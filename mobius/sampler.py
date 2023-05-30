@@ -40,7 +40,7 @@ def _load_design_from_config(config_filename):
     Returns
     -------
     designs : list of designs
-        List of designs to use to optimize polymer sequences.
+        List of designs to use to optimize polymers.
 
     """
     designs = {}
@@ -72,18 +72,18 @@ def _load_design_from_config(config_filename):
 
     for scaffold_design in design['scaffolds']:
         try:
-            scaffold_sequence = list(scaffold_design.keys())[0]
-            scaffold_instructions = scaffold_design[scaffold_sequence]
+            scaffold_complex_polymer = list(scaffold_design.keys())[0]
+            scaffold_instructions = scaffold_design[scaffold_complex_polymer]
         except:
-            scaffold_sequence = scaffold_design
+            scaffold_complex_polymer = scaffold_design
             scaffold_instructions = {}
 
-        polymers, _, _, _ = parse_helm(scaffold_sequence)
+        complex_polymer, _, _, _ = parse_helm(scaffold_complex_polymer)
 
-        for pid, sequence in polymers.items():
+        for pid, simple_polymer in complex_polymer.items():
             scaffold_instructions.setdefault(pid, {})
 
-            for i, monomer in enumerate(sequence):
+            for i, monomer in enumerate(simple_polymer):
                 if monomer == 'X':
                     try:
                         user_defined_monomers = scaffold_instructions[pid][i + 1]
@@ -111,7 +111,7 @@ def _load_design_from_config(config_filename):
                     # from the scaffold.
                     scaffold_instructions[pid][i + 1] = [monomer]
 
-        scaffold = get_scaffold_from_helm_string(scaffold_sequence)
+        scaffold = get_scaffold_from_helm_string(scaffold_complex_polymer)
         designs[scaffold] = scaffold_instructions
 
     return designs
@@ -211,7 +211,7 @@ def _load_samplers_from_config(config_filename):
     Returns
     -------
     samplers : list of sampling methods
-        List of sampling methods to use to optimize polymer sequences.
+        List of sampling methods to use to optimize polymers.
 
     """
     return _load_methods_from_config(config_filename, yaml_key='sampling')
@@ -219,7 +219,7 @@ def _load_samplers_from_config(config_filename):
 
 class PolymerSampler(_Sampler):
     """
-    Class for sampling the polymer sequence space using an acquisition function
+    Class for sampling the polymers space using an acquisition function
     and a search protocol.
 
     """
@@ -326,7 +326,7 @@ class PolymerSampler(_Sampler):
             suggested_polymers = suggested_polymers[passed]
             values = values[passed]
 
-        # Sort sequences by scores in the decreasing order (best to worst)
+        # Sort polymers by scores in the decreasing order (best to worst)
         # We want the best score to be the lowest, so we apply a scaling 
         # factor (1 or -1). This scalng factor depends of the acquisition
         # function nature.

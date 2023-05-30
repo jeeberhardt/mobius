@@ -122,7 +122,7 @@ class Map4Fingerprint:
         Parameters
         ----------
         input_type : str, optional (default='helm_rdkit')
-            The input format for the sequences. It can be one of 'fasta', 
+            The input format for the polymers. It can be one of 'fasta', 
             'helm_rdkit', 'helm', or 'smiles'.
         dimensions : int, optional (default=4096)
             The length of the MAP4 fingerprint.
@@ -145,36 +145,36 @@ class Map4Fingerprint:
         self._input_type = input_type.lower()
         self._HELMCoreLibrary_filename = HELMCoreLibrary_filename
 
-    def transform(self, sequences):
+    def transform(self, polymers):
         """
-        Compute the MAP4 fingerprints for the given sequences.
+        Compute the MAP4 fingerprints for the given polymers.
 
         Parameters
         ----------
-        sequences : str, list, tuple, or numpy.ndarray
-            Input sequences to be transformed.
+        polymers : str, list, tuple, or numpy.ndarray
+            A list of polymers or a single polymer to be transformed.
 
         Returns
         -------
         fingerprint : numpy.ndarray
-            The MAP4 fingerprints for the input sequences.
+            The MAP4 fingerprints for the input polymers.
 
         """
-        if not isinstance(sequences, (list, tuple, np.ndarray)):
-            sequences = [sequences]
+        if not isinstance(polymers, (list, tuple, np.ndarray)):
+            polymers = [polymers]
 
         try:
             if self._input_type == 'fasta':
-                mols = [Chem.rdmolfiles.MolFromFASTA(s) for s in sequences]
+                mols = [Chem.rdmolfiles.MolFromFASTA(c) for c in polymers]
             elif self._input_type == 'helm_rdkit':
-                mols = [Chem.rdmolfiles.MolFromHELM(s) for s in sequences]
+                mols = [Chem.rdmolfiles.MolFromHELM(c) for c in polymers]
             elif self._input_type == 'helm':
-                mols = MolFromHELM(sequences, self._HELMCoreLibrary_filename)
+                mols = MolFromHELM(polymers, self._HELMCoreLibrary_filename)
             else:
-                mols = [Chem.rdmolfiles.MolFromSmiles(s) for s in sequences]
+                mols = [Chem.rdmolfiles.MolFromSmiles(c) for c in polymers]
         except AttributeError:
-            print('Error: there are issues with the input molecules')
-            print(sequences)
+            print('Error: there are issues with the input polymers')
+            print(polymers)
 
         fps = self._map4calc.calculate_many(mols)
         fps = np.asarray(fps)
@@ -195,7 +195,7 @@ class MHFingerprint:
         Parameters
         ----------
         input_type : str, default 'helm_rdkit'
-            Input format of the sequences. The options are 'fasta', 
+            Input format of the polymers. The options are 'fasta', 
             'helm_rdkit', 'helm', or 'smiles'.
         dimensions : int, default 4096
             The number of bits in the resulting binary feature vector.
@@ -223,36 +223,36 @@ class MHFingerprint:
         self._input_type = input_type.lower()
         self._HELMCoreLibrary_filename = HELMCoreLibrary_filename
 
-    def transform(self, sequences):
+    def transform(self, polymers):
         """
-        Transforms the input sequences into MHFingerprints.
+        Transforms the input polymers into MHFingerprints.
 
         Parameters
         ----------
-        sequences : str, list or numpy.ndarray
-            Input sequences to be transformed.
+        polymers : str, list or numpy.ndarray
+            A list of polymers or a single polymer to be transformed.
 
         Returns
         -------
         fingerprint : numpy.ndarray
-           The MHFingerprint for the input sequences.
+           The MHFingerprint for the input polymers.
 
         """
-        if not isinstance(sequences, (list, tuple, np.ndarray)):
-            sequences = [sequences]
+        if not isinstance(polymers, (list, tuple, np.ndarray)):
+            polymers = [polymers]
 
         try:
             if self._input_type == 'fasta':
-                mols = [Chem.rdmolfiles.MolFromFASTA(s) for s in sequences]
+                mols = [Chem.rdmolfiles.MolFromFASTA(c) for c in polymers]
             elif self._input_type == 'helm_rdkit':
-                mols = [Chem.rdmolfiles.MolFromHELM(s) for s in sequences]
+                mols = [Chem.rdmolfiles.MolFromHELM(c) for c in polymers]
             elif self._input_type == 'helm':
-                mols = MolFromHELM(sequences, self._HELMCoreLibrary_filename)
+                mols = MolFromHELM(polymers, self._HELMCoreLibrary_filename)
             else:
-                mols = [Chem.rdmolfiles.MolFromSmiles(s) for s in sequences]
+                mols = [Chem.rdmolfiles.MolFromSmiles(c) for c in polymers]
         except AttributeError:
             print('Error: there are issues with the input molecules')
-            print(sequences)
+            print(polymers)
 
         fps = [self._encoder.fold(self._encoder.encode_mol(m, radius=self._radius, rings=self._rings, kekulize=self._kekulize), length=self._dimensions) for m in mols]
         fps = np.asarray(fps)
@@ -273,7 +273,7 @@ class MorganFingerprint:
         Parameters
         ----------
         input_type : str, default : 'helm_rdkit'
-            The type of input sequences. It can be 'fasta', 'helm_rdkit', 
+            The type of input polymers. It can be 'fasta', 'helm_rdkit', 
             'helm', or 'smiles'.
         dimensions : int, default : 4096
             The length of the fingerprint vector.
@@ -292,36 +292,36 @@ class MorganFingerprint:
         self._input_type = input_type.lower()
         self._HELMCoreLibrary_filename = HELMCoreLibrary_filename
 
-    def transform(self, sequences):
+    def transform(self, polymers):
         """
-        Transform input sequences into Morgan fingerprints.
+        Transform input polymers into Morgan fingerprints.
 
         Parameters
         ----------
-        sequences : list, tuple, ndarray or str
-            The input sequences or a single sequence string.
+        polymers : list, tuple, ndarray or str
+            A list of polymers or a single polymer to be transformed.
 
         Returns
         -------
         fps : ndarray
-            The Morgan fingerprints of the input sequences as a 2D numpy array.
+            The Morgan fingerprints of the input polymers as a 2D numpy array.
 
         """
-        if not isinstance(sequences, (list, tuple, np.ndarray)):
-            sequences = [sequences]
+        if not isinstance(polymers, (list, tuple, np.ndarray)):
+            polymers = [polymers]
 
         try:
             if self._input_type == 'fasta':
-                mols = [Chem.rdmolfiles.MolFromFASTA(s) for s in sequences]
+                mols = [Chem.rdmolfiles.MolFromFASTA(c) for c in polymers]
             elif self._input_type == 'helm_rdkit':
-                mols = [Chem.rdmolfiles.MolFromHELM(s) for s in sequences]
+                mols = [Chem.rdmolfiles.MolFromHELM(c) for c in polymers]
             elif self._input_type == 'helm':
-                mols = MolFromHELM(sequences, self._HELMCoreLibrary_filename)
+                mols = MolFromHELM(polymers, self._HELMCoreLibrary_filename)
             else:
-                mols = [Chem.rdmolfiles.MolFromSmiles(s) for s in sequences]
+                mols = [Chem.rdmolfiles.MolFromSmiles(c) for c in polymers]
         except AttributeError:
             print('Error: there are issues with the input molecules')
-            print(sequences)
+            print(polymers)
 
         fpg = rdFingerprintGenerator.GetMorganGenerator(includeChirality=True, radius=self._radius, fpSize=self._dimensions)
         fps = [fpg.GetFingerprintAsNumPy(m) for m in mols]

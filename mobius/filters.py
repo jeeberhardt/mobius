@@ -55,19 +55,19 @@ class PeptideSelfAggregationFilter():
         NATAA = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
                  'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
 
-        for i, polymer in enumerate(polymers):
-            sequences, connections, _, _ = parse_helm(polymer)
+        for i, complex_polymer in enumerate(polymers):
+            simple_polymers, connections, _, _ = parse_helm(complex_polymer)
 
             if connections:
                 msg_error = 'Self-aggregration filter only works for linear peptides.'
                 raise RuntimeError(msg_error)
             
-            for _, sequence in sequences.items():
-                if not set(sequence).issubset(NATAA):
+            for _, simple_polymer in simple_polymers.items():
+                if not set(simple_polymer).issubset(NATAA):
                     msg_error = 'Self-aggregration filter only works polymers containing the 20 natural amino acids.'
                     raise RuntimeError(msg_error)
         
-                if p.search(''.join(sequence)):
+                if p.search(''.join(simple_polymer)):
                     passed[i] = False
                     break
 
@@ -124,27 +124,27 @@ class PeptideSolubilityFilter():
         APOLAR = ['A', 'F', 'G', 'I', 'L', 'P', 'V', 'W']
         AA_CHARGED = ['D', 'E', 'K', 'R']
 
-        for i, polymer in enumerate(polymers):
-            sequences, connections, _, _ = parse_helm(polymer)
+        for i, complex_polymer in enumerate(polymers):
+            simple_polymers, connections, _, _ = parse_helm(complex_polymer)
 
             if connections:
                 msg_error = 'Self-aggregration filter only works for linear peptides.'
                 raise RuntimeError(msg_error)
             
-            for _, sequence in sequences.items():
-                if not set(sequence).issubset(NATAA):
+            for _, simple_polymer in simple_polymers.items():
+                if not set(simple_polymer).issubset(NATAA):
                     msg_error = 'Self-aggregration filter only works polymers containing the 20 natural amino acids.'
                     raise RuntimeError(msg_error)
             
-                length = len(sequence)
+                length = len(simple_polymer)
 
-                apolar_monomers = set(sequence).intersection(APOLAR)
+                apolar_monomers = set(simple_polymer).intersection(APOLAR)
                 
                 if len(apolar_monomers) / length >= self._hydrophobe_ratio:
                     passed[i] = False
                     break
 
-                charged_monomers = set(sequence).intersection(AA_CHARGED)
+                charged_monomers = set(simple_polymer).intersection(AA_CHARGED)
 
                 if len(charged_monomers) == 0:
                     passed[i] = False

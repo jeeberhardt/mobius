@@ -322,7 +322,7 @@ def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
         Number of random polymers to generate, or list of numbers of 
         polymers to generate per scaffold.
     scaffold_designs : dictionary
-        Dictionary with scaffold sequences and defined set of monomers 
+        Dictionary with scaffold polymers and defined set of monomers 
         to use for each position.
 
     Returns
@@ -343,38 +343,38 @@ def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
     for scaffold, design in scaffold_designs.items():
         i = 0
 
-        polymers, connections, _, _ = parse_helm(scaffold)
+        complex_polymer, connections, _, _ = parse_helm(scaffold)
 
         for _ in range(n_polymers_per_scaffold[i]):
-            mutant_polymers = {}
+            mutant_complex_polymer = {}
 
-            for pid, sequence in polymers.items():
-                mutated_sequence = list(sequence)
+            for pid, simple_polymer in complex_polymer.items():
+                mutated_simple_polymer = list(simple_polymer)
 
-                for i, monomer in enumerate(sequence):
+                for i, monomer in enumerate(simple_polymer):
                     if monomer == 'X':
-                        mutated_sequence[i] = np.random.choice(design[pid][i + 1])
+                        mutated_simple_polymer[i] = np.random.choice(design[pid][i + 1])
 
-                mutant_polymers[pid] = mutated_sequence
+                mutant_complex_polymer[pid] = mutated_simple_polymer
 
-            mutant_sequence = build_helm_string(mutant_polymers, connections)
-            random_polymers.append(mutant_sequence)
+            mutant_simple_polymer = build_helm_string(mutant_complex_polymer, connections)
+            random_polymers.append(mutant_simple_polymer)
 
         i += 1
 
     return np.asarray(random_polymers)
 
 
-def check_polymers_with_designs(polymer_sequences, designs):
+def check_polymers_with_designs(polymers, designs):
     """
     Checks if the given polymers are valid based on the designs.
 
     Parameters
     ----------
-    polymer_sequences : List
-        List of polymer sequences in HELM format.
+    polymers : List
+        List of polymers in HELM format.
     designs : dictionary
-        Dictionary with scaffold sequences and defined set of monomers
+        Dictionary with scaffold polymers and defined set of monomers
         to use for each position.
 
     Returns
@@ -384,21 +384,21 @@ def check_polymers_with_designs(polymer_sequences, designs):
         polymers are valid or not based on the designs.
 
     """
-    validity = np.ones(shape=(len(polymer_sequences),), dtype=bool)
+    validity = np.ones(shape=(len(polymers),), dtype=bool)
 
-    for i, polymer_sequence in enumerate(polymer_sequences):
-        scaffold = get_scaffold_from_helm_string(polymer_sequence)
+    for i, polymer in enumerate(polymers):
+        scaffold_polymer = get_scaffold_from_helm_string(polymer)
 
         try:
-            scaffold_design = designs[scaffold]
+            scaffold_design = designs[scaffold_polymer]
         except:
             validity[i] = False
             continue
 
-        polymers, _, _, _ = parse_helm(polymer_sequence)
+        complex_polymer, _, _, _ = parse_helm(polymer)
 
-        for pid, sequence in polymers.items():
-            for i, monomer in enumerate(sequence):
+        for pid, simple_polymer in complex_polymer.items():
+            for i, monomer in enumerate(simple_polymer):
                 if monomer not in scaffold_design[pid][i + 1]:
                     validity[i] = False
                     break
@@ -406,82 +406,82 @@ def check_polymers_with_designs(polymer_sequences, designs):
     return validity
 
 
-def adjust_polymers_to_designs(polymer_sequences, designs):
+def adjust_polymers_to_designs(polymers, designs):
     """
     Modify polymers to fit the given designs.
 
     Parameters
     ----------
-    polymer_sequences : List
-        List of polymer sequences in HELM format.
+    polymers : List
+        List of polymers in HELM format.
     designs : dictionary
-        Dictionary with scaffold sequences and defined set of monomers
+        Dictionary with scaffold polymers and defined set of monomers
         to use for each position.
 
     Returns
     -------
     List
-        List of polymer sequences in HELM format.
+        List of polymers in HELM format.
     ndarray
         ndarray of boolean values indicating whether the 
         polymers was modified or not.
 
     """
-    modified_sequences = []
-    modified = np.zeros(shape=(len(polymer_sequences),), dtype=bool)
+    modified_polymers = []
+    modified = np.zeros(shape=(len(polymers),), dtype=bool)
 
-    for i, polymer_sequence in enumerate(polymer_sequences):
-        scaffold = get_scaffold_from_helm_string(polymer_sequence)
+    for i, polymer in enumerate(polymers):
+        scaffold = get_scaffold_from_helm_string(polymer)
 
         try:
             scaffold_design = designs[scaffold]
         except KeyError:
-            msg_error = 'Scaffold %s corresponding to %s not found in the scaffold designs.' % (scaffold, polymer_sequence)
+            msg_error = 'Scaffold %s corresponding to %s not found in the scaffold designs.' % (scaffold, polymer)
             raise KeyError(msg_error)
 
-        sequences, connections, _, _ = parse_helm(polymer_sequence)
+        complex_polymer, connections, _, _ = parse_helm(polymer)
 
-        for sid, sequence in sequences.items():
-            modified_polymers = {}
-            modified_sequence = list(sequence)
+        for sid, simple_polymer in complex_polymer.items():
+            modified_complex_polymer = {}
+            modified_simple_polymer = list(simple_polymer)
 
-            for j, monomer in enumerate(sequence):
+            for j, monomer in enumerate(simple_polymer):
                 if monomer not in scaffold_design[sid][j + 1]:
-                    modified_sequence[j] = np.random.choice(scaffold_design[sid][j + 1])
+                    modified_simple_polymer[j] = np.random.choice(scaffold_design[sid][j + 1])
                     modified[i] = True
 
-            modified_polymers[sid] = modified_sequence
+            modified_polymers[sid] = modified_simple_polymer
 
-        modified_sequence = build_helm_string(modified_polymers, connections)
-        modified_sequences.append(modified_sequence)
+        modified_complex_polymer = build_helm_string(modified_polymers, connections)
+        modified_polymers.append(modified_complex_polymer)
 
-    return np.asarray(modified_sequences), modified
+    return np.asarray(modified_polymers), modified
 
 
-def group_polymers_by_scaffold(helm_sequences, return_index=False):
+def group_polymers_by_scaffold(polymers, return_index=False):
     """
-    Groups a list of HELM sequences by their scaffolds.
+    Groups a list polymers in HELM format by their scaffolds.
 
     Parameters
     ----------
-    helm_sequences : List of str
-        List of input sequences to group in HELM format.
+    polymers : List of str
+        List of input polymers in HELM format to group.
     return_index : bool, default : False
-        Whether to return also the original index of the grouped sequences.
+        Whether to return also the original index of the grouped polymers.
 
     Returns
     -------
     groups : Dict[str, List of str]
-        A dictionary with scaffold sequences as keys and 
-        lists of grouped sequences as values.
+        A dictionary with scaffold polymers as keys and 
+        lists of grouped polymers as values.
     group_indices : Dict[str, List of int]
-        If `return_index` is True, a dictionary with scaffold sequences 
-        as keys and lists of indices of the original sequences.
+        If `return_index` is True, a dictionary with scaffold polymers 
+        as keys and lists of indices of the original polymers.
 
     Examples
     --------
-    >>> sequences = ['PEPTIDE1{A.A.R}$$$$V2.0', 'PEPTIDE1{A.A}$$$$V2.0', 'PEPTIDE1{R.G}$$$$V2.0']
-    >>> groups = _group_by_scaffold(sequences)
+    >>> polymers = ['PEPTIDE1{A.A.R}$$$$V2.0', 'PEPTIDE1{A.A}$$$$V2.0', 'PEPTIDE1{R.G}$$$$V2.0']
+    >>> groups = _group_by_scaffold(polymers)
     >>> print(groups)
     {'X$PEPTIDE1{$X.X.X$}$V2.0': ['PEPTIDE1{A.A.R}$$$$V2.0'], 
      'X$PEPTIDE1{$X.X$}$V2.0': ['PEPTIDE1{A.A}$$$$V2.0', 'PEPTIDE1{R.G}$$$$V2.0']}
@@ -490,10 +490,10 @@ def group_polymers_by_scaffold(helm_sequences, return_index=False):
     groups = defaultdict(list)
     group_indices = defaultdict(list)
 
-    for i, helm_sequence in enumerate(helm_sequences):
-        scaffold_sequence = get_scaffold_from_helm_string(helm_sequence)
-        groups[scaffold_sequence].append(helm_sequence)
-        group_indices[scaffold_sequence].append(i)
+    for i, polymer in enumerate(polymers):
+        scaffold_polymer = get_scaffold_from_helm_string(polymer)
+        groups[scaffold_polymer].append(polymer)
+        group_indices[scaffold_polymer].append(i)
 
     if return_index:
         return groups, group_indices
@@ -501,13 +501,13 @@ def group_polymers_by_scaffold(helm_sequences, return_index=False):
         return groups
 
 
-def convert_FASTA_to_HELM(fasta_sequences):
+def convert_FASTA_to_HELM(sequences):
     """
     Converts one or more FASTA sequences to HELM format.
 
     Parameters
     ----------
-    fasta_sequences : str, List of str, or ndarray of str
+    sequences : str, List of str, or ndarray of str
         A FASTA sequence or list/ndarray of FASTA sequences.
 
     Returns
@@ -516,22 +516,22 @@ def convert_FASTA_to_HELM(fasta_sequences):
         A list of sequences in HELM format.
 
     """
-    if not isinstance(fasta_sequences, (list, tuple, np.ndarray)):
-        fasta_sequences = [fasta_sequences]
+    if not isinstance(sequences, (list, tuple, np.ndarray)):
+        sequences = [sequences]
 
-    return [build_helm_string({'PEPTIDE1': f}) for f in fasta_sequences]
+    return [build_helm_string({'PEPTIDE1': f}) for f in sequences]
 
 
-def convert_HELM_to_FASTA(helm_sequences, ignore_connections=False):
+def convert_HELM_to_FASTA(polymers, ignore_connections=False):
     """
     Converts one or more HELM sequences to FASTA format.
 
     Parameters
     ----------
-    helm_sequences : str, List of str, or numpy.ndarray of str
-        A HELM sequence or list/array of HELM sequences.
+    polymers : str, List of str, or numpy.ndarray of str
+        A polymer or list/array of polymers in HELM format.
     ignore_connections : bool, default : False
-        Whether to ignore connections in HELM sequences.
+        Whether to ignore connections in polymers.
 
     Returns
     -------
@@ -541,38 +541,38 @@ def convert_HELM_to_FASTA(helm_sequences, ignore_connections=False):
     Raises
     ------
     ValueError
-        If a polymer contains connections or more than one sequence.
+        If a polymer contains connections or more than one simple polymer.
 
     """
-    if not isinstance(helm_sequences, (list, tuple, np.ndarray)):
-        helm_sequences = [helm_sequences]
+    if not isinstance(polymers, (list, tuple, np.ndarray)):
+        polymers = [polymers]
 
     fasta_sequences = []
 
-    for helm_sequence in helm_sequences:
-        polymers, connections, _, _ = parse_helm(helm_sequence)
+    for polymer in polymers:
+        complex_polymer, connections, _, _ = parse_helm(polymer)
 
         if ignore_connections is False and connections:
             msg_error = 'Polymer %s cannot be converted to FASTA string. It contains connections.'
-            raise ValueError(msg_error % helm_sequence)
+            raise ValueError(msg_error % polymer)
 
-        if len(polymers.keys()) > 1:
-            msg_error = 'Polymer %s cannot be converted to FASTA string. It contains more than one sequence.'
-            raise ValueError(msg_error % helm_sequence)
+        if len(complex_polymer.keys()) > 1:
+            msg_error = 'Polymer %s cannot be converted to FASTA string. It contains more than one simple polymer.'
+            raise ValueError(msg_error % polymer)
 
-        fasta_sequences.append(''.join(polymers[list(polymers.keys())[0]]))
+        fasta_sequences.append(''.join(complex_polymer[list(complex_polymer.keys())[0]]))
 
     return fasta_sequences
 
 
-def build_helm_string(polymers, connections=None):
+def build_helm_string(complex_polymer, connections=None):
     """
     Build a HELM string from a dictionary of polymers and a list of connections.
 
     Parameters
     ----------
-    polymers : dict
-        A dictionary of polymers, where keys are the polymer types 
+    complex_polymer : dict
+        A dictionary of simple polymers, where keys are the simple polymer types 
         and values are lists of monomer symbols.
     connections : List, default : None
         A list of connections, where each connection is represented 
@@ -582,65 +582,64 @@ def build_helm_string(polymers, connections=None):
     Returns
     -------
     str
-        The generated HELM string.
+        The generated polymer in HELM format.
 
     """
-    sequences = []
+    tmp = []
 
-    for p, s in polymers.items():
-        tmp = '%s{%s}' % (p, '.'.join([m if len(m) == 1 else '[%s]' % m for m in s]))
-        sequences.append(tmp)
+    for pid, simple_polymer in complex_polymer.items():
+        simple_polymer_str = '%s{%s}' % (pid, '.'.join([m if len(m) == 1 else '[%s]' % m for m in simple_polymer]))
+        tmp.append(simple_polymer_str)
 
-    sequences_str = '|'.join(sequences)
+    complex_polymer_str = '|'.join(tmp)
 
     if connections is not None:
         connections_str = '|'.join(['%s,%s,%d:%s-%d:%s' % (c[0], c[1], c[2], c[3], c[4], c[5]) for c in connections])
     else:
         connections_str = ''
 
-    helm_string = '%s$%s$$$V2.0' % (sequences_str, connections_str)
+    polymer = '%s$%s$$$V2.0' % (complex_polymer_str, connections_str)
     
-    return helm_string
+    return polymer
 
 
-def parse_helm(helm_string):
+def parse_helm(polymer):
     """
     Parses a HELM string and returns the relevant information.
 
     Parameters
     ----------
-    helm_string (str)
-        A string in HELM format.
+    polymer (str)
+        A polymer in HELM format.
 
     Returns
     -------
-    polymers : dict
-        A dictionary with polymer IDs as keys and sequences as values.
+    complex_polymer : dict
+        A dictionary containing the simple polymer IDs (pid) as keys and simple polymer as values.
     connections : numpy.ndarray
         An array with dtype [('SourcePolymerID', 'U20'), ('TargetPolymerID', 'U20'),\
                              ('SourceMonomerPosition', 'i4'), ('SourceAttachment', 'U2'),\
                              ('TargetMonomerPosition', 'i4'), ('TargetAttachment', 'U2')].
-        Each row represents a connection between two monomers in the polymers.
+        Each row represents a connection between two monomers in the complex polymer.
     hydrogen_bonds : str
-        A string containing information about any hydrogen bonds in the HELM string.
+        A string containing information about any hydrogen bonds in the complex polymer.
     attributes : str
-        A string containing any additional attributes in the HELM string.
+        A string containing any additional attributes related to the complex polymer.
 
     """
     dtype = [('SourcePolymerID', 'U20'), ('TargetPolymerID', 'U20'),
              ('SourceMonomerPosition', 'i4'), ('SourceAttachment', 'U2'),
              ('TargetMonomerPosition', 'i4'), ('TargetAttachment', 'U2')]
 
-    polymers, connections, hydrogen_bonds, attributes, _ = helm_string.split('$')
+    complex_polymer_str, connections, hydrogen_bonds, attributes, _ = polymer.split('$')
 
-    # Process sequences
-    data = {}
-    for polymer in polymers.split('|'):
-        pid = polymer.split('{')[0]
-        sequence = [monomer.strip("[]") for monomer in polymer[len(pid) + 1:-1].split('.')]
-        data[pid] = sequence
+    # Process polymer
+    complex_polymer = {}
 
-    polymers = data
+    for simple_polymer_str in complex_polymer_str.split('|'):
+        pid = simple_polymer_str.split('{')[0]
+        simple_polymer = [monomer.strip("[]") for monomer in simple_polymer_str[len(pid) + 1:-1].split('.')]
+        complex_polymer[pid] = simple_polymer
 
     # Process connections
     data = []
@@ -655,60 +654,59 @@ def parse_helm(helm_string):
 
     connections = np.array(data, dtype=dtype)
     
-    return polymers, connections, hydrogen_bonds, attributes
+    return complex_polymer, connections, hydrogen_bonds, attributes
 
 
-def get_scaffold_from_helm_string(input_sequence):
+def get_scaffold_from_helm_string(polymer):
     """
-    Give the scaffold version of the HELM sequence.
+    Get the scaffold of the input polymer in HELM format.
 
     Parameters
     ----------
-    input_sequence : str
-        A sequence in HELM format.
+    polymer : str
+        A polymer in HELM format.
 
     Returns
     -------
     str
-        The scaffold version of the input sequence in HELM format.
+        The scaffold version of the input polymer in HELM format.
 
     Examples
     --------
-        input_sequence : PEPTIDE1{A.C.A.A.A}|PEPTIDE2{A.A.A.A}$PEPTIDE1,PEPTIDE2,1:R3-1:R3$$$V2.0
-        scaffold       : PEPTIDE1{X.C.X.X.X}|PEPTIDE2{X.A.X.X}$PEPTIDE1,PEPTIDE2,1:R3-1:R3$$$V2.0
+        polymer  : PEPTIDE1{A.C.A.A.A}|PEPTIDE2{A.A.A.A}$PEPTIDE1,PEPTIDE2,1:R3-1:R3$$$V2.0
+        scaffold : PEPTIDE1{X.C.X.X.X}|PEPTIDE2{X.A.X.X}$PEPTIDE1,PEPTIDE2,1:R3-1:R3$$$V2.0
 
     """
-    polymers, connections, _, _ = parse_helm(input_sequence)
+    scaffold_complex_polymer = {}
 
-    for polymer_id in polymers.keys():
+    complex_polymer, connections, _, _ = parse_helm(polymer)
+
+    for pid, simple_polymer in complex_polymer.items():
+        # Transform the simple polymer into a scaffold version
+        # (X represents an unknown monomer in the HELM notation)
+        scaffold_complex_polymer[pid] = 'X' * len(simple_polymer)
+
         if connections.size > 0:
             # Get all the connections in this polymer
-            attachment_positions1 = connections[connections['SourcePolymerID'] == polymer_id]['SourceMonomerPosition']
-            attachment_positions2 = connections[connections['TargetPolymerID'] == polymer_id]['TargetMonomerPosition']
+            attachment_positions1 = connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition']
+            attachment_positions2 = connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition']
             attachment_positions = np.concatenate([attachment_positions1, attachment_positions2])
-            # Build scaffold polymer sequence (X represents an unknown monomer in the HELM notation)
-            scaffold_sequence = np.array(['X'] * len(polymers[polymer_id]))
-            scaffold_sequence[attachment_positions - 1] = np.array(polymers[polymer_id])[attachment_positions - 1]
-            # Replace polymer sequence by scaffold sequence
-            polymers[polymer_id] = scaffold_sequence
-        else:
-            # Replace polymer sequence by scaffold sequence (but faster version since no connections)
-            # (X represents an unknown monomer in the HELM notation)
-            polymers[polymer_id] = 'X' * len(polymers[polymer_id])
+            # Put back the monomers involed in a connection
+            scaffold_complex_polymer[pid][attachment_positions - 1] = np.array(simple_polymer)[attachment_positions - 1]
 
-    scaffold_sequence = build_helm_string(polymers, connections)
+    scaffold = build_helm_string(scaffold_complex_polymer, connections)
 
-    return scaffold_sequence
+    return scaffold
 
 
-def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
+def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
     """
     Generate a list of RDKit molecules from HELM strings.
 
     Parameters
     ----------
-    HELM_strings : str or List or tuple or numpy.ndarray
-        The input HELM string(s) to convert to RDKit molecules.
+    polymers : str or List or tuple or numpy.ndarray
+        The polymer in HELM format to convert to RDKit molecules.
     HELMCoreLibrary_filename : str, default : None
         The filename of the HELM core library JSON file. 
         If not provided, the default HELMCoreLibrary JSON file will be used.
@@ -719,7 +717,7 @@ def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
         A list of RDKit molecules.
 
     """
-    peptides = []
+    rdkit_polymers = []
 
     if not isinstance(HELM_strings, (list, tuple, np.ndarray)):
             HELM_strings = [HELM_strings]
@@ -734,21 +732,20 @@ def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
     # Re-organize monomer data in a dictionary for faster access
     HELMCoreLibrary = {monomer['symbol']: monomer for monomer in data}
 
-    for HELM_string in HELM_strings:
+    for polymer in polymers:
         molecules_to_zip = []
 
-        polymers, connections, _, _ = parse_helm(HELM_string)
+        complex_polymer, connections, _, _ = parse_helm(polymer)
 
         #print(polymers)
         #print(connections)
 
-        for pid, seq in polymers.items():
-            number_monomers = len(seq)
+        for pid, simple_polymer in complex_polymer.items():
+            number_monomers = len(simple_polymer)
 
-            for i, monomer_symbol in enumerate(seq):
+            for i, monomer_symbol in enumerate(simple_polymer):
                 non_canonical_points = {}
                 canonical_points = {}
-                atom_attachments = {}
 
                 try:
                     monomer_data = HELMCoreLibrary[monomer_symbol]
@@ -853,7 +850,7 @@ def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
                                     if cap_atm.HasProp('atomLabel') and cap_atm.GetProp('atomLabel') == label:
                                         #print('-- Monomer cap on: %s - %s (%d)' % (label, cap_smiles, hashed_key))
                                         cap_atm.SetAtomMapNum(hashed_key)
-                                # ... and add monomer cap to peptide
+                                # ... and add monomer cap to polymer
                                 molecules_to_zip.append(cap)
                         else:
                             print('Warning: attachment point %s not defined for monomer %s!' % (label, monomer_symbol))
@@ -862,25 +859,25 @@ def MolFromHELM(HELM_strings, HELMCoreLibrary_filename=None):
 
                 #print('')
 
-        with Chem.RWMol() as rw_peptide:
-            [rw_peptide.InsertMol(molecule) for molecule in molecules_to_zip]
+        with Chem.RWMol() as rw_polymer:
+            [rw_polymer.InsertMol(molecule) for molecule in molecules_to_zip]
 
         RDLogger.DisableLog('rdApp.warning')
 
         # Bop-it, Twist-it, Pull-it and Zip-it!
-        peptide = Chem.molzip(rw_peptide)
+        rdkit_polymer = Chem.molzip(rw_polymer)
 
         # Clean mol and remove dummy H atoms
-        Chem.SanitizeMol(peptide)
+        Chem.SanitizeMol(rdkit_polymer)
         params = Chem.RemoveHsParameters()
         params.removeDegreeZero = True
-        peptide = Chem.RemoveHs(peptide, params)
+        rdkit_polymer = Chem.RemoveHs(rdkit_polymer, params)
 
         RDLogger.EnableLog('rdApp.warning')
 
-        peptides.append(peptide)
+        rdkit_polymers.append(rdkit_polymer)
 
-    return peptides
+    return rdkit_polymers
 
 
 def read_pssm_file(pssm_file):
