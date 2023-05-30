@@ -99,10 +99,13 @@ ei = ExpectedImprovement(gpmodel, maximize=False)
 ```
 
 ... and now let's define the search protocol in a YAML configuration file (`sampling.yaml`) that will be used 
-to optimize peptide sequences using the acquisition function. This YAML configuration file defines the design
-protocol, which includes the peptide scaffold, linear here, and sets of monomers for some positions to be used
-during the optimization. Finally, it defines the optimizer, here SequenceGA, to optimize the peptide sequences
-using the acquisition function / surrogate model initialized earlier.
+to optimize the peptide sequence. This YAML configuration file defines the design protocol, in which you need 
+to define the peptide scaffold, linear here. Additionnaly, you can specify the sets of monomers to be used at 
+specific positions during the optimization. It defines also the optimizer, here SequenceGA, for optimizing the 
+peptide sequence using the acquisition function / surrogate model initialized earlier. Finally, you can also 
+define some filtering criteria to remove peptide sequences that might exhibit some problematic properties during
+synthesis, such as self-aggregation or solubility.
+
 ```YAML
 design:
   monomers: 
@@ -130,10 +133,17 @@ sampling:
       pm: 0.1
       minimum_mutations: 1
       maximum_mutations: 5
+filters:
+  - class_path: mobius.PeptideSelfAggregationFilter
+  - class_path: mobius.PeptideSolubilityFilter
+    init_args:
+      hydrophobe_ratio: 0.5
+      charged_per_amino_acids: 5
 
 ```
 
-That YAML config file is now read by the sampler method.
+Once acquisition function / surrogate model are defined and the parameters set in the YAML 
+configuration file. We can initiate the sampling method.
 ```python
 ps = PolymerSampler(ei, 'sampling.yaml')
 ```

@@ -277,10 +277,11 @@ class PolymerSampler(_Sampler):
                   minimum_mutations: 1
                   maximum_mutations: 5
             filters:
-                - class_path: filters.SynthesizabilityFilter
-                - class_path: filters.SolubitlityFilter
-                  init_args:
-                    threshold: 0.5
+              - class_path: mobius.PeptideSelfAggregationFilter
+              - class_path: mobius.PeptideSolubilityFilter
+                init_args:
+                  hydrophobe_ratio: 0.5
+                  charged_per_amino_acids: 5
 
         """
         self._acq_fun = acquisition_function
