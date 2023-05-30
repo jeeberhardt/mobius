@@ -11,7 +11,7 @@ from .acquisition_functions import ExpectedImprovement, ProbabilityOfImprovement
 from .acquisition_functions import Greedy, RandomImprovement, UpperConfidenceBound
 from .mobius import Mobius
 from .sampler import PolymerSampler
-from .descriptors import SequenceDescriptors
+from .descriptors import SimplePolymerDescriptors
 from .fingerprints import MHFingerprint, Map4Fingerprint, MorganFingerprint
 from .genetic_algorithm import SequenceGA, ParallelSequenceGA, RandomGA
 from .surrogate_models import GPModel, DummyModel, RFModel
@@ -34,14 +34,14 @@ __all__ = ['VirtualTarget', 'ForceField',
            'GPModel', 'DummyModel', 'RFModel',
            'TanimotoSimilarityKernel',
            'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement', 'UpperConfidenceBound',
-           'MHFingerprint', 'Map4Fingerprint', 'MorganFingerprint', 'SequenceDescriptors',
+           'MHFingerprint', 'Map4Fingerprint', 'MorganFingerprint', 'SimplePolymerDescriptors',
            'GeneticOperators', 'SequenceGA', 'RandomGA', 'ParallelSequenceGA',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 
            'scrumbled_scanning', 'homolog_scanning',
            'plot_results',
            'parse_helm', 'build_helm_string', 'get_scaffold_from_helm_string', 'read_pssm_file', 
            'affinity_binding_to_energy', 'energy_to_affinity_binding', 
-           'generate_random_linear_polymers', 'generate_random_polymers_from_designs ',
+           'generate_random_linear_polymers', 'generate_random_polymers_from_designs',
            'adjust_polymers_to_designs', 'check_polymers_with_designs',
            'ic50_to_pic50', 'pic50_to_ic50',
            'PeptideSelfAggregationFilter', 'PeptideSolubilityFilter',

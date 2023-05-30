@@ -274,8 +274,8 @@ def generate_random_linear_polymers(n_polymers, polymers_lengths, monomers=None,
 
     Returns
     -------
-    List
-        List of generated polymers.
+    ndarray
+        Randomly generated linear polymers.
 
     Raises
     ------
@@ -314,7 +314,7 @@ def generate_random_linear_polymers(n_polymers, polymers_lengths, monomers=None,
 
 def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
     """
-    Generates random polymers using scaffold_designs.
+    Generates random polymers using scaffold designs.
 
     Parameters
     ----------
@@ -327,8 +327,8 @@ def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
 
     Returns
     -------
-    List
-        List of generated polymers.
+    ndarray
+        Randomly generated polymers.
 
     """
     random_polymers = []
@@ -346,19 +346,19 @@ def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
         complex_polymer, connections, _, _ = parse_helm(scaffold)
 
         for _ in range(n_polymers_per_scaffold[i]):
-            mutant_complex_polymer = {}
+            random_complex_polymer = {}
 
             for pid, simple_polymer in complex_polymer.items():
-                mutated_simple_polymer = list(simple_polymer)
+                random_simple_polymer = list(simple_polymer)
 
                 for i, monomer in enumerate(simple_polymer):
                     if monomer == 'X':
-                        mutated_simple_polymer[i] = np.random.choice(design[pid][i + 1])
+                        random_simple_polymer[i] = np.random.choice(design[pid][i + 1])
 
-                mutant_complex_polymer[pid] = mutated_simple_polymer
+                random_complex_polymer[pid] = random_simple_polymer
 
-            mutant_simple_polymer = build_helm_string(mutant_complex_polymer, connections)
-            random_polymers.append(mutant_simple_polymer)
+            random_polymer = build_helm_string(random_complex_polymer, connections)
+            random_polymers.append(random_polymer)
 
         i += 1
 
@@ -420,8 +420,8 @@ def adjust_polymers_to_designs(polymers, designs):
 
     Returns
     -------
-    List
-        List of polymers in HELM format.
+    ndarray
+        Adjusted polymers in HELM format based on designs.
     ndarray
         ndarray of boolean values indicating whether the 
         polymers was modified or not.
@@ -441,19 +441,19 @@ def adjust_polymers_to_designs(polymers, designs):
 
         complex_polymer, connections, _, _ = parse_helm(polymer)
 
-        for sid, simple_polymer in complex_polymer.items():
+        for pid, simple_polymer in complex_polymer.items():
             modified_complex_polymer = {}
             modified_simple_polymer = list(simple_polymer)
 
             for j, monomer in enumerate(simple_polymer):
-                if monomer not in scaffold_design[sid][j + 1]:
-                    modified_simple_polymer[j] = np.random.choice(scaffold_design[sid][j + 1])
+                if monomer not in scaffold_design[pid][j + 1]:
+                    modified_simple_polymer[j] = np.random.choice(scaffold_design[pid][j + 1])
                     modified[i] = True
 
-            modified_polymers[sid] = modified_simple_polymer
+            modified_complex_polymer[pid] = modified_simple_polymer
 
-        modified_complex_polymer = build_helm_string(modified_polymers, connections)
-        modified_polymers.append(modified_complex_polymer)
+        modified_polymer = build_helm_string(modified_complex_polymer, connections)
+        modified_polymers.append(modified_polymer)
 
     return np.asarray(modified_polymers), modified
 
