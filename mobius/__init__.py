@@ -7,7 +7,8 @@
 from .forcefield import ForceField
 from .virtual_target import VirtualTarget
 
-from .acquisition_functions import ExpectedImprovement, ProbabilityOfImprovement, Greedy, RandomImprovement
+from .acquisition_functions import ExpectedImprovement, ProbabilityOfImprovement
+from .acquisition_functions import Greedy, RandomImprovement, UpperConfidenceBound
 from .mobius import Mobius
 from .sampler import PolymerSampler
 from .descriptors import SequenceDescriptors
@@ -32,7 +33,7 @@ __all__ = ['VirtualTarget', 'ForceField',
            'PolymerSampler',
            'GPModel', 'DummyModel', 'RFModel',
            'TanimotoSimilarityKernel',
-           'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement',
+           'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement', 'UpperConfidenceBound',
            'MHFingerprint', 'Map4Fingerprint', 'MorganFingerprint', 'SequenceDescriptors',
            'GeneticOperators', 'SequenceGA', 'RandomGA', 'ParallelSequenceGA',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 

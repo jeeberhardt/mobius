@@ -343,3 +343,77 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
         pi[sigma == 0.0] == 0.0
 
         return pi
+
+
+class UpperConfidenceBound(_AcquisitionFunction):
+    """
+    Class for the Probability of Improvement acquisition function.
+
+    Attributes
+    ----------
+    surrogate_model : `_SurrogateModel`
+        The surrogate model used by the acquisition function.
+    maximize : bool
+        Tell if the goal to maximize (True) or minimize (False) 
+        the acquisition function.
+    scaling_factor : int
+        Scaling factor used by the Bolzmann weigthing function in the GA.
+
+    """
+
+    def __init__(self, surrogate_model, maximize=False, beta=0.2):
+        """
+        Upper Confidence Bound acquisition function.
+
+        Parameters
+        ----------
+        surrogate_model: `_SurrogateModel`
+            The surrogate model to be used by the acquisition function.
+        maximize : bool, default : False
+            Indicates whether the function is to be maximised.
+        kappa : float, default : 2.576
+            Exploitation-exploration trade-off parameter.
+
+        """
+        self._surrogate_model = surrogate_model
+        self._maximize = maximize
+        self._delta = 1. - beta
+        self._beta = beta
+
+    @property
+    def surrogate_model(self):
+        return self._surrogate_model
+    
+    @property
+    def maximize(self):
+        return self._maximize
+    
+    @property
+    def scaling_factor(self):
+        if self._maximize:
+            return 1
+        else:
+            return -1
+    
+    def forward(self, X_test):
+        """
+        Predict the Upper Confidence Bound values for input sample `X_test`.
+
+        Parameters
+        ----------
+        X_test : array-like of shape (n_samples, n_features)
+            The input samples.
+
+        Returns
+        -------
+        ucb : ndarray of shape (n_samples, )
+            Predicted Upper Confidence Bound value for each input sample.
+
+        """
+        # calculate mean and stdev via surrogate function
+        mu, sigma = self._surrogate_model.predict(X_test)
+
+        # calculate the upper confidence bound
+        ucb = -(self._delta * mu) - (self._beta * sigma)
+
+        return ucb
