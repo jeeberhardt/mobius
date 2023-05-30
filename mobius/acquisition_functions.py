@@ -361,7 +361,7 @@ class UpperConfidenceBound(_AcquisitionFunction):
 
     """
 
-    def __init__(self, surrogate_model, maximize=False, beta=0.2):
+    def __init__(self, surrogate_model, maximize=False, beta=0.25):
         """
         Upper Confidence Bound acquisition function.
 
@@ -371,7 +371,7 @@ class UpperConfidenceBound(_AcquisitionFunction):
             The surrogate model to be used by the acquisition function.
         maximize : bool, default : False
             Indicates whether the function is to be maximised.
-        kappa : float, default : 2.576
+        beta : float, default : 0.25
             Exploitation-exploration trade-off parameter.
 
         """
