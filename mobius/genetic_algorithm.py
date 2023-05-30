@@ -54,18 +54,18 @@ def _boltzmann_probability(scores, temperature=300.):
     return p
 
 
-def _generate_mating_couples(parent_sequences, parent_scores, n_children, temperature):
+def _generate_mating_couples(parent_polymers, parent_scores, n_children, temperature):
     """
-    Generate mating couples for parent sequences based on their scores
+    Generate mating couples for parent polymers based on their scores
     using the Bolzmann weigthing probabilities. This function is used
     by the SequentialGA class.
 
     Parameters
     ----------
-    parent_sequences: List of str
-        Parent sequences.
-    parent_scores: list of float
-        Scores for each parent sequence.
+    parent_polymers: array-like of str
+        Parent polymers in HELM format.
+    parent_scores: array-like of float or int
+        Scores for each parent polymer.
     n_children: int
         Total number of children to generate.
     temperature: float
@@ -73,17 +73,17 @@ def _generate_mating_couples(parent_sequences, parent_scores, n_children, temper
 
     Returns
     -------
-    mating_couples: List of tuple
-        List of tuples with the two parent sequences that will mate.
+    mating_couples: List of tuples
+        List of tuples with the two parent polymers that will mate.
 
     """
     mating_couples = []
     n_couples = int(n_children / 2)
-    parent_sequences = np.asarray(parent_sequences)
+    parent_polymers = np.asarray(parent_polymers)
 
     # If there is only one parent, automatically it is going to mate with itself...
-    if len(parent_sequences) == 1:
-        mating_couples = [(parent_sequences[0], parent_sequences[0])] * n_couples
+    if len(parent_polymers) == 1:
+        mating_couples = [(parent_polymers[0], parent_polymers[0])] * n_couples
         return mating_couples
 
     p = _boltzmann_probability(parent_scores, temperature)
@@ -92,7 +92,7 @@ def _generate_mating_couples(parent_sequences, parent_scores, n_children, temper
     # In the case no parents really stood up from the rest, all
     # the <n_couples> best parents will be able to mate with someone
     if np.sum(mates_per_parent) == 0:
-        print('Warning: It seems that none of the parents are worth mating. You might want to decrease the temperature.')
+        print('Warning: none of the parents are worth mating. You might want to decrease the temperature.')
         i = np.argsort(parent_scores)
         mates_per_parent[i[:n_couples]] = 1
 
@@ -109,41 +109,41 @@ def _generate_mating_couples(parent_sequences, parent_scores, n_children, temper
 
     for idx in np.argwhere(mates_per_parent > 0).flatten():
         # Compute Boltzmann probabilities without the selected parent
-        mask = np.ones(len(parent_sequences), dtype=bool)
+        mask = np.ones(len(parent_polymers), dtype=bool)
         mask[idx] = False
         p = _boltzmann_probability(parent_scores[mask], temperature)
 
         # Generate new couples with the selected parent
-        mates = np.random.choice(parent_sequences[mask], size=mates_per_parent[idx], replace=True, p=p)
-        mating_couples.extend([(parent_sequences[idx], m) for m in mates])
+        mates = np.random.choice(parent_polymers[mask], size=mates_per_parent[idx], replace=True, p=p)
+        mating_couples.extend([(parent_polymers[idx], m) for m in mates])
 
     return mating_couples
 
 
 @ray.remote
-def parallel_ga(gao, sequences, scores, acquisition_function, scaffold_designs):
-    return gao.run(sequences, scores, acquisition_function, scaffold_designs)
+def parallel_ga(gao, polymers, scores, acquisition_function, scaffold_designs):
+    return gao.run(polymers, scores, acquisition_function, scaffold_designs)
 
 
 class _GeneticAlgorithm(ABC):
     """
-    Abstract class for genetic algorithm brick
+    Abstract class for genetic algorithm optimization brick
     
     """
 
     @abstractmethod
-    def _generate_new_population(self, sequences, scores, scaffold_designs):
+    def _generate_new_population(self, polymers, scores, scaffold_designs):
         raise NotImplementedError()
 
     @abstractmethod
-    def run(self, sequences, scores, acquisition_function, scaffold_designs):
+    def run(self, polymers, scores, acquisition_function, scaffold_designs):
         attempts = 0
-        best_sequence_seen = None
-        # Store all the sequences seen so far...
-        sequences_cache = {}
+        best_polymer_seen = None
+        # Store all the polymers seen so far...
+        polymers_cache = {}
         scaling_factor = acquisition_function.scaling_factor
 
-        sequences = np.asarray(sequences)
+        polymers = np.asarray(polymers)
         scores = np.asarray(scores)
 
         for i in range(self._n_gen):
@@ -158,48 +158,48 @@ class _GeneticAlgorithm(ABC):
                 if acquisition_function.maximize:
                     scores = -scores
 
-                sequences = self._generate_new_population(sequences, scores, scaffold_designs)
+                polymers = self._generate_new_population(polymers, scores, scaffold_designs)
             else:
                 # Inverse the sign of the scores from the acquisition function so that
                 # the best score is always the lowest, necessary for the Boltzmann weights
                 # The scaling factor depends of the acquisition function nature
-                sequences = self._generate_new_population(sequences, scaling_factor * scores, scaffold_designs)
+                polymers = self._generate_new_population(polymers, scaling_factor * scores, scaffold_designs)
 
-            # Keep only unseen sequences. We don't want to reevaluate known sequences...
-            sequences_to_evaluate = list(set(sequences).difference(sequences_cache.keys()))
+            # Keep only unseen polymers. We don't want to reevaluate known polymers...
+            polymers_to_evaluate = list(set(polymers).difference(polymers_cache.keys()))
 
-            # If there is no new sequences, we skip the evaluation
-            if not sequences_to_evaluate:
-                print('Warning: no new sequences were generated. Skip evaluation.')
-                # But we still need to retrieve the scores of all the known sequences
-                scores = np.array([sequences_cache[s] for s in sequences])
+            # If there is no new polymers, we skip the evaluation
+            if not polymers_to_evaluate:
+                print('Warning: no new polymers were generated. Skip evaluation.')
+                # But we still need to retrieve the scores of all the known polymers
+                scores = np.array([polymers_cache[p] for p in polymers])
                 continue
 
-            # Evaluate new sequences
-            sequences_to_evaluate_scores = acquisition_function.forward(sequences_to_evaluate)
+            # Evaluate new polymers
+            polymers_to_evaluate_scores = acquisition_function.forward(polymers_to_evaluate)
 
-            # Get scores of known sequences
-            sequences_known = list(set(sequences).intersection(sequences_cache.keys()))
-            sequences_known_scores = [sequences_cache[s] for s in sequences_known]
+            # Get scores of known polymers
+            polymers_known = list(set(polymers).intersection(polymers_cache.keys()))
+            polymers_known_scores = [polymers_cache[s] for s in polymers_known]
 
-            # New population (known + unseen sequences)
-            sequences = sequences_known + sequences_to_evaluate
-            scores = np.concatenate([sequences_known_scores, sequences_to_evaluate_scores])
+            # New population (known + unseen polymers)
+            polymers = polymers_known + polymers_to_evaluate
+            scores = np.concatenate([polymers_known_scores, polymers_to_evaluate_scores])
 
-            # Store new sequences and scores in the cache
-            sequences_cache.update(dict(zip(sequences_to_evaluate, sequences_to_evaluate_scores)))
+            # Store new polymers and scores in the cache
+            polymers_cache.update(dict(zip(polymers_to_evaluate, polymers_to_evaluate_scores)))
 
             # Same thing, we want the best to be the lowest
             idx = np.argmin(scaling_factor * scores)
-            current_best_sequence = sequences[idx]
+            current_best_polymer = polymers[idx]
             current_best_score = scores[idx]
 
             # Convergence criteria
             # If the best score does not improve after N attempts, we stop.
-            if best_sequence_seen == current_best_sequence:
+            if best_polymer_seen == current_best_polymer:
                 attempts += 1
             else:
-                best_sequence_seen = current_best_sequence
+                best_polymer_seen = current_best_polymer
                 attempts = 0 
 
             if attempts == self._total_attempts:
@@ -208,25 +208,25 @@ class _GeneticAlgorithm(ABC):
 
             print(f'N {i + 1:03d} ({attempts + 1:02d}/{self._total_attempts:02d}) '
                   f'- Score: {current_best_score:5.3f} '
-                  f'- {current_best_sequence} ({current_best_sequence.count(".")})')
+                  f'- {current_best_polymer} ({current_best_polymer.count(".")})')
 
-        all_sequences = np.array(list(sequences_cache.keys()))
-        all_sequence_scores = np.fromiter(sequences_cache.values(), dtype=float)
+        all_polymers = np.array(list(polymers_cache.keys()))
+        all_polymer_scores = np.fromiter(polymers_cache.values(), dtype=float)
 
-        # Sort sequences by scores in the decreasing order (best to worst)
+        # Sort polymers by scores in the decreasing order (best to worst)
         # Same same thing, we want the best to be the lowest
-        sorted_indices = np.argsort(scaling_factor * all_sequence_scores)
+        sorted_indices = np.argsort(scaling_factor * all_polymer_scores)
 
-        self.sequences = all_sequences[sorted_indices]
-        self.scores = all_sequence_scores[sorted_indices]
+        self.polymers = all_polymers[sorted_indices]
+        self.scores = all_polymer_scores[sorted_indices]
 
-        return self.sequences, self.scores
+        return self.polymers, self.scores
 
 
 class SequenceGA(_GeneticAlgorithm):
     """
-    Use GA to search for new sequence candidates using the acquisition function
-    for scoring.
+    Use GA optimization to search for new polymer candidates using 
+    the acquisition function for scoring.
 
     """
 
@@ -259,7 +259,7 @@ class SequenceGA(_GeneticAlgorithm):
             Maximal number of mutations introduced in the new child.
 
         """
-        self.sequences = None
+        self.polymers = None
         self.scores = None
         # Parameters
         self._n_gen = n_gen
@@ -274,10 +274,10 @@ class SequenceGA(_GeneticAlgorithm):
         self._minimum_mutations = minimum_mutations
         self._maximum_mutations = maximum_mutations
 
-    def _generate_new_population(self, sequences, scores, scaffold_designs):
+    def _generate_new_population(self, polymers, scores, scaffold_designs):
         new_pop = []
 
-        mating_couples = _generate_mating_couples(sequences, scores, self._n_children, self._temperature)
+        mating_couples = _generate_mating_couples(polymers, scores, self._n_children, self._temperature)
 
         if self._elitism:
             # Carry-on the parents to the next generation
@@ -294,35 +294,35 @@ class SequenceGA(_GeneticAlgorithm):
 
         return new_pop
 
-    def run(self, sequences, scores, acquisition_function, scaffold_designs):
+    def run(self, polymers, scores, acquisition_function, scaffold_designs):
         """
-        Run the SequenceGA search.
+        Run the SequenceGA optimization.
 
         Parameters
         ----------
-        sequences : list of str
-            List of all the polymers in HELM format.
-        scores : array-like of shape (n_samples, )
-            List of all the value associated to each polymer.
+        polymers : array-like of str
+            Polymers in HELM format.
+        scores : array-like of float or int
+            Score associated to each polymer.
         acquisition_function : AcquisitionFunction
             The acquisition function that will be used to score the polymer.
         scaffold_designs : dictionary
-            Dictionary with scaffold sequences and defined set of monomers to use 
+            Dictionary with scaffold polymers and defined set of monomers to use 
             for each position.
 
         Returns
         -------
-        sequences : array-like of shape (n_samples,)
-            All the sequences found during the GA search.
-        scores : array-like of shape (n_samples,)
-            All the scores for each sequences found.
+        polymers : ndarray
+            Polymers found during the GA optimization.
+        scores : ndarray
+            Score for each polymer found.
 
         """
         # Make sure that inputs are numpy arrays
-        sequences = np.asarray(sequences)
+        polymers = np.asarray(polymers)
         scores = np.asarray(scores)
 
-        groups, group_indices = group_polymers_by_scaffold(sequences, return_index=True)
+        groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
 
         if len(group_indices) > 1:
             msg = 'presence of polymers with different scaffolds. Please use ParallelSequenceGA.'
@@ -333,20 +333,20 @@ class SequenceGA(_GeneticAlgorithm):
         assert set(groups.keys()).issubset(scaffold_designs.keys()), msg_error
 
         # Automatically adjust the input polymers to the scaffold designs
-        sequences, _ = adjust_polymers_to_designs(sequences, scaffold_designs)
+        polymers, _ = adjust_polymers_to_designs(polymers, scaffold_designs)
 
-        self.sequences, self.scores = super().run(sequences, scores, acquisition_function, scaffold_designs)
+        self.polymers, self.scores = super().run(polymers, scores, acquisition_function, scaffold_designs)
 
         print(f'End SequenceGA - Best score: {self.scores[0]:5.3f}'
-              f' - {self.sequences[0]} ({self.sequences[0].count(".")})')
+              f' - {self.polymers[0]} ({self.polymers[0].count(".")})')
 
-        return self.sequences, self.scores
+        return self.polymers, self.scores
 
 
 class ParallelSequenceGA(_GeneticAlgorithm):
     """
-    Parallel version of the SequenceGA to search for new sequence candidates using the 
-    acquisition function for scoring.
+    Parallel version of the SequenceGA optimization to search for new polymer candidates 
+    using the acquisition function for scoring.
 
     This version handle datasets containing polymers with different scaffolds. A SequenceGA
     search will be performed independently for each scaffold. Each SequenceGA search will 
@@ -385,7 +385,7 @@ class ParallelSequenceGA(_GeneticAlgorithm):
             Number of process to run in parallel. Per default, use all the available core.
 
         """
-        self.sequences = None
+        self.polymers = None
         self.scores = None
         # Parameters
         self._n_process = n_process
@@ -400,42 +400,42 @@ class ParallelSequenceGA(_GeneticAlgorithm):
                             'maximum_mutations': maximum_mutations}
         self._parameters.update(kwargs)
 
-    def _generate_new_population(self, sequences, scores, scaffold_designs):
+    def _generate_new_population(self, polymers, scores, scaffold_designs):
         raise NotImplementedError()
 
-    def run(self, sequences, scores, acquisition_function, scaffold_designs):
+    def run(self, polymers, scores, acquisition_function, scaffold_designs):
         """
-        Run the ParallelSequenceGA search.
+        Run the ParallelSequenceGA optimization.
         
         Parameters
         ----------
-        sequences : list of str
-            List of all the polymers in HELM format.
-        scores : array-like of shape (n_samples, )
-            List of all the value associated to each polymer.
+        polymers : array-like of str
+            Polymers in HELM format.
+        scores : array-like of float or int
+            Score associated to each polymer.
         acquisition_function : AcquisitionFunction
             The acquisition function that will be used to score the polymer.
         scaffold_designs : dictionary
-            Dictionary with scaffold sequences and sets of monomers to 
+            Dictionary with scaffold polymers and sets of monomers to 
             use for each position.
 
         Returns
         -------
-        sequences : array-like of shape (n_samples,)
-            All the sequences found during the GA search.
-        scores : array-like of shape (n_samples,)
-            All the scores for each sequences found.
+        polymers : ndarray
+            Polymers found during the GA optimization.
+        scores : ndarray
+            Score for each polymer found.
 
         """
         # Make sure that inputs are numpy arrays
-        sequences = np.asarray(sequences)
+        polymers = np.asarray(polymers)
         scores = np.asarray(scores)
 
         # Starts by automatically adjusting the input polymers to the scaffold designs
-        sequences, _ = adjust_polymers_to_designs(sequences, scaffold_designs)
+        polymers, _ = adjust_polymers_to_designs(polymers, scaffold_designs)
 
         # Group/cluster them by scaffold
-        groups, group_indices = group_polymers_by_scaffold(sequences, return_index=True)
+        groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
 
         # Check that all the scaffold designs are defined for all the polymers
         scaffolds_not_present = list(set(groups.keys()).difference(scaffold_designs.keys()))
@@ -459,14 +459,14 @@ class ParallelSequenceGA(_GeneticAlgorithm):
             tmp_scaffolds_designs = {key: scaffold_designs[key] for key in scaffolds_not_present}
             # We generate them
             n_polymers = [42] * len(tmp_scaffolds_designs)
-            new_sequences = generate_random_polymers_from_designs(n_polymers, tmp_scaffolds_designs)
+            new_polymers = generate_random_polymers_from_designs(n_polymers, tmp_scaffolds_designs)
             # We score them
-            new_scores = acquisition_function.forward(new_sequences)
+            new_scores = acquisition_function.forward(new_polymers)
             # Add them to the rest
-            sequences = np.concatenate([sequences, new_sequences])
+            polymers = np.concatenate([polymers, new_polymers])
             scores = np.concatenate([scores, new_scores])
             # Recluster all of them again (easier than updating the groups)
-            groups, group_indices = group_polymers_by_scaffold(sequences, return_index=True)
+            groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
 
         # Take the minimal amount of CPUs needed or available
         if self._n_process == -1:
@@ -476,7 +476,7 @@ class ParallelSequenceGA(_GeneticAlgorithm):
         ray.init(num_cpus=self._n_process, ignore_reinit_error=True)
 
         seq_gao = SequenceGA(**self._parameters)
-        refs = [parallel_ga.remote(seq_gao, sequences[seq_ids], scores[seq_ids], acquisition_function, scaffold_designs) 
+        refs = [parallel_ga.remote(seq_gao, polymers[seq_ids], scores[seq_ids], acquisition_function, scaffold_designs) 
                 for _, seq_ids in group_indices.items()]
 
         try:
@@ -485,30 +485,30 @@ class ParallelSequenceGA(_GeneticAlgorithm):
             ray.shutdown()
             sys.exit(0)
 
-        sequences, scores = zip(*results)
+        polymers, scores = zip(*results)
         ray.shutdown()
 
         # Remove duplicates
-        sequences, unique_indices = np.unique(np.concatenate(sequences), return_index=True)
+        polymers, unique_indices = np.unique(np.concatenate(polymers), return_index=True)
         scores = np.concatenate(scores)[unique_indices]
 
-        # Sort sequences by scores in the decreasing order (best to worst)
+        # Sort polymers by score in the decreasing order (best to worst)
         # The scores are scaled to be sure that the best has the lowest score
         # This scaling factor is based on the acquisition function nature
         sorted_indices = np.argsort(acquisition_function.scaling_factor * scores)
 
-        self.sequences = sequences[sorted_indices]
+        self.polymers = polymers[sorted_indices]
         self.scores = scores[sorted_indices]
 
         print(f'End SequenceGA - Best score: {self.scores[0]:5.3f}'
-              f' - {self.sequences[0]} ({self.sequences[0].count(".")})')
+              f' - {self.polymers[0]} ({self.polymers[0].count(".")})')
 
-        return self.sequences, self.scores
+        return self.polymers, self.scores
 
 
 class RandomGA():
     """
-    The RandomGA is for benchmark purpose only. It generates random liner polymer sequences.
+    The RandomGA is for benchmark purpose only. It generates random polymers.
 
     """
 
@@ -522,63 +522,54 @@ class RandomGA():
             Number of GA generation to run.
         n_children : int, default : 500
             Number of children generated at each generation.
-        minimum_size : int, default : 1
-            Minimal size of the polymers explored during the search.
-        maximum_size: int, default : 1
-            Maximal size of the polymers explored during the search.
-        monomer_symbols : list of str, default : None
-            Symbol (1 letter) of the monomers that are going to be used during the search. 
-            Per default, only the 20 natural amino acids will be used.
-        n_process : int, default : -1
-            Number of process to run in parallel. Per default, use all the available core.
 
         """
-        self.sequences = None
+        self.polymers = None
         self.scores = None
         # Parameters
         self._n_gen = n_gen
         self._n_children = n_children
 
-    def run(self, sequences, scores, acquisition_function, scaffold_designs):
+    def run(self, polymers, scores, acquisition_function, scaffold_designs):
         """
-        Run the RandomGA "search".
+        Run the RandomGA "optimization".
 
         Parameters
         ----------
-        sequences : list of str
-            List of all the polymers in HELM format.
-        scores : array-like of shape (n_samples, )
-            List of all the value associated to each polymer.
+        polymers : array-like of str
+            Polymers in HELM format.
+        scores : array-like of float or int
+            Score associated to each polymer.
         acquisition_function : AcquisitionFunction (RandomImprovement)
             The acquisition function that will be used to score the polymer.
         scaffold_designs : dictionary
-            Dictionary with scaffold sequences and defined set of monomers 
+            Dictionary with scaffold polymers and defined set of monomers 
             to use for each position.
 
         Returns
         -------
-        sequences : array-like of shape (n_samples,)
-            All the sequences found during the GA search.
-        scores : array-like of shape (n_samples,)
-            All the scores for each sequences found.
+        polymers : ndarray
+            Polymers found during the GA search.
+        scores : ndarray
+            Score for each polymer found.
 
         """
-        # Generate (n_children * n_gen) sequences and random score them!
-        all_sequences = generate_random_polymers_from_designs(self._n_children * self._n_gen, scaffold_designs)
-        all_scores = acquisition_function.forward(all_sequences)
+        # Generate (n_children * n_gen) polymers and random score them!
+        all_polymers = generate_random_polymers_from_designs(self._n_children * self._n_gen, scaffold_designs)
+        all_scores = acquisition_function.forward(all_polymers)
 
-        all_sequences = np.asarray(all_sequences)
+        all_polymers = np.asarray(all_polymers)
         all_scores = np.asarray(all_scores)
 
-        # Sort sequences by scores in the decreasing order (best to worst)
+        # Sort polymers by scores in the decreasing order (best to worst)
         # The scores are scaled to be sure that the best has the lowest score
         # This scaling factor is based on the acquisition function nature
         sorted_indices = np.argsort(acquisition_function.scaling_factor * scores)
 
-        self.sequences = all_sequences[sorted_indices]
+        self.polymers = all_polymers[sorted_indices]
         self.scores = all_scores[sorted_indices]
 
         print(f'End RandomGA - Best score: {self.scores[0]:5.3f}'
-              f' - {self.sequences[0]} ({self.sequences[0].count(".")})')
+              f' - {self.polymers[0]} ({self.polymers[0].count(".")})')
 
-        return self.sequences, self.scores
+        return self.polymers, self.scores
