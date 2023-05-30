@@ -391,9 +391,9 @@ class UpperConfidenceBound(_AcquisitionFunction):
     @property
     def scaling_factor(self):
         if self._maximize:
-            return 1
-        else:
             return -1
+        else:
+            return 1
     
     def forward(self, X_test):
         """
@@ -414,6 +414,6 @@ class UpperConfidenceBound(_AcquisitionFunction):
         mu, sigma = self._surrogate_model.predict(X_test)
 
         # calculate the upper confidence bound
-        ucb = -(self._delta * mu) - (self._beta * sigma)
+        ucb = (self._delta * mu) + (self._beta * sigma)
 
         return ucb
