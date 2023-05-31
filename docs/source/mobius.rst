@@ -13,7 +13,7 @@ to contact us.
 
    ./modules/mobius
    ./modules/emulators
-   ./modules/sampler
+   ./modules/planner
    ./modules/genetic_algorithm
    ./modules/surrogate_models
    ./modules/acquisition_functions
