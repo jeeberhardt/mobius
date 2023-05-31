@@ -10,7 +10,7 @@ from .virtual_target import VirtualTarget
 from .acquisition_functions import ExpectedImprovement, ProbabilityOfImprovement
 from .acquisition_functions import Greedy, RandomImprovement, UpperConfidenceBound
 from .mobius import Mobius
-from .sampler import PolymerSampler
+from .planner import Planner
 from .descriptors import SimplePolymerDescriptors
 from .fingerprints import MHFingerprint, Map4Fingerprint, MorganFingerprint
 from .genetic_algorithm import SequenceGA, ParallelSequenceGA, RandomGA
@@ -30,7 +30,7 @@ from .utils import convert_FASTA_to_HELM, convert_HELM_to_FASTA
 __all__ = ['VirtualTarget', 'ForceField',
            'LinearPeptideEmulator', 'FindMe',
            'Mobius',
-           'PolymerSampler',
+           'Planner',
            'GPModel', 'DummyModel', 'RFModel',
            'TanimotoSimilarityKernel',
            'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement', 'UpperConfidenceBound',

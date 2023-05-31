@@ -1,6 +1,6 @@
-Sampler
+Planner
 -------
 
-.. automodule:: mobius.sampler
+.. automodule:: mobius.planner
     :members:
     :special-members:

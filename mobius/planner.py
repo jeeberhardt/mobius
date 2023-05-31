@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Mobius - polymer sampler
+# Mobius - polymer planner
 #
 
 import yaml
@@ -13,7 +13,7 @@ import numpy as np
 from .utils import parse_helm, get_scaffold_from_helm_string
 
 
-class _Sampler(ABC):
+class _Planner(ABC):
 
     @abstractmethod
     def ask(self):
@@ -35,12 +35,12 @@ def _load_design_from_config(config_filename):
     Parameters
     ----------
     config_filename : YAML config filename
-        YAML config file containing the sampling protocol.
+        YAML config file containing the design protocol.
 
     Returns
     -------
     designs : list of designs
-        List of designs to use to optimize polymers.
+        List of designs to use during the polymer optimization.
 
     """
     designs = {}
@@ -188,7 +188,7 @@ def _load_filters_from_config(config_filename):
     Parameters
     ----------
     config_filename : YAML config filename
-        YAML config file containing the sampling protocol.
+        YAML config file containing the filter protocol.
 
     Returns
     -------
@@ -199,51 +199,50 @@ def _load_filters_from_config(config_filename):
     return _load_methods_from_config(config_filename, yaml_key='filters')
 
 
-def _load_samplers_from_config(config_filename):
+def _load_optimizers_from_config(config_filename):
     """
-    Function to load the sampler methods from the YAML config file.
+    Function to load the optimization methods from the YAML config file.
 
     Parameters
     ----------
     config_filename : YAML config filename
-        YAML config file containing the sampling protocol.
+        YAML config file containing the optimization protocol.
 
     Returns
     -------
-    samplers : list of sampling methods
-        List of sampling methods to use to optimize polymers.
+    optimizers : list of optimization methods
+        List of optimizer methods to use for optimizing polymers.
 
     """
-    return _load_methods_from_config(config_filename, yaml_key='sampling')
+    return _load_methods_from_config(config_filename, yaml_key='optimizer')
 
 
-class PolymerSampler(_Sampler):
+class Planner(_Planner):
     """
-    Class for sampling the polymers space using an acquisition function
-    and a search protocol.
+    Class for setting up the design/optimization/filter protocols.
 
     """
 
     def __init__(self, acquisition_function, config_filename):
         """
-        Initialize the polymer sampler.
+        Initialize the polymer planner.
 
         Parameters
         ----------
         acquisition_function : `AcquisitionFunction`
-            The acquisition function that will be used to score the polymer/peptide.
+            The acquisition function that will be used to score the polymers.
         config_filename : str
-            Path of the YAML config file containing the design, sampling and filters 
-            protocols for optimizing polymers/peptides.
+            Path of the YAML config file containing the design, optimization 
+            and filters protocols for optimizing polymers.
 
         Examples
         --------
 
-        >>> from mobius import PolymerSampler
-        >>> ps = PolymerSampler(acq_fun, config_filename='config.yaml')
+        >>> from mobius import Planner
+        >>> ps = Planner(acq_fun, config_filename='config.yaml')
 
         Example of `config.yaml` defining the scaffold design protocol, 
-        as well as the path of the sampling method, here mobius.SequenceGA, 
+        as well as the path of the optimizing methods, here mobius.SequenceGA, 
         and the arguments used to initialize it. Different filters can 
         also be defined to filter out polymers/peptides that do not 
         satisfy certain criteria.
@@ -264,7 +263,7 @@ class PolymerSampler(_Sampler):
                             1: [AROMATIC, NEG_CHARGED]
                             4: POLAR
                             8: [C, G, T, S, V, L, M]
-            sampling:
+            optimizer:
               - class_path: mobius.SequenceGA
                 init_args:
                   n_gen: 1000
@@ -286,7 +285,7 @@ class PolymerSampler(_Sampler):
         """
         self._acq_fun = acquisition_function
         self._designs = _load_design_from_config(config_filename)
-        self._samplers = _load_samplers_from_config(config_filename)
+        self._optimizers = _load_optimizers_from_config(config_filename)
         self._filters = _load_filters_from_config(config_filename)
 
     def ask(self, batch_size=None):
@@ -297,7 +296,7 @@ class PolymerSampler(_Sampler):
         ----------
         batch_size : int, default: None
             Total number of new polymers/peptides that will be returned. If not 
-            provided, it will return all the polymers sampled during the optimization.
+            provided, it will return all the polymers found during the optimization.
 
         Returns
         -------
@@ -313,8 +312,8 @@ class PolymerSampler(_Sampler):
         suggested_polymers = self._acq_fun.surrogate_model.X_train_original.copy()
         values = self._acq_fun.surrogate_model.y_train.copy()
 
-        for sampler in self._samplers:
-            suggested_polymers, values = sampler.run(suggested_polymers, values, self._acq_fun, self._designs)
+        for optimizer in self._optimizers:
+            suggested_polymers, values = optimizer.run(suggested_polymers, values, self._acq_fun, self._designs)
 
         # Apply filters on the suggested polymers
         if self._filters:
@@ -363,7 +362,7 @@ class PolymerSampler(_Sampler):
             Value associated to each polymer/peptide.
         batch_size : int, default: None
             Total number of new polymers/peptides that will be returned. If not 
-            provided, it will return all the polymers sampled during the optimization.
+            provided, it will return all the polymers found during the optimization.
 
         Returns
         -------

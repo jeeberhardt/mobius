@@ -14,7 +14,7 @@ First, import the required modules and functions from the Mobius package, as wel
 
     import numpy as np
 
-    from mobius import PolymerSampler, SequenceGA
+    from mobius import Planner, SequenceGA
     from mobius import Map4Fingerprint
     from mobius import GPModel, ExpectedImprovement, TanimotoSimilarityKernel
     from mobius import LinearPeptideEmulator
@@ -119,7 +119,7 @@ using the acquisition function / surrogate model initialized earlier.
               1: [AROMATIC, NEG_CHARGED]
               4: POLAR
               9: [A, V, I, L, M, T]
-    sampling:
+    oprtimizer:
       - class_path: mobius.SequenceGA
         init_args:
           n_gen: 1000
@@ -132,11 +132,11 @@ using the acquisition function / surrogate model initialized earlier.
           minimum_mutations: 1
           maximum_mutations: 5
 
-And instantiate the PolymerSampler object using the YAML configuration file and the acquisition function:
+And instantiate the Planner object using the YAML configuration file and the acquisition function:
 
 .. code-block:: python
 
-    ps = PolymerSampler(ei, 'sampling.yaml')
+    ps = Planner(ei, 'sampling.yaml')
 
 Run three Design-Make-Test cycles, iterating through the following steps:
 
