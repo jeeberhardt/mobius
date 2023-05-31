@@ -44,7 +44,7 @@ pip install -e .
 #
 
 import numpy as np
-from mobius import PolymerSampler, SequenceGA
+from mobius import Planner, SequenceGA
 from mobius import Map4Fingerprint
 from mobius import GPModel, ExpectedImprovement, TanimotoSimilarityKernel
 from mobius import LinearPeptideEmulator
@@ -121,7 +121,7 @@ design:
           1: [AROMATIC, NEG_CHARGED]
           4: POLAR
           9: [A, V, I, L, M, T]
-sampling:
+optimizer:
   - class_path: mobius.SequenceGA
     init_args:
       n_gen: 1000
@@ -145,7 +145,7 @@ filters:
 Once acquisition function / surrogate model are defined and the parameters set in the YAML 
 configuration file. We can initiate the sampling method.
 ```python
-ps = PolymerSampler(ei, 'sampling.yaml')
+ps = Planner(ei, 'sampling.yaml')
 ```
 
 Now it is time to run the optimization!!
