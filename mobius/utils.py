@@ -719,8 +719,8 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
     """
     rdkit_polymers = []
 
-    if not isinstance(HELM_strings, (list, tuple, np.ndarray)):
-            HELM_strings = [HELM_strings]
+    if not isinstance(polymers, (list, tuple, np.ndarray)):
+            polymers = [polymers]
 
     if HELMCoreLibrary_filename is None:
         d = path_module("mobius")
