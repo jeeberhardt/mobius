@@ -26,11 +26,6 @@ class _SurrogateModel(ABC):
 
     @property
     @abstractmethod
-    def X_train_original(self):
-        pass
-
-    @property
-    @abstractmethod
     def y_train(self):
         pass
 
@@ -55,16 +50,11 @@ class DummyModel(_SurrogateModel):
         self._likelihood = None
         self._model = None
         self._X_train = np.array([])
-        self._X_train_original = np.array([])
         self._y_train = np.array([])
 
     @property
     def X_train(self):
         return self._X_train
-
-    @property
-    def X_train_original(self):
-        return self._X_train_original
 
     @property
     def y_train(self):
@@ -126,7 +116,6 @@ class GPModel(_SurrogateModel):
         self._likelihood = None
         self._model = None
         self._X_train = None
-        self._X_train_original = None
         self._y_train = None
 
     @property
@@ -145,23 +134,6 @@ class GPModel(_SurrogateModel):
             raise RuntimeError(msg)
 
         return self._X_train
-
-    @property
-    def X_train_original(self):
-        """
-        Returns the original training dataset before transformation.
-        
-        Raises
-        ------
-        RuntimeError
-            If the GPModel instance is not fitted yet.
-
-        """
-        if self._X_train_original is None:
-            msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
-            raise RuntimeError(msg)
-
-        return self._X_train_original
 
     @property
     def y_train(self):
@@ -193,14 +165,12 @@ class GPModel(_SurrogateModel):
 
         """
         # Make sure that inputs are numpy arrays, keep a persistant copy
-        self._X_train_original = np.asarray(X_train).copy()
+        self._X_train = np.asarray(X_train).copy()
         self._y_train = np.asarray(y_train).copy()
 
         if self._input_transformer is not None:
             # Transform input data
-            self._X_train = self._input_transformer.transform(self._X_train_original)
-        else:
-            self._X_train = self._X_train_original
+            self._X_train = self._input_transformer.transform(self._X_train)
 
         # Convert to torch tensors
         X_train = torch.from_numpy(self._X_train).float()
@@ -314,7 +284,6 @@ class RFModel(_SurrogateModel):
         self._input_transformer = input_transformer
         self._model = None
         self._X_train = None
-        self._X_train_original = None
         self._y_train = None
         self._kwargs = kwargs
         
@@ -347,28 +316,6 @@ class RFModel(_SurrogateModel):
             raise RuntimeError(msg)
 
         return self._X_train
-
-    @property
-    def X_train_original(self):
-        """
-        Returns the original training dataset before transformation.
-        
-        Returns
-        -------
-        X_train_original : array-like of shape (n_samples, n_features)
-            The original training dataset before transformation.
-
-        Raises
-        ------
-        RuntimeError
-            If the model is not fitted yet.
-
-        """
-        if self._X_train_original is None:
-            msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
-            raise RuntimeError(msg)
-
-        return self._X_train_original
 
     @property
     def y_train(self):
@@ -405,14 +352,12 @@ class RFModel(_SurrogateModel):
 
         """
         # Make sure that inputs are numpy arrays, keep a persistant copy
-        self._X_train_original = np.asarray(X_train).copy()
+        self._X_train = np.asarray(X_train).copy()
         self._y_train = np.asarray(y_train).copy()
 
         if self._input_transformer is not None:
             # Transform input data
-            self._X_train = self._input_transformer.transform(self._X_train_original)
-        else:
-            self._X_train = self._X_train_original
+            self._X_train = self._input_transformer.transform(self._X_train)
         
         self._model = RandomForestRegressor(**self._kwargs)
         self._model.fit(self._X_train, self._y_train)

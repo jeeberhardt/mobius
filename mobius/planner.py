@@ -283,6 +283,8 @@ class Planner(_Planner):
                   charged_per_amino_acids: 5
 
         """
+        self._polymers = None
+        self._values = None
         self._acq_fun = acquisition_function
         self._designs = _load_design_from_config(config_filename)
         self._optimizers = _load_optimizers_from_config(config_filename)
@@ -308,9 +310,8 @@ class Planner(_Planner):
             returned number will be equal to `batch_size`.
 
         """
-        # Use the training set from the surrogate model as inputs for the optimization
-        suggested_polymers = self._acq_fun.surrogate_model.X_train_original.copy()
-        values = self._acq_fun.surrogate_model.y_train.copy()
+        suggested_polymers = self._polymers.copy()
+        values = self._values.copy()
 
         for optimizer in self._optimizers:
             suggested_polymers, values = optimizer.run(suggested_polymers, values, self._acq_fun, self._designs)
@@ -348,6 +349,8 @@ class Planner(_Planner):
             Values associated to each polymer/peptide.
 
         """
+        self._polymers = polymers
+        self._values = values
         self._acq_fun.surrogate_model.fit(polymers, values)
 
     def recommand(self, polymers, values, batch_size=None):
