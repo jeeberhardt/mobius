@@ -231,7 +231,7 @@ class SerialSequenceGA(_GeneticAlgorithm):
     """
 
     def __init__(self, n_gen=1000, n_children=500, temperature=0.01, elitism=True, total_attempts=50,
-                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=1, **kwargs):
+                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=None, **kwargs):
         """
         Initialize the SequenceGA optimization.
 
@@ -255,7 +255,7 @@ class SerialSequenceGA(_GeneticAlgorithm):
             Probability of mutation.
         minimum_mutations : int, default : 1
             Minimal number of mutations introduced in the new child.
-        maximum_mutations: int, default : 1
+        maximum_mutations: int, default : None
             Maximal number of mutations introduced in the new child.
 
         """
@@ -339,7 +339,7 @@ class SequenceGA(_GeneticAlgorithm):
     """
 
     def __init__(self, n_gen=1000, n_children=500, temperature=0.01, elitism=True, total_attempts=50,
-                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=1, n_process=-1, **kwargs):
+                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=None, n_process=-1, **kwargs):
         """
         Initialize the ParallelSequenceGA optimization.
 
@@ -363,7 +363,7 @@ class SequenceGA(_GeneticAlgorithm):
             Probability of mutation.
         minimum_mutations : int, default : 1
             Minimal number of mutations introduced in the new child.
-        maximum_mutations: int, default : 1
+        maximum_mutations: int, default : None
             Maximal number of mutations introduced in the new child.
         n_process : int, default : -1
             Number of process to run in parallel. Per default, use all the available core.
