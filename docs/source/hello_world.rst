@@ -84,7 +84,7 @@ an IC50 of 1 nM, a pIC50 of 1 corresponds to an IC50 of 10 nM, etc.
 
 Now that we have results from the initial lab experiment, we can start the Bayesian 
 Optimization. Define the molecular fingerprint, the surrogate model (Gaussian Process), 
-and the acquisition function (Expected Improvement):
+the acquisition function (Expected Improvement) and the optimization method (SequenceGA):
 
 .. note::
     Other molecular fingerprints, surrogate models and acquisitions functions are available. 
@@ -96,8 +96,9 @@ and the acquisition function (Expected Improvement):
     map4 = Map4Fingerprint(input_type='helm_rdkit', dimensions=4096, radius=1)
     gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
     ei = ExpectedImprovement(gpmodel, maximize=False)
+    optimizer = SequenceGA(total_attempts=5)
 
-Define the search protocol in a YAML configuration file (`sampling.yaml`) that will be used 
+Define the search protocol in a YAML configuration file (`design_protocol.yaml`) that will be used 
 to optimize peptide sequences using the acquisition function. This YAML configuration file defines the design
 protocol, which includes the peptide scaffold, linear here, and sets of monomers for some positions to be used
 during the optimization. Finally, it defines the optimizer, here SequenceGA, to optimize the peptide sequences
@@ -119,24 +120,19 @@ using the acquisition function / surrogate model initialized earlier.
               1: [AROMATIC, NEG_CHARGED]
               4: POLAR
               9: [A, V, I, L, M, T]
-    oprtimizer:
-      - class_path: mobius.SequenceGA
+    filters:
+      - class_path: mobius.PeptideSelfAggregationFilter
+      - class_path: mobius.PeptideSolubilityFilter
         init_args:
-          n_gen: 1000
-          n_children: 500
-          temperature: 0.01
-          elitism: True
-          total_attempts: 5
-          cx_points: 2
-          pm: 0.1
-          minimum_mutations: 1
-          maximum_mutations: 5
+          hydrophobe_ratio: 0.5
+          charged_per_amino_acids: 5
 
-And instantiate the Planner object using the YAML configuration file and the acquisition function:
+And instantiate the Planner object using the YAML configuration file, the acquisition function
+and the optimization method:
 
 .. code-block:: python
 
-    ps = Planner(ei, 'sampling.yaml')
+    ps = Planner(ei, optimizer, design_protocol='design_protocol.yaml')
 
 Run three Design-Make-Test cycles, iterating through the following steps:
 
