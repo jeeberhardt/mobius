@@ -95,7 +95,7 @@ the acquisition function (Expected Improvement) and the optimization methode (Se
 ```python
 map4 = Map4Fingerprint(input_type='helm_rdkit', dimensions=4096, radius=1)
 gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
-ei = ExpectedImprovement(gpmodel, maximize=False)
+acq = ExpectedImprovement(gpmodel, maximize=False)
 optimizer = SequenceGA(total_attempts=5)
 ```
 
@@ -132,7 +132,7 @@ filters:
 Once acquisition function / surrogate model are defined and the parameters set in the YAML 
 configuration file. We can initiate the planner method.
 ```python
-ps = Planner(ei, optimizer, design_protocol='design_protocol.yaml')
+ps = Planner(acq, optimizer, design_protocol='design_protocol.yaml')
 ```
 
 Now it is time to run the optimization!!

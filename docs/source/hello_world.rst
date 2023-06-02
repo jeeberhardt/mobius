@@ -95,7 +95,7 @@ the acquisition function (Expected Improvement) and the optimization method (Seq
 
     map4 = Map4Fingerprint(input_type='helm_rdkit', dimensions=4096, radius=1)
     gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
-    ei = ExpectedImprovement(gpmodel, maximize=False)
+    acq = ExpectedImprovement(gpmodel, maximize=False)
     optimizer = SequenceGA(total_attempts=5)
 
 Define the search protocol in a YAML configuration file (`design_protocol.yaml`) that will be used 
@@ -132,7 +132,7 @@ and the optimization method:
 
 .. code-block:: python
 
-    ps = Planner(ei, optimizer, design_protocol='design_protocol.yaml')
+    ps = Planner(acq, optimizer, design_protocol='design_protocol.yaml')
 
 Run three Design-Make-Test cycles, iterating through the following steps:
 
