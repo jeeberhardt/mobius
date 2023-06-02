@@ -130,7 +130,7 @@ filters:
 ```
 
 Once acquisition function / surrogate model are defined and the parameters set in the YAML 
-configuration file. We can initiate the planner method.
+configuration file, we can initiate the planner method.
 ```python
 ps = Planner(acq, optimizer, design_protocol='design_protocol.yaml')
 ```

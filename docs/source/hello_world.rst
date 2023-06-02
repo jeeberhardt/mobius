@@ -139,7 +139,7 @@ Run three Design-Make-Test cycles, iterating through the following steps:
 - Recommend 96 new peptides based on existing data using the Bayesian optimization.
 - Optionally, apply additional filtering methods to the suggested peptides.
 - Virtually test the suggested peptides using the MHC emulator (replace with actual lab experiments).
-- Update the list of tested peptides and their pIC50 scores.
+- Update the list of tested peptides and their pIC50 values.
 
 .. code-block:: python
 
