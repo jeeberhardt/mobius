@@ -199,53 +199,35 @@ def _load_filters_from_config(config_filename):
     return _load_methods_from_config(config_filename, yaml_key='filters')
 
 
-def _load_optimizers_from_config(config_filename):
-    """
-    Function to load the optimization methods from the YAML config file.
-
-    Parameters
-    ----------
-    config_filename : YAML config filename
-        YAML config file containing the optimization protocol.
-
-    Returns
-    -------
-    optimizers : list of optimization methods
-        List of optimizer methods to use for optimizing polymers.
-
-    """
-    return _load_methods_from_config(config_filename, yaml_key='optimizer')
-
-
 class Planner(_Planner):
     """
     Class for setting up the design/optimization/filter protocols.
 
     """
 
-    def __init__(self, acquisition_function, config_filename):
+    def __init__(self, acquisition_function, optimizer, design_protocol):
         """
         Initialize the polymer planner.
 
         Parameters
         ----------
-        acquisition_function : `AcquisitionFunction`
+        acquisition_function : `_AcquisitionFunction`
             The acquisition function that will be used to score the polymers.
-        config_filename : str
-            Path of the YAML config file containing the design, optimization 
-            and filters protocols for optimizing polymers.
+        optimizer : `_GeneticAlgorithm`
+            The optimizer that will be used to optimize the polymers.
+        design_protocol : str
+            Path of the YAML config file containing the design protocol 
+            (scaffolds + filters) used during polymers optimization.
 
         Examples
         --------
 
         >>> from mobius import Planner
-        >>> ps = Planner(acq_fun, config_filename='config.yaml')
+        >>> ps = Planner(acq_fun, optimizer, design_protocole='config.yaml')
 
-        Example of `config.yaml` defining the scaffold design protocol, 
-        as well as the path of the optimizing methods, here mobius.SequenceGA, 
-        and the arguments used to initialize it. Different filters can 
-        also be defined to filter out polymers/peptides that do not 
-        satisfy certain criteria.
+        Example of `config.yaml` defining the scaffold design protocol and the 
+        different filters can also be defined to filter out polymers 
+        that do not satisfy certain criteria.
 
         .. code:: yaml
 
@@ -263,18 +245,6 @@ class Planner(_Planner):
                             1: [AROMATIC, NEG_CHARGED]
                             4: POLAR
                             8: [C, G, T, S, V, L, M]
-            optimizer:
-              - class_path: mobius.SequenceGA
-                init_args:
-                  n_gen: 1000
-                  n_children: 500
-                  temperature: 0.01
-                  elitism: True
-                  total_attempts: 50
-                  cx_points: 2
-                  pm: 0.1
-                  minimum_mutations: 1
-                  maximum_mutations: 5
             filters:
               - class_path: mobius.PeptideSelfAggregationFilter
               - class_path: mobius.PeptideSolubilityFilter
@@ -286,9 +256,9 @@ class Planner(_Planner):
         self._polymers = None
         self._values = None
         self._acq_fun = acquisition_function
-        self._designs = _load_design_from_config(config_filename)
-        self._optimizers = _load_optimizers_from_config(config_filename)
-        self._filters = _load_filters_from_config(config_filename)
+        self._optimizer = optimizer
+        self._designs = _load_design_from_config(design_protocol)
+        self._filters = _load_filters_from_config(design_protocol)
 
     def ask(self, batch_size=None):
         """
@@ -311,10 +281,10 @@ class Planner(_Planner):
 
         """
         suggested_polymers = self._polymers.copy()
-        values = self._values.copy()
+        predicted_values = self._values.copy()
 
-        for optimizer in self._optimizers:
-            suggested_polymers, values = optimizer.run(suggested_polymers, values, self._acq_fun, self._designs)
+        suggested_polymers, predicted_values = self._optimizer.run(suggested_polymers, predicted_values, 
+                                                                   self._acq_fun, self._designs)
 
         # Apply filters on the suggested polymers
         if self._filters:
@@ -324,18 +294,18 @@ class Planner(_Planner):
                 passed = np.logical_and(passed, filter.apply(suggested_polymers))
 
             suggested_polymers = suggested_polymers[passed]
-            values = values[passed]
+            predicted_values = predicted_values[passed]
 
         # Sort polymers by scores in the decreasing order (best to worst)
         # We want the best score to be the lowest, so we apply a scaling 
         # factor (1 or -1). This scalng factor depends of the acquisition
         # function nature.
-        sorted_indices = np.argsort(self._acq_fun.scaling_factor * values)
+        sorted_indices = np.argsort(self._acq_fun.scaling_factor * predicted_values)
 
         suggested_polymers = suggested_polymers[sorted_indices]
-        values = values[sorted_indices]
+        predicted_values = predicted_values[sorted_indices]
 
-        return suggested_polymers[:batch_size], values[:batch_size]
+        return suggested_polymers[:batch_size], predicted_values[:batch_size]
 
     def tell(self, polymers, values):
         """

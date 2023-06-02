@@ -223,10 +223,10 @@ class _GeneticAlgorithm(ABC):
         return self.polymers, self.scores
 
 
-class SequenceGA(_GeneticAlgorithm):
+class SerialSequenceGA(_GeneticAlgorithm):
     """
-    Use GA optimization to search for new polymer candidates using 
-    the acquisition function for scoring.
+    Use Serial version of the GA optimization to search for new polymer 
+    candidates using the acquisition function for scoring.
 
     """
 
@@ -322,28 +322,12 @@ class SequenceGA(_GeneticAlgorithm):
         polymers = np.asarray(polymers)
         scores = np.asarray(scores)
 
-        groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
-
-        if len(group_indices) > 1:
-            msg = 'presence of polymers with different scaffolds. Please use ParallelSequenceGA.'
-            raise RuntimeError(msg)
-
-        # Check that the scaffold is defined
-        msg_error = f'The scaffold {list(groups.keys())[0]} is not defined.'
-        assert set(groups.keys()).issubset(scaffold_designs.keys()), msg_error
-
-        # Automatically adjust the input polymers to the scaffold designs
-        polymers, _ = adjust_polymers_to_designs(polymers, scaffold_designs)
-
         self.polymers, self.scores = super().run(polymers, scores, acquisition_function, scaffold_designs)
-
-        print(f'End SequenceGA - Best score: {self.scores[0]:5.3f}'
-              f' - {self.polymers[0]} ({self.polymers[0].count(".")})')
 
         return self.polymers, self.scores
 
 
-class ParallelSequenceGA(_GeneticAlgorithm):
+class SequenceGA(_GeneticAlgorithm):
     """
     Parallel version of the SequenceGA optimization to search for new polymer candidates 
     using the acquisition function for scoring.
@@ -468,29 +452,37 @@ class ParallelSequenceGA(_GeneticAlgorithm):
             # Recluster all of them again (easier than updating the groups)
             groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
 
-        # Take the minimal amount of CPUs needed or available
-        if self._n_process == -1:
-            self._n_process = min([os.cpu_count(), len(group_indices)])
+        seq_gao = SerialSequenceGA(**self._parameters)
 
-        # Dispatch all the scaffold accross different independent Sequence GA opt.
-        ray.init(num_cpus=self._n_process, ignore_reinit_error=True)
+        if len(group_indices) == 1:
+            # There is only one scaffold, run it on a single CPU
+            polymers, scores = seq_gao.run(polymers, scores, acquisition_function, scaffold_designs)
+        else:
+            # Take the minimal amount of CPUs needed or available
+            if self._n_process == -1:
+                self._n_process = min([os.cpu_count(), len(group_indices)])
 
-        seq_gao = SequenceGA(**self._parameters)
-        refs = [parallel_ga.remote(seq_gao, polymers[seq_ids], scores[seq_ids], acquisition_function, scaffold_designs) 
-                for _, seq_ids in group_indices.items()]
+            # Dispatch all the scaffold accross different independent Sequence GA opt.
+            ray.init(num_cpus=self._n_process, ignore_reinit_error=True)
 
-        try:
-            results = ray.get(refs)
-        except:
+            refs = [parallel_ga.remote(seq_gao, polymers[seq_ids], scores[seq_ids], acquisition_function, scaffold_designs) 
+                    for _, seq_ids in group_indices.items()]
+
+            try:
+                results = ray.get(refs)
+            except:
+                ray.shutdown()
+                sys.exit(0)
+
+            polymers, scores = zip(*results)
+            polymers = np.concatenate(polymers)
+            scores = np.concatenate(scores)
+
             ray.shutdown()
-            sys.exit(0)
-
-        polymers, scores = zip(*results)
-        ray.shutdown()
 
         # Remove duplicates
-        polymers, unique_indices = np.unique(np.concatenate(polymers), return_index=True)
-        scores = np.concatenate(scores)[unique_indices]
+        polymers, unique_indices = np.unique(polymers, return_index=True)
+        scores = scores[unique_indices]
 
         # Sort polymers by score in the decreasing order (best to worst)
         # The scores are scaled to be sure that the best has the lowest score
