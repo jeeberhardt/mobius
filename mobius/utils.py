@@ -287,7 +287,7 @@ def generate_random_linear_polymers(n_polymers, polymers_lengths, monomers=None,
 
     if monomers is None:
         # Default to the 20 natural amino acids
-        monomerss = ["A", "R", "N", "D", "C", "E", "Q", "G", 
+        monomers = ["A", "R", "N", "D", "C", "E", "Q", "G", 
                     "H", "I", "L", "K", "M", "F", "P", "S", 
                     "T", "W", "Y", "V"]
 
