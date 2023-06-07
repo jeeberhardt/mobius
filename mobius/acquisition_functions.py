@@ -5,6 +5,7 @@
 #
 
 from abc import ABC, abstractmethod
+from collections import namedtuple
 
 import numpy as np
 import ray
@@ -104,14 +105,18 @@ class RandomImprovement(_AcquisitionFunction):
 
         Returns
         -------
-        mu : ndarray of shape (n_samples, )
-            Random value for each input sample.
+        results : namedtuple
+            The results of the acquisition function returned as a namedtuple
+            with the following important attributes: `acq` random values
+            as an ndarray of shape (n_samples, ), `mu` and `sigma` are defined
+            as None.
 
         """
         X_test = np.asarray(X_test)
-        mu = np.random.uniform(low=self._low, high=self._high, size=X_test.shape[0])
+        ri = np.random.uniform(low=self._low, high=self._high, size=X_test.shape[0])
 
-        return mu
+        results = namedtuple('results', ['acq', 'mu', 'sigma'])
+        return results(ri, np.empty((ri.shape[0],)).fill(np.nan), np.empty((ri.shape[0],)).fill(np.nan))
 
 
 class Greedy(_AcquisitionFunction):
@@ -171,13 +176,17 @@ class Greedy(_AcquisitionFunction):
 
         Returns
         -------
-        mu : ndarray of shape (n_samples, )
-            The mean values predicted by the surrogate model for each input sample.
+        results : namedtuple
+            The results of the acquisition function returned as a namedtuple
+            with the following important attributes: `acq` and `mu` the 
+            predicted mean values as an ndarray of shape (n_samples, ), `sigma`
+            is defined as None.
 
         """
         mu, _ = self._surrogate_model.predict(X_test)
 
-        return mu
+        results = namedtuple('results', ['acq', 'mu', 'sigma'])
+        return results(mu, mu, np.empty((mu.shape[0],)).fill(np.nan))
 
 
 class ExpectedImprovement(_AcquisitionFunction):
@@ -243,8 +252,12 @@ class ExpectedImprovement(_AcquisitionFunction):
 
         Returns
         -------
-        ei : ndarray of shape (n_samples, )
-            Predicted Expected Improvement value for each input sample.
+        results : namedtuple
+            The results of the acquisition function returned as a namedtuple
+            with the following important attributes: `acq` the expected
+            improvement values as an ndarray of shape (n_samples, ), `mu` the
+            predicted mean values as an ndarray of shape (n_samples, ), `sigma`
+            the predicted sigma values as an ndarray of shape (n_samples, ).
 
         """
         if self._maximize:
@@ -263,7 +276,8 @@ class ExpectedImprovement(_AcquisitionFunction):
         ei = sigma * (updf + u * ucdf)
         ei[sigma == 0.0] == 0.0
 
-        return ei
+        results = namedtuple('results', ['acq', 'mu', 'sigma'])
+        return results(ei, mu, sigma)
 
 
 class ProbabilityOfImprovement(_AcquisitionFunction):
@@ -323,8 +337,12 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
 
         Returns
         -------
-        pi : ndarray of shape (n_samples, )
-            Predicted Probability of Improvement value for each input sample.
+        results : namedtuple
+            The results of the acquisition function returned as a namedtuple
+            with the following important attributes: `acq` the probability of 
+            improvement values as an ndarray of shape (n_samples, ), `mu` the
+            predicted mean values as an ndarray of shape (n_samples, ), `sigma`
+            the predicted sigma values as an ndarray of shape (n_samples, ).
 
         """
         if self._maximize:
@@ -342,7 +360,8 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
         pi = norm.cdf(u)
         pi[sigma == 0.0] == 0.0
 
-        return pi
+        results = namedtuple('results', ['acq', 'mu', 'sigma'])
+        return results(pi, mu, sigma)
 
 
 class UpperConfidenceBound(_AcquisitionFunction):
@@ -406,8 +425,12 @@ class UpperConfidenceBound(_AcquisitionFunction):
 
         Returns
         -------
-        ucb : ndarray of shape (n_samples, )
-            Predicted Upper Confidence Bound value for each input sample.
+        results : namedtuple
+            The results of the acquisition function returned as a namedtuple
+            with the following important attributes: `acq` the upper confidence
+            bound values as an ndarray of shape (n_samples, ), `mu` the
+            predicted mean values as an ndarray of shape (n_samples, ), `sigma`
+            the predicted sigma values as an ndarray of shape (n_samples, ).
 
         """
         # calculate mean and stdev via surrogate function
@@ -416,4 +439,5 @@ class UpperConfidenceBound(_AcquisitionFunction):
         # calculate the upper confidence bound
         ucb = (self._delta * mu) + (self._beta * sigma)
 
-        return ucb
+        results = namedtuple('results', ['acq', 'mu', 'sigma'])
+        return results(ucb, mu, sigma)
