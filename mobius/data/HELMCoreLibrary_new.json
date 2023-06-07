@@ -2356,5 +2356,31 @@
         "id": 0, 
         "polymerType": "PEPTIDE", 
         "symbol": "Me-"
+    },
+    {
+        "monomerType": "Backbone", 
+        "smiles": "COc1ccc(C[C@H](N[*])C([*])=O)cc1 |$;;;;;;;;;_R1;;_R2;;;$|", 
+        "name": "(2S)-2-amino-3-(4-methoxyphenyl)propanoic acid", 
+        "author": "Pistoia Alliance HELM project", 
+        "molfile": "HELM Core Monomer library\n     RDKit          2D\n\n 15 15  0  0  1  0  0  0  0  0999 V2000\n    0.0000    2.4750    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    2.0625    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145    1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -0.4125    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7145   -1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289   -1.6500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4289   -2.4750    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -2.8875    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -1.2375    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.8579   -1.6500    0.0000 R#  0  0  0  0  0  0  0  0  0  0  0  0\n    2.1434   -0.4125    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0000    0.8250    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  2  0\n  4  5  1  0\n  5  6  2  0\n  6  7  1  0\n  8  7  1  0\n  8  9  1  1\n  9 10  1  0\n  8 11  1  0\n 11 12  1  0\n 11 13  2  0\n  6 14  1  0\n 14 15  2  0\n  3 15  1  0\nM  RGP  2  10   1  12   2\nM  END\n", 
+        "naturalAnalog": "Y", 
+        "rgroups": [
+            {
+                "capGroupSmiles": "[*:1][H]", 
+                "alternateId": "R1-H", 
+                "capGroupName": "H", 
+                "label": "R1"
+            }, 
+            {
+                "capGroupSmiles": "O[*:2]", 
+                "alternateId": "R2-OH", 
+                "capGroupName": "OH", 
+                "label": "R2"
+            }
+        ], 
+        "createDate": null, 
+        "id": 0, 
+        "polymerType": "PEPTIDE", 
+        "symbol": "Tyr_Me"
     }
 ]
