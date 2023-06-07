@@ -176,13 +176,14 @@ class _GeneticAlgorithm(ABC):
                 continue
 
             # Evaluate new polymers
-            polymers_to_evaluate_scores = acquisition_function.forward(polymers_to_evaluate)
+            results = acquisition_function.forward(polymers_to_evaluate)
+            polymers_to_evaluate_scores = results.acq
 
-            # Get scores of known polymers
+            # Get scores of already known polymers
             polymers_known = list(set(polymers).intersection(polymers_cache.keys()))
             polymers_known_scores = [polymers_cache[s] for s in polymers_known]
 
-            # New population (known + unseen polymers)
+            # Put back together scores and polymers (already seen and evaluated new ones)
             polymers = polymers_known + polymers_to_evaluate
             scores = np.concatenate([polymers_known_scores, polymers_to_evaluate_scores])
 
