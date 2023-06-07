@@ -109,11 +109,11 @@ using the acquisition function / surrogate model initialized earlier.
     design:
       monomers: 
         default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
-          APOLAR: [A, F, G, I, L, P, V, W]
-          POLAR: [C, D, E, H, K, N, Q, R, K, S, T, M]
-          AROMATIC: [F, H, W, Y]
-          POS_CHARGED: [K, R]
-          NEG_CHARGED: [D, E]
+        APOLAR: [A, F, G, I, L, P, V, W]
+        POLAR: [C, D, E, H, K, N, Q, R, K, S, T, M]
+        AROMATIC: [F, H, W, Y]
+        POS_CHARGED: [K, R]
+        NEG_CHARGED: [D, E]
       scaffolds:
         - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
             PEPTIDE1:
@@ -136,10 +136,10 @@ and the optimization method:
 
 Run three Design-Make-Test cycles, iterating through the following steps:
 
-- Recommend 96 new peptides based on existing data using the Bayesian optimization.
-- Optionally, apply additional filtering methods to the suggested peptides.
-- Virtually test the suggested peptides using the MHC emulator (replace with actual lab experiments).
-- Update the list of tested peptides and their pIC50 values.
+#. Recommend 96 new peptides based on existing data using the Bayesian optimization.
+#. Optionally, apply additional filtering methods to the suggested peptides.
+#. Virtually test the suggested peptides using the MHC emulator (replace with actual lab experiments).
+#. Update the list of tested peptides and their pIC50 values.
 
 .. code-block:: python
 
