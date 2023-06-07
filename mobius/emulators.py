@@ -20,7 +20,7 @@ class _Emulator(ABC):
     """Abstract class for defining an emulator"""
 
     @abstractmethod
-    def predict(self):
+    def score(self):
         raise NotImplementedError()
 
 
@@ -82,7 +82,7 @@ class FindMe(_Emulator):
 
         self._target_polymer_transformed = torch.from_numpy(np.asarray(target_polymer_transformed)).float()
 
-    def predict(self, polymers, input_type='helm'):
+    def score(self, polymers, input_type='helm'):
         """
         Score the input polymers according to the unknown target polymers 
         using the `kernel` and the `input_transformer`.
@@ -152,7 +152,7 @@ class LinearPeptideEmulator(_Emulator):
             self._pssm[len(pssm.columns)] = pssm
             self._intercept[len(pssm.columns)] = intercept
 
-    def predict(self, peptides, input_type='helm'):
+    def score(self, peptides, input_type='helm'):
         """
         Score the input peptides using the previously defined PSSM.
         
