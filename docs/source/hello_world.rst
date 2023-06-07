@@ -104,7 +104,8 @@ the acquisition function (Expected Improvement) and the optimization method (Seq
     optimizer = SequenceGA(total_attempts=5)
 
 Define the search protocol in a YAML configuration file (`design_protocol.yaml`) that will be used 
-to optimize peptide sequences using the acquisition function. This YAML configuration file defines the design
+to optimize peptide sequences using the acquisition function. See the :ref:`design_protocol` section
+for more details about the design protocol. This YAML configuration file defines the design
 protocol, which includes the peptide scaffold, linear here, and sets of monomers for some positions to be used
 during the optimization. Finally, it defines the optimizer, here SequenceGA, to optimize the peptide sequences
 using the acquisition function / surrogate model initialized earlier.
