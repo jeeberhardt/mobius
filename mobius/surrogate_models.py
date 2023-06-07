@@ -176,9 +176,7 @@ class GPModel(_SurrogateModel):
         X_train = torch.from_numpy(self._X_train).float()
         y_train = torch.from_numpy(self._y_train).float()
 
-        # Set noise_prior to None, otherwise cannot pickle GPModel
-        noise_prior = None
-        #noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
+        noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
         self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
         self._model = _ExactGPModel(X_train, y_train, self._likelihood, self._kernel)
 
