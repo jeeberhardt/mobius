@@ -15,7 +15,7 @@ dependencies:
   - seaborn
   - scikit-learn
   - scipy
-  - sphinx
+  - sphinx == 6.2.1
   - sphinx_rtd_theme
   - pytorch
   - pip:
