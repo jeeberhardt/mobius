@@ -8,6 +8,7 @@ dependencies:
   - gpytorch
   - matplotlib
   - numpy
+  - numpydoc
   - pandas
   - pip
   - rdkit
