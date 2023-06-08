@@ -11,8 +11,8 @@ Capable of handling arbitrary peptide scaffolds (such as macrocycles and branche
 structures) and non-natural amino acids using the HELM notation, Mobius offers a
 variety of peptide scanning strategies (including alanine, random, homolog, and 
 property-based scanning) for generating the initial batch of peptides. It also 
-features multiple surrogate models (Gaussian Process and Random Forest), acquisition 
-functions, and a range of sequence descriptors.
+features multiple acquisition functions, and a range of different fingerprint methods 
+and sequence descriptors.
 
 Flexible and modular, Mobius can be easily extended to accommodate custom surrogate 
 models and descriptors, ensuring adaptability to specific needs and requirements.
