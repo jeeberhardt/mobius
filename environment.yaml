@@ -1,0 +1,22 @@
+name: mobius
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python >=3.7
+  - botorch
+  - gpytorch
+  - matplotlib
+  - numpy
+  - pandas
+  - pip
+  - rdkit
+  - seaborn
+  - scikit-learn
+  - scipy
+  - sphinx
+  - sphinx_rtd_theme
+  - torch
+  - pip:
+    mhfp
+    ray
