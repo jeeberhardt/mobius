@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python >=3.7
+  - python <=3.10
   - botorch
   - gpytorch
   - matplotlib
@@ -16,7 +16,7 @@ dependencies:
   - scipy
   - sphinx
   - sphinx_rtd_theme
-  - torch
+  - pytorch
   - pip:
-    mhfp
-    ray
+    - mhfp
+    - ray
