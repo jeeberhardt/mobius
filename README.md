@@ -129,7 +129,7 @@ for i in range(3):
 
 ## Documentation
 
-Coming soon...
+The installation instructions, documentation and tutorials can be found on [readthedocs.org](https://mobius.readthedocs.io/en/master/index.html).
 
 ## Citation
 
