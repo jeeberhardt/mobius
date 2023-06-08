@@ -149,4 +149,4 @@ Coming soon...
 
 ## Citation
 
-* [J. Eberhardt, M. Lill, T. Schwede. (2023). Combining Bayesian optimization with sequence- or structure-based strategies for optimization of peptide-binding protein.](https://chemrxiv.org/engage/chemrxiv/article-details/6480388be64f843f4173003)
+* [J. Eberhardt, M. Lill, T. Schwede. (2023). Combining Bayesian optimization with sequence- or structure-based strategies for optimization of peptide-binding protein.](https://doi.org/10.26434/chemrxiv-2023-b7l81)
