@@ -28,12 +28,17 @@ Now, create a simple linear peptide emulator for MHC class I HLA-A*02:01.
     with actual lab experiments. See list of other available emulators in the 
     :ref:`mobius` section.
 
+.. note::
+    The Position Specific Scoring Matrix (PSSM) files used to initialize the emulator are
+    available in the `IEDB <http://tools.iedb.org/mhci/download/>`_ database. Click on the 
+    following link to directly download the PSSM files: `IEDB_MHC_I-2.9_matx_smm_smmpmbec.zip <http://tools.immuneepitope.org/static/download/IEDB_MHC_I-2.9_matx_smm_smmpmbec.tar.gz>`_.
+
 .. code-block:: python
 
-    pssm_files = ['data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-8.txt',
-                  'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-9.txt',
-                  'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-10.txt',
-                  'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-11.txt']
+    pssm_files = ['IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-8.txt',
+                  'IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-9.txt',
+                  'IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-10.txt',
+                  'IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-11.txt']
     lpe = LinearPeptideEmulator(pssm_files)
 
 Define the peptide sequence to optimize, and convert it to HELM format. Mobius uses internally

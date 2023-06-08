@@ -34,9 +34,11 @@ from mobius import homolog_scanning, alanine_scanning
 from mobius import convert_FASTA_to_HELM
 
 
-# Simple linear peptide emulator/oracle for MHC class I A*0201
-# WARNING: This is for benchmarking purpose only. This step
-# should be an actual lab experiment.
+# Simple linear peptide emulator/oracle for MHC class I A*0201. 
+# The Position Specific Scoring Matrices (PSSM) can be downloaded from the 
+# IEDB database (http://tools.iedb.org/mhci/download/). WARNING: This is 
+# for benchmarking purpose only. This step should be an 
+actual lab experiment.
 pssm_files = ['data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-8.txt',
               'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-9.txt',
               'data/mhc/IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-10.txt',
