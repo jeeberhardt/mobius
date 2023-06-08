@@ -23,15 +23,13 @@ Mobius requires a number of Python packages, notably:
 Instructions
 ------------
 
-I highly recommand you to install Miniconda (https://docs.conda.io/en/latest/miniconda.html) if you want a 
-clean python environnment. To install everything properly with `conda`, you just have to do this:
+I highly recommand you to install Mamba (https://github.com/conda-forge/miniforge#mambaforge) if you want 
+a clean python environnment. To install everything properly with `mamba`, you just have to do this:
 
 .. code-block:: bash
 
-    conda create -n mobius -c conda-forge python=3 mkl numpy scipy pandas matplotlib \
-        rdkit seaborn sklearn torch botorch gpytorch sphinx sphinx_rtd_theme
-    conda activate mobius
-    pip install ray mhfp
+    mamba env create -f environment.yaml -n mobius
+    mamba activate mobius
 
 We can now install the `mobius` package
 

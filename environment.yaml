@@ -8,13 +8,14 @@ dependencies:
   - gpytorch
   - matplotlib
   - numpy
+  - numpydoc
   - pandas
   - pip
   - rdkit
   - seaborn
   - scikit-learn
   - scipy
-  - sphinx
+  - sphinx == 6.2.1
   - sphinx_rtd_theme
   - pytorch
   - pip:
