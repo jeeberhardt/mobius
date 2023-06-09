@@ -1,7 +1,7 @@
 .. _custom_features:
 
-Add custom features and fingerprints
-=====================================
+Add custom fingerprints
+=======================
 
 Choosing the right molecular representation is a reccurrent topic in cheminformatics 
 and computational chemistry. Very often the molecular representation is highly 
