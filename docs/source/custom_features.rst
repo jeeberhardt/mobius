@@ -89,7 +89,7 @@ we can create our own fingerprint class, named `MolFeat`` as follow:
             return fps
 
 And voila! We have our own fingerprint class that we can use in combination with
-the `GaussianProcessRegression` class. Let's see how it works in practice on the
+the Gaussian Process Regression method. Let's see how it works in practice on the
 MHC class I dataset!
 
 We start first by importing the necessary packages and functions:
