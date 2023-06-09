@@ -3,16 +3,18 @@
 Add custom fingerprints
 =======================
 
-Choosing the right molecular representation is a reccurrent topic in cheminformatics 
-and computational chemistry. Very often the molecular representation is highly 
-dependent on the task at hand. And one simple way to deal that issue is usually to try out
-different representations and see which one works best and give your the optimal
-performance.
+Navigating the world of cheminformatics and computational chemistry, you'll often 
+bump into the topic of choosing just the right molecular representation. It's a 
+bit like choosing the right tool for a job - the best pick can depend heavily on 
+the task you're tackling! One straightforward strategy is to play around with 
+different representations, trying them on for size to see which one fits your task 
+the best and yields optimal performance.
 
-Here in this example, we are going to show you how to use your own features and
-fingerprints in combination with a Gaussian Process Regression model using the
-`molfeat` python package. For more detailed information about this package, please 
-refer to the `molfeat documentation <https://molfeat-docs.datamol.io/stable/>`_.
+In the next part of our journey, we're going to roll up our sleeves and dive into 
+how you can blend your own features and fingerprints with a Gaussian Process Regression 
+model, all with the help of our friendly Python companion, the molfeat package. For 
+those craving a deeper understanding of molfeat, feel free to pop over to the 
+`molfeat documentation <https://molfeat-docs.datamol.io/stable/>`_.
 
 To install the package, you can use the following command:
 
@@ -22,8 +24,9 @@ To install the package, you can use the following command:
     mamba install -c conda-forge molfeat
 
 
-One of the nice things about this package, is that it comes with a large variety 
-of features and fingerprints that you can use out of the box. See the list below:
+One of the delightful aspects of the `molfeat` package is its extensive wardrobe of 
+ready-to-use features and fingerprints. It's like a treasure trove waiting to be 
+explored. Check out the list below to see what's in store:
 
 .. code-block:: python
 
@@ -34,8 +37,10 @@ of features and fingerprints that you can use out of the box. See the list below
     # 'rdkit-count', 'ecfp-count', 'fcfp-count', 'topological-count', 'atompair-count'])
 
 
-Using the `Map4fingerprint` class as template (see source code `here <https://git.scicore.unibas.ch/schwede/mobius/-/blob/master/mobius/fingerprints.py#L112>`_), 
-we can create our own fingerprint class, named `MolFeat`` as follow:
+Leveraging the Map4Fingerprint class as a template (source code available 
+`here <https://git.scicore.unibas.ch/schwede/mobius/-/blob/master/mobius/fingerprints.py#L112>`) 
+we can craft our very own fingerprint class. Let's call it `MolFeat`, and create 
+it as shown below:
 
 .. code-block:: python
 
@@ -88,11 +93,11 @@ we can create our own fingerprint class, named `MolFeat`` as follow:
 
             return fps
 
-And voila! We have our own fingerprint class that we can use in combination with
-the Gaussian Process Regression method. Let's see how it works in practice on the
-MHC class I dataset!
+And there you have it! We've now created our very own fingerprint class that can 
+be used in harmony with the Gaussian Process Regression method. Now, let's take 
+it for a spin and see it in action on the MHC class I dataset!
 
-We start first by importing the necessary packages and functions:
+First things first, let's import the necessary packages and functions:
 
 .. code-block:: python
 
@@ -132,7 +137,8 @@ We then read the MHC class I dataset and split it into training and testing sets
                                                         mhci['pic50'][::10].values, 
                                                         test_size=0.30, random_state=42)
 
-We can now train our GPR model using the `Molfeat` class using different fingerprint methods:
+With everything set up, we're ready to train our Gaussian Process Regression (GPR) 
+model using the MolFeat class, employing a variety of fingerprint methods:
 
 .. code-block:: python
     
@@ -156,6 +162,8 @@ We can now train our GPR model using the `Molfeat` class using different fingerp
     # secfp -- r2: 0.374 - RMSD: 1.084
     # rdkit -- r2: 0.312 - RMSD: 1.136
 
-As you can see some fingerprint methods better perform better than others, with the
-MACCS fingerprint performing the worst with a R^2 or 0.191 and a RMSD of 1.231, compared 
-to fcfp with a R^2 of 0.406 and a RMSD of 1.055.
+As is evident, the performance varies among different fingerprint methods. The
+MACCS fingerprint method turns out to be the underperformer here, scoring an 
+R^2 of 0.191 and an RMSD of 1.231. On the other hand, the fcfp method puts 
+up a more impressive show with an R^2 of 0.406 and an RMSD of 1.055, however
+it's still not that great. Clearly, there is some room for improvement!
