@@ -10,7 +10,7 @@ build-package-job:
   script:
     - pip install twine
     - python3 setup.py sdist
-    - python3 twine check dist/*
-    - python3 twine upload dist/*
+    - twine check dist/*
+    - twine upload dist/*
   only:
     - tags
