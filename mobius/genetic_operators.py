@@ -93,10 +93,10 @@ class GeneticOperators:
                 if minimum_mutations == maximum_mutations:
                     number_mutations = maximum_mutations
                 elif maximum_mutations is None:
-                    number_mutations = self._rng.integers(low=minimum_mutations, high=len(simple_polymer))
+                    number_mutations = self._rng.integers(low=minimum_mutations, high=len(possible_positions))
                 else:
                     # The maximum number of mutations cannot be greater than the length of the polymer
-                    tmp_maximum_mutations = np.min([maximum_mutations, len(simple_polymer)])
+                    tmp_maximum_mutations = np.min([maximum_mutations, len(possible_positions)])
                     number_mutations = self._rng.integers(low=minimum_mutations, high=tmp_maximum_mutations)
 
                 # Choose positions to mutate
@@ -182,8 +182,8 @@ class GeneticOperators:
             for cx_position in cx_positions:
                 simple_polymer1[cx_position:], simple_polymer2[cx_position:] = simple_polymer2[cx_position:], simple_polymer1[cx_position:]
 
-            mutant_complex_polymer1[pid] = ''.join(simple_polymer1)
-            mutant_complex_polymer2[pid] = ''.join(simple_polymer2)
+            mutant_complex_polymer1[pid] = simple_polymer1
+            mutant_complex_polymer2[pid] = simple_polymer2
 
         mutant_polymer1 = build_helm_string(mutant_complex_polymer1, connections1)
         mutant_polymer2 = build_helm_string(mutant_complex_polymer2, connections2)
