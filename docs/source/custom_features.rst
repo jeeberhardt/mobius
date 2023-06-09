@@ -38,7 +38,7 @@ explored. Check out the list below to see what's in store:
 
 
 Leveraging the Map4Fingerprint class as a template (source code available 
-`here <https://git.scicore.unibas.ch/schwede/mobius/-/blob/master/mobius/fingerprints.py#L112>`) 
+`here <https://git.scicore.unibas.ch/schwede/mobius/-/blob/master/mobius/fingerprints.py#L112>`_) 
 we can craft our very own fingerprint class. Let's call it `MolFeat`, and create 
 it as shown below:
 
