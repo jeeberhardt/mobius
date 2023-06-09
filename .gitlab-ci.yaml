@@ -1,0 +1,15 @@
+stages:
+  - build
+
+before_script:
+  - pip install --upgrade pip
+
+build-package-job:
+  stage: build
+  image: python:3.10
+  script:
+    - pip install twine
+    - python3 setup.py sdist
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python3 -m twine upload --repository-url https://git.scicore.unibas.ch/api/v4/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+  only:
+    - tags
