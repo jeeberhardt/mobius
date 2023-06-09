@@ -682,9 +682,12 @@ def get_scaffold_from_helm_string(polymer):
     complex_polymer, connections, _, _ = parse_helm(polymer)
 
     for pid, simple_polymer in complex_polymer.items():
+        # Need to define dtype based on the longest monomer symbol in the simple polymer
+        dtype = f'U{len(max(simple_polymer, key=len))}'
+
         # Transform the simple polymer into a scaffold version
         # (X represents an unknown monomer in the HELM notation)
-        scaffold_complex_polymer[pid] = np.array(['X'] * len(simple_polymer))
+        scaffold_complex_polymer[pid] = np.array(['X'] * len(simple_polymer), dtype=dtype)
 
         if connections.size > 0:
             # Get all the connections in this polymer
