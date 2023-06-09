@@ -732,6 +732,8 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
     # Re-organize monomer data in a dictionary for faster access
     HELMCoreLibrary = {monomer['symbol']: monomer for monomer in data}
 
+    RDLogger.DisableLog('rdApp.warning')
+
     for polymer in polymers:
         molecules_to_zip = []
 
@@ -862,8 +864,6 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
         with Chem.RWMol() as rw_polymer:
             [rw_polymer.InsertMol(molecule) for molecule in molecules_to_zip]
 
-        RDLogger.DisableLog('rdApp.warning')
-
         # Bop-it, Twist-it, Pull-it and Zip-it!
         rdkit_polymer = Chem.molzip(rw_polymer)
 
@@ -873,9 +873,9 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
         params.removeDegreeZero = True
         rdkit_polymer = Chem.RemoveHs(rdkit_polymer, params)
 
-        RDLogger.EnableLog('rdApp.warning')
-
         rdkit_polymers.append(rdkit_polymer)
+    
+    RDLogger.EnableLog('rdApp.warning')
 
     return rdkit_polymers
 
