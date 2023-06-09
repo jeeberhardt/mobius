@@ -684,7 +684,7 @@ def get_scaffold_from_helm_string(polymer):
     for pid, simple_polymer in complex_polymer.items():
         # Transform the simple polymer into a scaffold version
         # (X represents an unknown monomer in the HELM notation)
-        scaffold_complex_polymer[pid] = 'X' * len(simple_polymer)
+        scaffold_complex_polymer[pid] = np.array(['X'] * len(simple_polymer))
 
         if connections.size > 0:
             # Get all the connections in this polymer

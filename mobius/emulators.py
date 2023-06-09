@@ -110,7 +110,7 @@ class FindMe(_Emulator):
             assert input_type.lower() in ['fasta', 'helm'], msg_error % input_type
 
             if input_type == 'fasta':
-                polymer = convert_FASTA_to_HELM(polymers)
+                polymers = convert_FASTA_to_HELM(polymers)
 
         if not isinstance(polymers, (list, tuple, np.ndarray)):
             polymers = [polymers]
