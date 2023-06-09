@@ -1,0 +1,16 @@
+stages:
+  - build
+
+before_script:
+  - pip install --upgrade pip
+
+build-package-job:
+  stage: build
+  image: python:3.10
+  script:
+    - pip install twine
+    - python3 setup.py sdist
+    - twine check dist/*
+    - twine upload dist/*
+  only:
+    - tags
