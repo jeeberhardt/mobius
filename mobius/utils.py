@@ -727,13 +727,13 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
 
     if HELMCoreLibrary_filename is None:
         d = path_module("mobius")
-        HELMCoreLibrary_filename = os.path.join(d, "data/HELMCoreLibrary_new.json")
+        HELMCoreLibrary_filename = os.path.join(d, "data/chembl_32_monomer_library.json")
 
     with open(HELMCoreLibrary_filename) as f:
         data = json.load(f)
 
     # Re-organize monomer data in a dictionary for faster access
-    HELMCoreLibrary = {monomer['symbol']: monomer for monomer in data}
+    HELMCoreLibrary = {monomer['MonomerID']: monomer for monomer in data}
 
     RDLogger.DisableLog('rdApp.warning')
 
@@ -756,11 +756,12 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
                     monomer_data = HELMCoreLibrary[monomer_symbol]
                 except KeyError:
                     error_msg = 'Error: monomer %s unknown.' % monomer_symbol
-                    print(error_msg)
+                    raise KeyError(error_msg)
+                    #print(error_msg)
 
                 # Read SMILES string
-                monomer = Chem.MolFromSmiles(monomer_data['smiles'])
-                assert monomer is not None, 'Error: invalid monomer SMILES (%s) for %s' % (monomer_data['smiles'], monomer_symbol)
+                monomer = Chem.MolFromSmiles(monomer_data['MonomerSmiles'])
+                assert monomer is not None, 'Error: invalid monomer SMILES (%s) for %s' % (monomer_data['MonomerSmiles'], monomer_symbol)
 
                 #print(monomer_symbol, (i + 1), HELMCoreLibrary[monomer_symbol]['smiles'])
 
@@ -778,8 +779,8 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
                 #print('Non-canonical attachments: ', non_canonical_points)
 
                 # Get all the canonical attachment points (not involved in a non-canonical attachment)
-                for r in monomer_data['rgroups']:
-                    label = '_%s' % r['label']
+                for r in monomer_data['Attachments']:
+                    label = '_%s' % r['AttachmentLabel']
 
                     if label not in non_canonical_points:
                         monomer_cap = None
@@ -788,8 +789,8 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
                         if label == '_R1':
                             if i == 0:
                                 # If it is the first monomer and R1 is not involved in a non-canonical connections, then add cap
-                                key = '%s_%d_%s' % (pid, (i + 1), r['label'])
-                                monomer_cap_smiles = r['capGroupSmiles']
+                                key = '%s_%d_%s' % (pid, (i + 1), r['AttachmentLabel'])
+                                monomer_cap_smiles = r['CapGroupSmiles']
                             else:
                                 # Look at R2 of the previous monomer and check if not involved in a non-canonical connections
                                 r2_1 = np.where((connections['SourcePolymerID'] == pid) & (connections['SourceMonomerPosition'] == i) & (connections['SourceAttachment'] == 'R2'))[0]
@@ -797,8 +798,8 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
 
                                 if r2_1.size or r2_2.size:
                                     # R2_previous monomer involved in non-canonical connection 
-                                    key = '%s_%d_%s' % (pid, (i + 1), r['label'])
-                                    monomer_cap_smiles = r['capGroupSmiles']
+                                    key = '%s_%d_%s' % (pid, (i + 1), r['AttachmentLabel'])
+                                    monomer_cap_smiles = r['CapGroupSmiles']
                                     #print('R2 of previous monomer involved in a non-canonical attachments!!')
                                 else:
                                     # Canonical connection between R2_previous and R1_current monomers
@@ -806,8 +807,8 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
                         elif label == '_R2':
                             if i == number_monomers - 1:
                                 # If it is the last monomer and R2 is not involved in non-canonical connections, then add cap
-                                key = '%s_%d_%s' % (pid, (i + 1), r['label'])
-                                monomer_cap_smiles = r['capGroupSmiles']
+                                key = '%s_%d_%s' % (pid, (i + 1), r['AttachmentLabel'])
+                                monomer_cap_smiles = r['CapGroupSmiles']
                             else:
                                 # Look at R1 of the next monomer and check if not involved in a non-canonical connections
                                 r1_1 = np.where((connections['SourcePolymerID'] == pid) & (connections['SourceMonomerPosition'] == (i + 2)) & (connections['SourceAttachment'] == 'R1'))[0]
@@ -815,16 +816,16 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
 
                                 if r1_1.size or r1_2.size:
                                     # R1_next monomer involved in non-canonical connection 
-                                    key = '%s_%d_%s' % (pid, (i + 1), r['label'])
-                                    monomer_cap_smiles = r['capGroupSmiles']
+                                    key = '%s_%d_%s' % (pid, (i + 1), r['AttachmentLabel'])
+                                    monomer_cap_smiles = r['CapGroupSmiles']
                                     #print('R1 of next monomer involved in a non-canonical attachments!!')
                                 else:
                                     # Canonical connection between R2_current and R2_next monomers
                                     key = '%s_%d_%d' % (pid, (i + 1), (i + 2))
                         else:
                             # For every R3, R4,... not involved in a non-canonical connections
-                            key = '%s_%d_%s' % (pid, (i + 1), r['label'])
-                            monomer_cap_smiles = r['capGroupSmiles']
+                            key = '%s_%d_%s' % (pid, (i + 1), r['AttachmentLabel'])
+                            monomer_cap_smiles = r['CapGroupSmiles']
 
                         canonical_points[label] = (key, monomer_cap_smiles)
 
