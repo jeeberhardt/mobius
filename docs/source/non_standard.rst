@@ -5,17 +5,16 @@ Macrocycles and non-standard monomers
 
 Are you weary of those flashy, `Selling Sunset` methods that promise the world 
 but fall short, functioning solely on linear peptides with the same old 20 
-standard-amino acids? I feel you. It's like being served a bland meal after 
-reading a mouth-watering menu. That's exactly why `mobius` was created. Designed 
-to bring the zest back into your peptide optimization work, boldly stepping 
-outside the box. It natively handles complex peptide scaffolds, embracing 
-non-natural amino acids. With `mobius`, the peptide optimization world is 
-your oyster, ready to be explored beyond the limitations of standard amino acids.
+standard-amino acids? I feel you. That's exactly why `mobius` was created.
+It natively handles complex peptide scaffolds, embracing non-natural amino acids. 
+With `mobius`, the peptide optimization world is your oyster, ready to be explored 
+beyond the limitations of standard amino acids.
 
-Ready to dive in? Excellent! Let's roll up our sleeves and get to work. We're 
+Ready to dive in? Excellent! To show you some of `mobius` capabilities we're 
 going to kick things off with a simple (albeit not entirely realistic) example. 
 For this exercice, we are going to take a ramdom macrocycle peptides containing 
-non-natural amino acids from the `CycPeptMPDB <http://cycpeptmpdb.com/>`_:
+non-natural amino acids from the `CycPeptMPDB <http://cycpeptmpdb.com/>`_, that 
+try to find it back starting from a peptide containing only standard amino-acids.
 
 .. code-block:: python
 
@@ -31,11 +30,16 @@ non-natural amino acids from the `CycPeptMPDB <http://cycpeptmpdb.com/>`_:
     target = 'PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0'
 
 In our quest to rediscover the target sequence from just standard amino acids, we'll 
-have to keep in mind that while mobius is a robust tool, it doesn't possess magical 
-abilities (at least not yet!). So, we're proceeding with a couple of assumptions:
+have to keep in mind that while mobius is able to do a lot of things, it doesn't possess 
+magical abilities (at least not yet!). So, we're proceeding with a couple of assumptions:
 
-#. We're already informed about the peptide scaffold (a 10-mer with a link between monomers 4 and 10).
+#. We're already informed about the peptide scaffold (10-mer, link between monomers 4 and 10).
 #. We know the non-standard amino acids that need to be integrated into the mix.
+
+.. note::
+
+    While `mobius` does not do scaffold hopping on its own, you could define multiple 
+    scaffolds to be explored during the optimization (see :ref:`design_protocol`).
 
 To simulate a closed-loop Design-Make-Test optimization cycle, we're going to harness 
 the power of the FindMe emulator. This clever tool works by setting up a target 
