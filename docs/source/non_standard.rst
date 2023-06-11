@@ -69,12 +69,12 @@ by applying the alanine and homolog scanning methods.
 
     lead = 'PEPTIDE1{E.P.L.T.A.K.I.G.L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0'
 
-    seed_library = [lead_peptide]
+    seed_library = [lead]
 
-    for seq in alanine_scanning(lead_peptide):
+    for seq in alanine_scanning(lead):
         seed_library.append(seq)
 
-    for seq in homolog_scanning(lead_peptide):
+    for seq in homolog_scanning(lead):
         seed_library.append(seq)
 
         if len(seed_library) >= 96:
