@@ -30,8 +30,8 @@ non-natural amino acids from the `CycPeptMPDB <http://cycpeptmpdb.com/>`_:
     # See http://cycpeptmpdb.com/peptides/id_7170/ for more information
     target = 'PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0'
 
-In our quest to rediscover murepavidin from just standard amino acids, we'll have 
-to keep in mind that while mobius is a robust tool, it doesn't possess magical 
+In our quest to rediscover the target sequence from just standard amino acids, we'll 
+have to keep in mind that while mobius is a robust tool, it doesn't possess magical 
 abilities (at least not yet!). So, we're proceeding with a couple of assumptions:
 
 #. We're already informed about the peptide scaffold (a 10-mer with a link between monomers 4 and 10).
