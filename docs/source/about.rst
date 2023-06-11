@@ -15,9 +15,9 @@ facilitate the generation of an initial batch of peptides, enabling you to
 jumpstart your optimization project. Moreover, Mobius features an array of 
 fingerprint methods that are adaptable to a wide spectrum of peptide types.
 
-`Mobius` shines in its flexibility and modularity, allowing for seamless integration 
-with custom surrogate models, fingerprint methods, and filters. This ensures 
-that Mobius can be tailored to meet the specific demands and requirements of 
+`Mobius` shines in its flexibility and modularity, allowing for seamless 
+integration with custom surrogate models, fingerprint methods. This ensures 
+that `Mobius` can be tailored to meet the specific demands and requirements of 
 your peptide optimization projects.
 
 The source code is available under the Apache license at `https://git.scicore.unibas.ch/schwede/mobius <https://git.scicore.unibas.ch/schwede/mobius>`_.
