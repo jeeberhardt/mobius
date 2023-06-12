@@ -1,6 +1,6 @@
 [project]
 name = "moebius"
-version = "0.3.dev1"
+version = "0.3.dev2"
 description = "Python package for optimizing peptide sequences using Bayesian optimization (BO)"
 authors = [
     { name = "Jerome Eberhardt", email = "jerome.eberhardt@unibas.ch" },
@@ -8,7 +8,7 @@ authors = [
     { name = "Torsten Schwede", email = "tosten.schwede@unibas.ch" },
 ]
 readme = "README.md"
-requires-python = "<=3.11"
+requires-python = "<=3.10"
 keywords = [
     "drug design",
     "peptide",
