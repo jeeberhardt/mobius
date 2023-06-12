@@ -53,7 +53,7 @@ dependencies = [
 
 [project.urls] 
 "Homepage" = "https://git.scicore.unibas.ch/schwede/mobius"
-"Documentation" = "https://mobius.readthedocs.io/en/master/"
+"Documentation" = "https://mobius.readthedocs.io/en/latest/"
 "Source" = "https://git.scicore.unibas.ch/schwede/mobius"
 
 [tool.setuptools]
