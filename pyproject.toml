@@ -4,6 +4,8 @@ version = "0.3"
 description = "Python package for optimizing peptide sequences using Bayesian optimization (BO)"
 authors = [
     { name = "Jerome Eberhardt", email = "jerome.eberhardt@unibas.ch" },
+    { name = "Markus Lill", email = "markus.lill@unibas.ch"},
+    { name = "Torsten Schwede", email = "torsten.schwede@unibas.ch"},
 ]
 readme = "README.md"
 requires-python = "<=3.11"
