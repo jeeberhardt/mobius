@@ -1,0 +1,64 @@
+[project]
+name = "mobius"
+version = "0.3"
+description = "Python package for optimizing peptide sequences using Bayesian optimization (BO)"
+authors = [
+    { name = "Jerome Eberhardt", email = "jerome.eberhardt@unibas.ch" },
+    { name = "Markus Lill" },
+    { name = "Torsten Schwede" },
+]
+readme = "README.md"
+requires-python = "<=3.11"
+keywords = [
+    "drug design",
+    "peptide",
+    "Bayesian optimization",
+    "HELM"
+]
+license = { text = "Apache-2.0" }
+classifiers = [
+        'Environment :: Console',
+        'Environment :: Other Environment',
+        'Intended Audience :: Education',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: Apache Software License',
+        'Natural Language :: English',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: OS Independent',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'Topic :: Scientific/Engineering :: Chemistry',
+        'Topic :: Software Development :: Libraries'
+]
+dependencies = [
+    "botorch",
+    "gpytorch",
+    "matplotlib",
+    "numpy",
+    "numpydoc",
+    "pandas",
+    "rdkit",
+    "scikit-learn",
+    "scipy",
+    "sphinx == 6.2.1",
+    "sphinx_rtd_theme",
+    "torch",
+    "ray",
+    "mhfp"
+]
+
+[project.urls] 
+"Homepage" = "https://git.scicore.unibas.ch/schwede/mobius"
+"Documentation" = "https://mobius.readthedocs.io/en/master/"
+"Source" = "https://git.scicore.unibas.ch/schwede/mobius"
+
+[tool.setuptools]
+py-modules = ['mobius']
+
+[build-system]
+requires = ["setuptools >= 40.6.0", "wheel"]
+build-backend = "setuptools.build_meta"
