@@ -3,12 +3,12 @@
 Hello, world!
 =============
 
-This example shows the basic usage of Mobius, and how to use Bayesian Optimisation (BO) to 
+This example shows the basic usage of `mobius`, and how to use Bayesian Optimisation (BO) to 
 optimize peptides against the MHC class I HLA-A*02:01. Starting from a single peptide sequence
-with a low binding affinity, the goal is to improve the binding afffinity in only few DMT 
-iterations.
+with a low IC50 in the micromolar range, the goal is to improve the IC50 in only 
+few DMT iterations.
 
-First, import the required modules and functions from the Mobius package, as well as NumPy:
+First, import the required modules and functions from the `mobius` package, as well as NumPy:
 
 .. code-block:: python
 
@@ -48,7 +48,7 @@ representing peptides and other complex biomolecules. See documentation from the
 HELM notation.
 
 .. warning::
-    Mobius can only handle peptides or equivalent polymers. RNA and oligonucleotides are not supported.
+    `Mobius` can only handle peptides or equivalent polymers. RNA and oligonucleotides are not supported.
 
 .. code-block:: python
 
@@ -103,11 +103,12 @@ the acquisition function (Expected Improvement) and the optimization method (Seq
     acq = ExpectedImprovement(gpmodel, maximize=False)
     optimizer = SequenceGA(total_attempts=5)
 
-Define the search protocol in a YAML configuration file (`design_protocol.yaml`) that will be used 
-to optimize peptide sequences using the acquisition function. See the :ref:`design_protocol` section
-for more details about the design protocol. This YAML configuration file defines the design
-protocol, which includes the peptide scaffold, linear here, and sets of monomers for some positions to be used
-during the optimization. Finally, it defines the optimizer, here SequenceGA, to optimize the peptide sequences
+Define the search protocol in a YAML configuration file (`design_protocol.yaml`) that 
+will be used to optimize peptide sequences using the acquisition function. See the 
+:ref:`design_protocol` section for more details about the design protocol. This YAML 
+configuration file defines the design protocol, which includes the peptide scaffold, 
+linear here, and sets of monomers for some positions to be used during the optimization. 
+Finally, it defines the optimizer, here SequenceGA, to optimize the peptide sequences 
 using the acquisition function / surrogate model initialized earlier.
 
 .. code-block:: YAML
@@ -133,8 +134,8 @@ using the acquisition function / surrogate model initialized earlier.
           hydrophobe_ratio: 0.5
           charged_per_amino_acids: 5
 
-And instantiate the Planner object using the YAML configuration file, the acquisition function
-and the optimization method:
+And instantiate the Planner object using the YAML configuration file, the acquisition 
+function and the optimization method:
 
 .. code-block:: python
 

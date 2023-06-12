@@ -56,7 +56,7 @@ this as demonstrated below:
 
     monomers: 
       default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
-      AA_I_really_love: [E, L, I, N, E]
+      AA_I_really_love: [E, L, I, N]
 
 In the example above, we defined a collection called `AA_I_really_love` that includes only the amino 
 acids E, L, I, N.

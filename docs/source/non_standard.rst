@@ -12,7 +12,7 @@ beyond the limitations of standard amino acids.
 
 Ready to dive in? Excellent! To show you some of `mobius` capabilities we're 
 going to kick things off with a simple (albeit not entirely realistic) example. 
-For this exercice, we are going to take a ramdom macrocycle peptides containing 
+For this exercice, we are going to take a random macrocycle peptides containing 
 non-natural amino acids from the `CycPeptMPDB <http://cycpeptmpdb.com/>`_, and 
 try to find it back starting from a peptide containing only standard amino acids.
 
