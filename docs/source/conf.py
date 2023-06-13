@@ -14,8 +14,6 @@ project = 'Mobius'
 copyright = '2023, Eberhardt J., Lill M., Schwede T.'
 author = 'Eberhardt J., Lill M., Schwede T.'
 
-release = '0.2'
-
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
