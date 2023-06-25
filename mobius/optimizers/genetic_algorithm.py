@@ -13,9 +13,9 @@ import numpy as np
 import ray
 
 from .genetic_operators import GeneticOperators
-from .utils import generate_random_polymers_from_designs
-from .utils import adjust_polymers_to_designs
-from .utils import group_polymers_by_scaffold
+from ..utils import generate_random_polymers_from_designs
+from ..utils import adjust_polymers_to_designs
+from ..utils import group_polymers_by_scaffold
 
 
 def _boltzmann_probability(scores, temperature=300.):

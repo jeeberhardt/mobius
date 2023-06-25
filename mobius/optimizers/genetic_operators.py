@@ -7,7 +7,7 @@
 
 import numpy as np
 
-from .utils import build_helm_string, parse_helm, get_scaffold_from_helm_string
+from ..utils import build_helm_string, parse_helm, get_scaffold_from_helm_string
 
 
 class GeneticOperators:
