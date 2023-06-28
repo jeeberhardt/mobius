@@ -58086,13 +58086,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58110,19 +58110,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-H",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R3;$|"
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
             }
         ]
     },
@@ -58140,19 +58140,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-OH",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R3$|"
+                "CapGroupSmiles": "O[*] |$;_R3$|"
             }
         ]
     },
@@ -58170,19 +58170,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-OH",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R3$|"
+                "CapGroupSmiles": "O[*] |$;_R3$|"
             }
         ]
     },
@@ -58200,13 +58200,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58224,13 +58224,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58248,13 +58248,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58272,13 +58272,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58296,19 +58296,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-H",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R3;$|"
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
             }
         ]
     },
@@ -58326,13 +58326,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58350,13 +58350,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58374,13 +58374,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58398,13 +58398,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58422,13 +58422,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58446,13 +58446,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58470,13 +58470,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58494,13 +58494,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58518,13 +58518,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58542,13 +58542,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58566,13 +58566,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58590,13 +58590,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58614,19 +58614,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-H",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R3;$|"
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
             }
         ]
     },
@@ -58644,19 +58644,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-OH",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R3$|"
+                "CapGroupSmiles": "O[*] |$;_R3$|"
             }
         ]
     },
@@ -58674,19 +58674,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-OH",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R3$|"
+                "CapGroupSmiles": "O[*] |$;_R3$|"
             }
         ]
     },
@@ -58704,13 +58704,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58728,13 +58728,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58752,13 +58752,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58776,19 +58776,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-H",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R3;$|"
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
             }
         ]
     },
@@ -58806,13 +58806,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58830,13 +58830,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58854,13 +58854,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58878,13 +58878,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58902,13 +58902,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58926,13 +58926,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58950,13 +58950,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58974,13 +58974,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -58998,13 +58998,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59022,13 +59022,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59046,13 +59046,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59070,7 +59070,7 @@
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59088,7 +59088,7 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             }
         ]
     },
@@ -59106,13 +59106,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59130,19 +59130,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-OH",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R3$|"
+                "CapGroupSmiles": "O[*] |$;_R3$|"
             }
         ]
     },
@@ -59160,13 +59160,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59184,13 +59184,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59208,13 +59208,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59232,13 +59232,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59256,19 +59256,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-OH",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R3$|"
+                "CapGroupSmiles": "O[*] |$;_R3$|"
             }
         ]
     },
@@ -59286,13 +59286,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59310,13 +59310,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59334,19 +59334,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-H",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R3;$|"
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
             }
         ]
     },
@@ -59364,13 +59364,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59388,13 +59388,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59412,13 +59412,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59436,13 +59436,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59460,13 +59460,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59484,13 +59484,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59508,13 +59508,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59532,19 +59532,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-H",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R3;$|"
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
             }
         ]
     },
@@ -59562,19 +59562,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-H",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R3;$|"
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
             }
         ]
     },
@@ -59592,13 +59592,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59616,19 +59616,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-H",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R3;$|"
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
             }
         ]
     },
@@ -59646,13 +59646,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59670,13 +59670,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59694,13 +59694,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59718,13 +59718,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59742,13 +59742,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59766,13 +59766,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59790,19 +59790,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-H",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R3;$|"
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
             }
         ]
     },
@@ -59820,13 +59820,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59844,13 +59844,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59868,13 +59868,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59892,19 +59892,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-OH",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R3$|"
+                "CapGroupSmiles": "O[*] |$;_R3$|"
             }
         ]
     },
@@ -59922,13 +59922,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -59946,19 +59946,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-H",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R3;$|"
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
             }
         ]
     },
@@ -59976,19 +59976,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-H",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R3;$|"
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
             }
         ]
     },
@@ -60006,13 +60006,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -60030,13 +60030,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -60054,19 +60054,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-OH",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R3$|"
+                "CapGroupSmiles": "O[*] |$;_R3$|"
             }
         ]
     },
@@ -60084,13 +60084,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -60108,13 +60108,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -60132,13 +60132,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -60156,19 +60156,19 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             },
             {
                 "AttachmentID": "R3-OH",
                 "AttachmentLabel": "R3",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R3$|"
+                "CapGroupSmiles": "O[*] |$;_R3$|"
             }
         ]
     },
@@ -60186,13 +60186,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -60210,13 +60210,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -60234,13 +60234,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -60258,13 +60258,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*][H] |$_R1;$|"
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -60282,7 +60282,7 @@
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*] |$;_R2$|"
+                "CapGroupSmiles": "O[*] |$;_R2$|"
             }
         ]
     },
@@ -60300,13 +60300,13 @@
                 "AttachmentID": "R1-H",
                 "AttachmentLabel": "R1",
                 "CapGroupName": "H",
-                "CapgroupSmiles": "[*:1][H]"
+                "CapGroupSmiles": "[*:1][H]"
             },
             {
                 "AttachmentID": "R2-OH",
                 "AttachmentLabel": "R2",
                 "CapGroupName": "OH",
-                "CapgroupSmiles": "O[*:2]"
+                "CapGroupSmiles": "O[*:2]"
             }
         ]
     }
