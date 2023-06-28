@@ -254,7 +254,7 @@ class LinearPeptideEmulator(_Emulator):
         while True:
             peptide_length = np.random.choice(peptide_lengths)
             p = ''.join(np.random.choice(monomer_symbols, peptide_length))
-            s = self.predict([p], input_type='FASTA')[0]
+            s = self.score([p], input_type='FASTA')[0]
 
             if low_score <= s <= high_score:
                 random_peptides.append(p)
