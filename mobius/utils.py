@@ -727,7 +727,7 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
 
     if HELMCoreLibrary_filename is None:
         d = path_module("mobius")
-        HELMCoreLibrary_filename = os.path.join(d, "data/chembl_32_monomer_library.json")
+        HELMCoreLibrary_filename = os.path.join(d, "data/monomer_library.json")
 
     with open(HELMCoreLibrary_filename) as f:
         data = json.load(f)
