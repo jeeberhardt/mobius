@@ -29,7 +29,7 @@ class Pool:
         """
         self._candidates = candidates
     
-    def run(self, polymers, scores, acquisition_function):
+    def run(self, polymers, scores, acquisition_function, **kwargs):
         """
         Run the Pool optimization.
         
