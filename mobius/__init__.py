@@ -17,7 +17,7 @@ from .optimizers import SequenceGA, RandomGA
 from .optimizers import Pool
 from .surrogate_models import GPModel, DummyModel, RFModel
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning
-from .kernels import TanimotoSimilarityKernel
+from .kernels import TanimotoSimilarityKernel, CosineSimilarityKernel
 from .emulators import LinearPeptideEmulator, FindMe
 from .plotting import plot_results
 from .filters import PeptideSelfAggregationFilter, PeptideSolubilityFilter
@@ -32,7 +32,7 @@ __all__ = ['VirtualTarget', 'ForceField',
            'Mobius',
            'Planner',
            'GPModel', 'DummyModel', 'RFModel',
-           'TanimotoSimilarityKernel',
+           'TanimotoSimilarityKernel', 'CosineSimilarityKernel',
            'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement', 'UpperConfidenceBound',
            'MHFingerprint', 'Map4Fingerprint', 'MorganFingerprint', 'SimplePolymerDescriptors',
            'SequenceGA', 'RandomGA', 'Pool',
