@@ -14,7 +14,7 @@ to contact us.
    ./modules/mobius
    ./modules/emulators
    ./modules/planner
-   ./modules/genetic_algorithm
+   ./modules/optimizers
    ./modules/surrogate_models
    ./modules/acquisition_functions
    ./modules/kernels

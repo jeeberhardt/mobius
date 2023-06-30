@@ -17,7 +17,7 @@ class Pool:
 
     """
 
-    def __init__(self, candidates, **kwargs) -> None:
+    def __init__(self, candidates, **kwargs):
         """
         Initialize the Pool optimization.
 
@@ -29,7 +29,7 @@ class Pool:
         """
         self._candidates = candidates
     
-    def run(self, polymers, scores, acquisition_function):
+    def run(self, polymers, scores, acquisition_function, **kwargs):
         """
         Run the Pool optimization.
         
