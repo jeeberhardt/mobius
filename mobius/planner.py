@@ -284,7 +284,7 @@ class Planner(_Planner):
         predicted_values = self._values.copy()
 
         suggested_polymers, predicted_values = self._optimizer.run(suggested_polymers, predicted_values, 
-                                                                   self._acq_fun, self._designs)
+                                                                   self._acq_fun, scaffold_designs=self._designs)
 
         # Apply filters on the suggested polymers
         if self._filters:

@@ -27,7 +27,7 @@ class Pool:
             List of candidates.
         
         """
-        self._candidates = candidates
+        self._candidates = set(candidates)
     
     def run(self, polymers, scores, acquisition_function, **kwargs):
         """
@@ -55,7 +55,7 @@ class Pool:
         # Remove candidates in common with the input polymers
         # Bacause we are not going to evaluate them again, they are supposed
         # to be already evaluated (aka experimentally tested)
-        candidates = np.asarray(set(polymers).difference(self._candidates))
+        candidates = np.asarray(list(self._candidates.difference(polymers)))
 
         # Evaluate the acquisition function for the candidates
         results = acquisition_function.forward(candidates)
