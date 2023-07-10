@@ -121,7 +121,7 @@ class ProteinPeptideComplex:
 
         return v
 
-    def relax_peptide(self, chain, distance=6., cycles=5, scorefxn="beta_soft"):
+    def relax_peptide(self, chain, distance=6., cycles=5, scorefxn="beta_cart"):
         """
         Relaxes the peptide chain.
 
@@ -133,7 +133,7 @@ class ProteinPeptideComplex:
             The distance cutoff.
         cycles : int, default: 5
             The number of relax cycles.
-        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_soft"
+        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_cart"
             The name of the score function. List of suggested scoring functions:
             - beta_cart: beta_nov16_cart
             - beta_soft: beta_nov16_soft
