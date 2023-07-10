@@ -6,7 +6,7 @@
 
 import numpy as np
 import pyrosetta
-from pyrosetta.rosetta.core.select.residue_selector import NeighborhoodSelector, ChainSelector, ResidueIndexSelector
+from pyrosetta.rosetta.core.select.residue_selector import NeighborhoodResidueSelector, ChainSelector, ResidueIndexSelector
 from pyrosetta.rosetta.protocols.relax import FastRelax
 from pyrosetta.rosetta.protocols.simple_moves import MutateResidue
 from pyrosetta.rosetta.protocols.analysis import InterfaceAnalyzerMover
@@ -116,7 +116,7 @@ class ProteinPeptideComplex:
         else:
             raise RuntimeError('Either residues or chain must be specified')
 
-        neighborhood_selector = NeighborhoodSelector(selector, distance=distance, include_focus_in_subset=include_focus_in_subset)
+        neighborhood_selector = NeighborhoodResidueSelector(selector, distance=distance, include_focus_in_subset=include_focus_in_subset)
         v = neighborhood_selector.apply(self.pose)
 
         return v
@@ -155,7 +155,7 @@ class ProteinPeptideComplex:
         relax = FastRelax(scorefxn, cycles)
         relax.set_movemap(movemap)
         relax.set_movemap_disables_packing_of_fixed_chi_positions(True)
-        if '_cart' in scorefxn:
+        if '_cart' in scorefxn.get_name():
             relax.cartesian(True)
         relax.min_type('dfpmin_armijo_nonmonotone')
         relax.apply(self.pose)
