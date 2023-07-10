@@ -18,6 +18,24 @@ from ..utils import adjust_polymers_to_designs
 from ..utils import group_polymers_by_scaffold
 
 
+def _softmax_probability(scores):
+    """
+    Computes the softmax probability based on the input scores.
+    
+    Parameters
+    ----------
+    scores : array-like
+        Scores to be used to compute the softmax probabilities.
+    
+    Returns
+    -------
+    probabilities : ndarray
+        Softmax probability of each score.
+    
+    """
+    return np.exp(-scores) / np.sum(np.exp(-scores))
+
+
 def _boltzmann_probability(scores, temperature=300.):
     """
     Computes the Boltzmann probability based on the input scores.
@@ -87,6 +105,7 @@ def _generate_mating_couples(parent_polymers, parent_scores, n_children, tempera
         return mating_couples
 
     p = _boltzmann_probability(parent_scores, temperature)
+    #p = _softmax_probability(parent_scores)
     mates_per_parent = np.floor(n_couples * p).astype(int)
 
     # In the case no parents really stood up from the rest, all
