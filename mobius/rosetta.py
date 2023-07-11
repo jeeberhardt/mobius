@@ -282,7 +282,7 @@ def _complex_polymer_to_mutations(complex_polymer):
     return mutations
 
 
-class ProteinPeptideScorerRay:
+class ProteinPeptideScorer:
     def __init__(self, pdb_filename, chain, params_filenames=None, n_process=-1):
         """
         A class to score peptides in parallel.
