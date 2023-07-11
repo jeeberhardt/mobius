@@ -282,7 +282,7 @@ def _complex_polymer_to_mutations(complex_polymer):
     return mutations
 
 
-class ProteinPeptideScorer:
+class ProteinPeptideScorerRay:
     def __init__(self, pdb_filename, chain, params_filenames=None, n_process=-1):
         """
         A class to score peptides in parallel.
@@ -312,23 +312,19 @@ class ProteinPeptideScorer:
         
         Parameters
         ----------
-        peptide : str
-            The peptide.
-        filename : str
-            The filename of the pdb file.
-        peptide_chain : str
-            The chain id of the peptide.
-        params_filenames : list of str
-            The filenames of the params files.
+        args : tuple
+            The arguments to pass to the function.
             
         Returns
         -------
+        pdbblock : str
+            The PDBBlock of the complex.
         peptide : str
             The peptide.
         scores : dict
-        The scores of the peptide with the following keys:
+            The scores of the peptide with the following keys:
                 
-        """        
+        """
         cplex = ProteinPeptideComplex(filename, peptide_chain, params_filenames)
 
         # Convert complex_polymer into mutation format. This depends on how complex_polymer should be translated into mutations.
@@ -338,8 +334,13 @@ class ProteinPeptideScorer:
         cplex.mutate(mutations)
         cplex.relax_peptide()
         scores = cplex.score()
+        
+        # Write PDBBlock
+        buffer = pyrosetta.rosetta.std.stringbuf()
+        cplex.pose.dump_pdb(pyrosetta.rosetta.std.ostream(buffer))
+        pdbblock = buffer.str()
 
-        return peptide, scores
+        return pdbblock, peptide, scores
     
     def score_peptides(self, peptides):
         """
@@ -352,17 +353,20 @@ class ProteinPeptideScorer:
 
         Returns
         -------
+        pdbblocks : list of str
+            The list of PDBBlocks.
         df : pandas.DataFrame
             The dataframe containing the scores of the peptides.
 
         """
         data = []
+        pdbs = []
         
         if self._n_process == -1:
             n_process = np.min([os.cpu_count(), len(peptides)])
         else:
             n_process = self._n_process
-            
+        
         ray.init(num_cpus=int(n_process), ignore_reinit_error=True)
         
         # Process peptides in parallel
@@ -371,11 +375,12 @@ class ProteinPeptideScorer:
         
         # Convert results into a dataframe
         for r in results:
-            data.append([r[0]] + list(r[1].values()))
+            pdbs.append(r[0])
+            data.append([r[1]] + list(r[2].values()))
 
-        columns = ['peptide'] + list(results[0][1].keys())
+        columns = ['peptide'] + list(results[0][2].keys())
         df = pd.DataFrame(data=data, columns=columns)
         
         ray.shutdown()
         
-        return df
+        return pdbs, df
