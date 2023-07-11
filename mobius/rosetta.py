@@ -317,10 +317,10 @@ class ProteinPeptideScorerRay:
             
         Returns
         -------
-        pdbblock : str
-            The PDBBlock of the complex.
+        pdb_string : str
+            The PDB file of the protein-peptide complex as string.
         peptide : str
-            The peptide.
+            The peptide in HELM format.
         scores : dict
             The scores of the peptide with the following keys:
                 
@@ -335,12 +335,12 @@ class ProteinPeptideScorerRay:
         cplex.relax_peptide()
         scores = cplex.score()
         
-        # Write PDBBlock
+        # Write PDB into a string
         buffer = pyrosetta.rosetta.std.stringbuf()
         cplex.pose.dump_pdb(pyrosetta.rosetta.std.ostream(buffer))
-        pdbblock = buffer.str()
+        pdb_string = buffer.str()
 
-        return pdbblock, peptide, scores
+        return pdb_string, peptide, scores
     
     def score_peptides(self, peptides):
         """
@@ -349,12 +349,12 @@ class ProteinPeptideScorerRay:
         Parameters
         ----------
         peptides : list of str
-            The list of peptides.
+            The list of peptides in HELM format.
 
         Returns
         -------
-        pdbblocks : list of str
-            The list of PDBBlocks.
+        pdbs : list of str
+            The list of PDB files of the protein-peptide complexes as strings.
         df : pandas.DataFrame
             The dataframe containing the scores of the peptides.
 
@@ -373,7 +373,7 @@ class ProteinPeptideScorerRay:
         refs = [self.process_peptide.remote(peptide, self._filename, self._peptide_chain, self._params_filenames) for peptide in peptides]
         results = ray.get(refs)
         
-        # Convert results into a dataframe
+        # Collect results
         for r in results:
             pdbs.append(r[0])
             data.append([r[1]] + list(r[2].values()))
