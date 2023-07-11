@@ -4,13 +4,18 @@
 # PyRosetta
 #
 
+import os
+
 import numpy as np
+import pandas as pd
 import pyrosetta
+import ray
 from pyrosetta.rosetta.core.select.residue_selector import NeighborhoodResidueSelector, ChainSelector, ResidueIndexSelector
 from pyrosetta.rosetta.protocols.relax import FastRelax
 from pyrosetta.rosetta.protocols.simple_moves import MutateResidue
 from pyrosetta.rosetta.protocols.analysis import InterfaceAnalyzerMover
 
+from . import utils
 
 class ProteinPeptideComplex:
     """
@@ -40,7 +45,7 @@ class ProteinPeptideComplex:
               'W': 'TRP',
               'Y': 'TYR'}
 
-    def __init__(self, filename, params_filenames=None):
+    def __init__(self, filename, chain, params_filenames=None):
         """
         Loads a pose from filename with the params in the params_folder
 
@@ -48,37 +53,25 @@ class ProteinPeptideComplex:
         ----------
         filename : str
             The filename of the pdb file.
+        chain : str
+            The chain id of the peptide.
         params_filenames : list of str, default: None
             The filenames of the params files.
 
         """
         options = '-no_optH false -ex1 -ex2 -mute all -beta -ignore_unrecognized_res true -load_PDB_components false -ignore_waters false'
         pyrosetta.init(extra_options=options)
-        self.pose = self.load_pose_from_file(filename, params_filenames)
+        
+        self.pose = pyrosetta.Pose()
+        self._peptide_chain = chain
         self._scorefxn = None
-
-    def load_pose_from_file(self, filename, params_filenames=None):
-        """
-        Loads a pose from filename with the params in the params_folder
-
-        Parameters
-        ----------
-        filename : str
-            The filename of the pdb file.
-        params_filenames : list of str, default: None
-            The filenames of the params files.
-
-        """
-        pose = pyrosetta.Pose()
 
         if params_filenames:
             params_paths = pyrosetta.rosetta.utility.vector1_string()
             params_paths.extend(params_filenames)
-            pyrosetta.generate_nonstandard_residue_set(pose, params_paths)
+            pyrosetta.generate_nonstandard_residue_set(self.pose, params_paths)
 
-        pyrosetta.rosetta.core.import_pose.pose_from_file(pose, filename)
-
-        return pose
+        pyrosetta.rosetta.core.import_pose.pose_from_file(self.pose, filename)
 
     def _get_neighbour_vector(self, residues=None, chain=None, distance=6., include_focus_in_subset=True):
         """
@@ -121,14 +114,12 @@ class ProteinPeptideComplex:
 
         return v
 
-    def relax_peptide(self, chain, distance=6., cycles=5, scorefxn="beta_cart"):
+    def relax_peptide(self, distance=6., cycles=5, scorefxn="beta_cart"):
         """
         Relaxes the peptide chain.
 
         Parameters
         ----------
-        chain : str
-            The chain id of the peptide.
         distance : float, default: 6.
             The distance cutoff.
         cycles : int, default: 5
@@ -143,7 +134,7 @@ class ProteinPeptideComplex:
         if not isinstance(scorefxn, pyrosetta.rosetta.core.scoring.ScoreFunction):
             scorefxn = pyrosetta.create_score_function(scorefxn)
 
-        v = self._get_neighbour_vector(chain=chain, distance=distance)
+        v = self._get_neighbour_vector(chain=self._peptide_chain, distance=distance)
 
         movemap = pyrosetta.MoveMap()
         movemap.set_bb(False)
@@ -162,55 +153,63 @@ class ProteinPeptideComplex:
 
     def mutate(self, mutations):
         """
-        Mutates the residues.
+        Mutates the peptide with the given mutations list.
 
         Parameters
         ----------
         mutations : list of str
-            The list of mutations in the format chainid:resid:resname.
+            The list of mutations in the format resid:resname.
 
         """
         pdb2pose = self.pose.pdb_info().pdb2pose
 
         for mutation in mutations:
-            chainid, resid, new_resname = mutation.split(':')
-            target_residue_idx = pdb2pose(chain=chainid, res=int(resid))
+            resid, new_resname = mutation.split(':')
+            target_residue_idx = pdb2pose(chain=self._peptide_chain, res=int(resid))
             # The N and C ter residues have these extra :NtermProteinFull, blablabla suffixes
             target_residue_name = self.pose.residue(target_residue_idx).name().split(':')[0]
 
             if target_residue_name != self._name3[new_resname]:
                 residue_mutator = MutateResidue(target=target_residue_idx, new_res=self._name3[new_resname])
                 residue_mutator.apply(self.pose)
-
-    def _has_interface(self, interface):
+    
+    def _get_interface(self, peptide_chain):
         """
-        Checks whether the pose has the interface.
+        Returns the interface between the peptide and the protein.
 
         Parameters
         ----------
-        interface : str
-            The interface name (e.g. AB_C, which means that the interface is between chains AB and chain C).
-
+        peptide_chain : str
+            The chain id of the peptide.
+        
         Returns
         -------
-        has_interface : bool
-            Whether the pose has the interface or not.
+        interface : str
+            The interface between the peptide and the protein.
 
-        """
+        """ 
+        protein_chains = []
         pose2pdb = self.pose.pdb_info().pose2pdb
-        have_chains = {pose2pdb(r).split()[1] for r in range(1, self.pose.total_residue() + 1)}
-        want_chains = set(interface.replace('_', ''))
 
-        return have_chains == want_chains
+        v = self._get_neighbour_vector(chain=peptide_chain, distance=9.)
+        residue_indices = np.argwhere(list(v)).flatten()
 
-    def score_interface(self, interface, scorefxn="beta"):
+        for idx in residue_indices:
+            _, chain = pose2pdb(idx).split()
+            if chain != peptide_chain:
+                protein_chains.append(chain)
+        
+        protein_chains = np.unique(protein_chains)
+        interface = f'{"".join(protein_chains)}_{peptide_chain}'
+        
+        return interface
+
+    def score(self, scorefxn="beta"):
         """
-        Scores the interface.
+        Scores peptide.
 
         Parameters
         ----------
-        interface : str
-            The interface name (e.g. AB_C, which means that the interface is between chains AB and chain C).
         scorefxn_name : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta"
             The name of the score function. List of suggested scoring functions:
             - beta: beta_nov16
@@ -219,7 +218,7 @@ class ProteinPeptideComplex:
         Returns
         -------
         scores : dict
-            The scores of the interface with the following keys:
+            The scores of the peptide with the following keys:
             - dG_separated: the energy difference between the complex and the separated chains
             - dSASA: the change in SASA upon complex formation
             - dG_separated/dSASAx100: the ratio between the energy and the change in SASA
@@ -227,7 +226,7 @@ class ProteinPeptideComplex:
             - hbond_unsatisfied: the number of unsatisfied hydrogen bonds
 
         """
-        assert self._has_interface(interface), f'There is no {interface}'
+        interface = self._get_interface(self._peptide_chain)
 
         if not isinstance(scorefxn, pyrosetta.rosetta.core.scoring.ScoreFunction):
             scorefxn = pyrosetta.create_score_function(scorefxn)
@@ -256,3 +255,127 @@ class ProteinPeptideComplex:
 
         """
         self.pose.dump_pdb(output_filename)
+
+
+def _complex_polymer_to_mutations(complex_polymer):
+    """
+    Converts complex_polymer into a list of mutations.
+
+    Parameters
+    ----------
+    complex_polymer : dict
+        The complex polymer.
+
+    Returns
+    -------
+    mutations : list of str
+        The list of mutations in the format resid:resname.
+
+    """
+    mutations = []
+
+    for _, residues in complex_polymer.items():
+        for i, resname in enumerate(residues, start=1):
+            mutation = f"{i}:{resname}"
+            mutations.append(mutation)
+
+    return mutations
+
+
+class ProteinPeptideScorer:
+    def __init__(self, pdb_filename, chain, params_filenames=None, n_process=-1):
+        """
+        A class to score peptides in parallel.
+        
+        Parameters
+        ----------
+        pdb_filename : str
+            The filename of the pdb file.
+        chain : str
+            The chain id of the peptide.
+        params_filenames : list of str, default: None
+            The filenames of the params files.
+        n_process : int, default: -1
+            The number of processes to use. If -1, use all available CPUs.
+        
+        """
+        self._filename = pdb_filename
+        self._params_filenames = params_filenames
+        self._peptide_chain = chain
+        self._n_process = n_process
+    
+    @staticmethod
+    @ray.remote
+    def process_peptide(peptide, filename, peptide_chain, params_filenames):
+        """
+        Processes a peptide.
+        
+        Parameters
+        ----------
+        peptide : str
+            The peptide.
+        filename : str
+            The filename of the pdb file.
+        peptide_chain : str
+            The chain id of the peptide.
+        params_filenames : list of str
+            The filenames of the params files.
+            
+        Returns
+        -------
+        peptide : str
+            The peptide.
+        scores : dict
+        The scores of the peptide with the following keys:
+                
+        """        
+        cplex = ProteinPeptideComplex(filename, peptide_chain, params_filenames)
+
+        # Convert complex_polymer into mutation format. This depends on how complex_polymer should be translated into mutations.
+        complex_polymer, _, _, _ = utils.parse_helm(peptide)
+        mutations = _complex_polymer_to_mutations(complex_polymer)
+
+        cplex.mutate(mutations)
+        cplex.relax_peptide()
+        scores = cplex.score()
+
+        return peptide, scores
+    
+    def score_peptides(self, peptides):
+        """
+        Scores peptides in parallel.
+
+        Parameters
+        ----------
+        peptides : list of str
+            The list of peptides.
+
+        Returns
+        -------
+        df : pandas.DataFrame
+            The dataframe containing the scores of the peptides.
+
+        """
+        data = []
+        
+        if self._n_process == -1:
+            n_process = np.min([os.cpu_count(), len(peptides)])
+        else:
+            n_process = self._n_process
+            
+        ray.init(num_cpus=int(n_process), ignore_reinit_error=True)
+        
+        # Process peptides in parallel
+        refs = [self.process_peptide.remote(peptide, self._filename, self._peptide_chain, self._params_filenames) for peptide in peptides]
+        results = ray.get(refs)
+        
+        # Convert results into a dataframe
+        for r in results:
+            data.append([r[0]] + list(r[1].values()))
+
+        columns = ['peptide'] + list(results[0][1].keys())
+        df = pd.DataFrame(data=data, columns=columns)
+        
+        ray.shutdown()
+        
+        return df
