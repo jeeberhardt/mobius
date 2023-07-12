@@ -169,6 +169,9 @@ class ProteinPeptideComplex:
             # The N and C ter residues have these extra :NtermProteinFull, blablabla suffixes
             target_residue_name = self.pose.residue(target_residue_idx).name().split(':')[0]
 
+            assert target_residue_name in self._name3.values(), f"Residue {target_residue_name} is not a standard amino acid."
+
+            # Skip residue if it is already the same
             if target_residue_name != self._name3[new_resname]:
                 residue_mutator = MutateResidue(target=target_residue_idx, new_res=self._name3[new_resname])
                 residue_mutator.apply(self.pose)
@@ -257,14 +260,14 @@ class ProteinPeptideComplex:
         self.pose.dump_pdb(output_filename)
 
 
-def _complex_polymer_to_mutations(complex_polymer):
+def _polymer_to_mutations(polymer):
     """
-    Converts complex_polymer into a list of mutations.
+    Converts polymer in HELM format into a list of mutations.
 
     Parameters
     ----------
-    complex_polymer : dict
-        The complex polymer.
+    polymer : str
+        The polymer in HELM format.
 
     Returns
     -------
@@ -272,12 +275,14 @@ def _complex_polymer_to_mutations(complex_polymer):
         The list of mutations in the format resid:resname.
 
     """
-    mutations = []
+    mutations = {}
 
-    for _, residues in complex_polymer.items():
+    complex_polymer, _, _, _ = utils.parse_helm(polymer)
+
+    for pid, residues in complex_polymer.items():
         for i, resname in enumerate(residues, start=1):
             mutation = f"{i}:{resname}"
-            mutations.append(mutation)
+            mutations.setdefault(pid, []).append(mutation)
 
     return mutations
 
@@ -327,11 +332,12 @@ class ProteinPeptideScorer:
         """
         cplex = ProteinPeptideComplex(filename, peptide_chain, params_filenames)
 
-        # Convert complex_polymer into mutation format. This depends on how complex_polymer should be translated into mutations.
-        complex_polymer, _, _, _ = utils.parse_helm(peptide)
-        mutations = _complex_polymer_to_mutations(complex_polymer)
+        # Transform HELM into a list of mutations
+        mutations = _polymer_to_mutations(peptide)
 
-        cplex.mutate(mutations)
+        assert len(mutations) > 1, "Peptide will more than one polymer chain is not supported."
+
+        cplex.mutate(list(mutations.values())[0])
         cplex.relax_peptide()
         scores = cplex.score()
         
