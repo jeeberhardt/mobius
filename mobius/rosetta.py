@@ -351,7 +351,7 @@ class ProteinPeptideScorer:
         # Transform HELM into a list of mutations
         mutations = _polymer_to_mutations(peptide)
 
-        assert len(mutations) > 1, "Peptide will more than one polymer chain is not supported."
+        assert len(mutations) == 1, "Peptide will more than one polymer chain is not supported."
 
         cplex.mutate(list(mutations.values())[0])
         cplex.relax_peptide(distance=distance, cycles=cycles, scorefxn=scorefxn)
