@@ -311,14 +311,29 @@ class ProteinPeptideScorer:
     
     @staticmethod
     @ray.remote
-    def process_peptide(peptide, filename, peptide_chain, params_filenames):
+    def process_peptide(peptide, filename, peptide_chain, params_filenames, distance, cycles, scorefxn):
         """
         Processes a peptide.
         
         Parameters
         ----------
-        args : tuple
-            The arguments to pass to the function.
+        peptide : str
+            The peptide in HELM format.
+        filename : str
+            The filename of the pdb file.
+        peptide_chain : str
+            The chain id of the peptide.
+        params_filenames : list of str, default: None
+            The filenames of the params files.
+        distance : float, default: 6.
+            The distance cutoff.
+        cycles : int, default: 5
+            The number of relax cycles.
+        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_cart"
+            The name of the score function. List of suggested scoring functions:
+            - beta_cart: beta_nov16_cart
+            - beta_soft: beta_nov16_soft
+            - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
             
         Returns
         -------
@@ -338,7 +353,7 @@ class ProteinPeptideScorer:
         assert len(mutations) > 1, "Peptide will more than one polymer chain is not supported."
 
         cplex.mutate(list(mutations.values())[0])
-        cplex.relax_peptide()
+        cplex.relax_peptide(distance=distance, cycles=cycles, scorefxn=scorefxn)
         scores = cplex.score()
         
         # Write PDB into a string
@@ -348,7 +363,7 @@ class ProteinPeptideScorer:
 
         return pdb_string, peptide, scores
     
-    def score_peptides(self, peptides):
+    def score_peptides(self, peptides, distance=6., cycles=5, scorefxn="beta_cart"):
         """
         Scores peptides in parallel.
 
@@ -356,6 +371,15 @@ class ProteinPeptideScorer:
         ----------
         peptides : list of str
             The list of peptides in HELM format.
+        distance : float, default: 6.
+            The distance cutoff.
+        cycles : int, default: 5
+            The number of relax cycles.
+        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_cart"
+            The name of the score function. List of suggested scoring functions:
+            - beta_cart: beta_nov16_cart
+            - beta_soft: beta_nov16_soft
+            - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
 
         Returns
         -------
@@ -376,7 +400,9 @@ class ProteinPeptideScorer:
         ray.init(num_cpus=int(n_process), ignore_reinit_error=True)
         
         # Process peptides in parallel
-        refs = [self.process_peptide.remote(peptide, self._filename, self._peptide_chain, self._params_filenames) for peptide in peptides]
+        refs = [self.process_peptide.remote(peptide, 
+                                            self._filename, self._peptide_chain, self._params_filenames, 
+                                            distance, cycles, scorefxn) for peptide in peptides]
         results = ray.get(refs)
         
         # Collect results
