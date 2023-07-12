@@ -7,6 +7,7 @@
 import json
 import os
 import random
+import yaml
 from collections import defaultdict
 from importlib import util
 
@@ -700,6 +701,35 @@ def get_scaffold_from_helm_string(polymer):
     scaffold = build_helm_string(scaffold_complex_polymer, connections)
 
     return scaffold
+
+
+def write_design_protocol_yaml_file_from_polymers(polymers, filename='design.yaml'):
+    """
+    Write the bare minimum design protocol yaml file from a list of polymers in HELM format.
+
+    Parameters
+    ----------
+    polymers : List of str
+        List of polymers in HELM format.
+    filename : str, default : 'design.yaml'
+        Name of the design protocol yaml file to write.
+
+    """
+    design_protocol = {
+        'design': {
+            'monomers': {
+                'default': ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+            },
+            'scaffolds': []
+        }
+    }
+
+    # Get the scaffold of each polymer
+    groups = group_polymers_by_scaffold(polymers)
+    design_protocol['design']['scaffolds'] = list(groups.keys())
+
+    with open(filename, 'w') as f:
+        yaml.dump(design_protocol, f)
 
 
 def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
