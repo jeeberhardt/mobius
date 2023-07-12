@@ -18,6 +18,7 @@ from pyrosetta.rosetta.protocols.analysis import InterfaceAnalyzerMover
 
 from . import utils
 
+
 class ProteinPeptideComplex:
     """
     A class to handle protein-peptide complexes.
@@ -115,14 +116,14 @@ class ProteinPeptideComplex:
 
         return v
 
-    def relax_peptide(self, distance=6., cycles=5, scorefxn="beta_cart"):
+    def relax_peptide(self, distance=9., cycles=5, scorefxn="beta_cart"):
         """
         Relaxes the peptide chain.
 
         Parameters
         ----------
-        distance : float, default: 6.
-            The distance cutoff.
+        distance : float, default: 9.
+            The distance cutoff. The distance is from the center of mass atom, not from every atom in the molecule
         cycles : int, default: 5
             The number of relax cycles.
         scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_cart"
@@ -326,8 +327,8 @@ class ProteinPeptideScorer:
             The chain id of the peptide.
         params_filenames : list of str, default: None
             The filenames of the params files.
-        distance : float, default: 6.
-            The distance cutoff.
+        distance : float, default: 9.
+            The distance cutoff. The distance is from the center of mass atom, not from every atom in the molecule
         cycles : int, default: 5
             The number of relax cycles.
         scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_cart"
@@ -364,7 +365,7 @@ class ProteinPeptideScorer:
 
         return pdb_string, peptide, scores
     
-    def score_peptides(self, peptides, distance=6., cycles=5, scorefxn="beta_cart"):
+    def score_peptides(self, peptides, distance=9., cycles=5, scorefxn="beta_cart"):
         """
         Scores peptides in parallel.
 
@@ -372,8 +373,8 @@ class ProteinPeptideScorer:
         ----------
         peptides : list of str
             The list of peptides in HELM format.
-        distance : float, default: 6.
-            The distance cutoff.
+        distance : float, default: 9.
+            The distance cutoff. The distance is from the center of mass atom, not from every atom in the molecule.
         cycles : int, default: 5
             The number of relax cycles.
         scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_cart"
