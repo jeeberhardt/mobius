@@ -5,6 +5,7 @@
 #
 
 import os
+import joblib
 
 import numpy as np
 import pandas as pd
@@ -393,7 +394,9 @@ class ProteinPeptideScorer:
         pdbs = []
         
         if self._n_process == -1:
-            n_process = np.min([os.cpu_count(), len(peptides)])
+            # joblib.cpu_count() returns the exact number available that can be used on the cluster
+            # unlike os.cpu_count, ray.init() or multiprocessing.cpu_count()...
+            n_process = np.min([joblib.cpu_count(), len(peptides)])
         else:
             n_process = self._n_process
         
