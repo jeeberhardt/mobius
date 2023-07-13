@@ -26,26 +26,15 @@ class ProteinPeptideComplex:
     Original source: https://raw.githubusercontent.com/matteoferla/MEF2C_analysis/main/variant.py
     """
 
-    _name3 = {'A': 'ALA',
-              'C': 'CYS',
-              'D': 'ASP',
-              'E': 'GLU',
-              'F': 'PHE',
-              'G': 'GLY',
-              'H': 'HIS',
-              'I': 'ILE',
-              'L': 'LEU',
-              'K': 'LYS',
-              'M': 'MET',
-              'N': 'ASN',
-              'P': 'PRO',
-              'Q': 'GLN',
-              'R': 'ARG',
-              'S': 'SER',
-              'T': 'THR',
-              'V': 'VAL',
-              'W': 'TRP',
-              'Y': 'TYR'}
+    _name3 = {'A': 'ALA', 'C': 'CYS', 'D': 'ASP', 'E': 'GLU', 'F': 'PHE', 
+              'G': 'GLY', 'H': 'HIS', 'I': 'ILE', 'L': 'LEU', 'K': 'LYS',
+              'M': 'MET', 'N': 'ASN', 'P': 'PRO', 'Q': 'GLN', 'R': 'ARG',
+              'S': 'SER', 'T': 'THR', 'V': 'VAL', 'W': 'TRP', 'Y': 'TYR',
+              'dA': 'DALA', 'dC': 'DCYS', 'dD': 'DASP', 'dE': 'DGLU', 
+              'dF': 'DPHE', 'dH': 'DHIS', 'dI': 'DILE', 'dL': 'DLEU', 
+              'dK': 'DLYS', 'dM': 'DMET', 'dN': 'DASN', 'dP': 'DPRO', 
+              'dQ': 'DGLN', 'dR': 'DARG', 'dS': 'DSER', 'dT': 'DTHR', 
+              'dV': 'DVAL', 'dW': 'DTRP', 'dY': 'DTYR'}
 
     def __init__(self, filename, chain, params_filenames=None):
         """
@@ -171,7 +160,7 @@ class ProteinPeptideComplex:
             # The N and C ter residues have these extra :NtermProteinFull, blablabla suffixes
             target_residue_name = self.pose.residue(target_residue_idx).name().split(':')[0]
 
-            assert target_residue_name in self._name3.values(), f"Residue {target_residue_name} is not a standard amino acid."
+            assert target_residue_name in self._name3.values(), f"Residue {target_residue_name} is not a D/L standard amino acid."
 
             # Skip residue if it is already the same
             if target_residue_name != self._name3[new_resname]:
