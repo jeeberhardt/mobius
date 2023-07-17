@@ -120,10 +120,32 @@ class ProteinPeptideComplex:
             - beta_cart: beta_nov16_cart
             - beta_soft: beta_nov16_soft
             - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
+            - beta_design: beta_nov16_cart with the following weights:
+                - voids_penalty: 1.0
+                - hbnet: 1.0
+                - hbond_sr_bb: 10.0
+                - hbond_lr_bb: 10.0
+                - hbond_bb_sc: 5.0
+                - hbond_sc: 3.0
+                - aspartimide_penalty: 1.0
+                - buried_unsatisfied_penalty: 0.5
 
         """
         if not isinstance(scorefxn, pyrosetta.rosetta.core.scoring.ScoreFunction):
-            scorefxn = pyrosetta.create_score_function(scorefxn)
+            if scorefxn == 'beta_design':
+                scorefxn = pyrosetta.create_score_function('beta_cart')
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.voids_penalty, 1.0)
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbnet, 1.0)
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_sr_bb, 10.0)
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_lr_bb, 10.0)
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_bb_sc, 5.0)
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_sc, 3.0)
+                #scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.netcharge, 1.0)
+                #scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.aa_composition, 1.0)
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.aspartimide_penalty, 1.0)
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.buried_unsatisfied_penalty, 0.5)
+            else:
+                scorefxn = pyrosetta.create_score_function(scorefxn)
 
         v = self._get_neighbour_vector(chain=self._peptide_chain, distance=distance)
 
