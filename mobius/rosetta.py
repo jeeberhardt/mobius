@@ -324,7 +324,7 @@ class ProteinPeptideScorer:
     
     @staticmethod
     @ray.remote
-    def process_peptide(peptide, filename, peptide_chain, params_filenames, distance, cycles, scorefxn):
+    def process_peptide(peptide, filename, peptide_chain, params_filenames, distance, cycles, relax_scorefxn, scorefxn):
         """
         Processes a peptide.
         
@@ -342,10 +342,23 @@ class ProteinPeptideScorer:
             The distance cutoff. The distance is from the center of mass atom, not from every atom in the molecule
         cycles : int, default: 5
             The number of relax cycles.
-        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_cart"
+        design_scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_cart"
             The name of the score function. List of suggested scoring functions:
             - beta_cart: beta_nov16_cart
             - beta_soft: beta_nov16_soft
+            - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
+            - beta_design: beta_nov16_cart with the following weights:
+                - voids_penalty: 1.0
+                - hbnet: 1.0
+                - hbond_sr_bb: 10.0
+                - hbond_lr_bb: 10.0
+                - hbond_bb_sc: 5.0
+                - hbond_sc: 3.0
+                - aspartimide_penalty: 1.0
+                - buried_unsatisfied_penalty: 0.5
+        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta"
+            The name of the score function. List of suggested scoring functions:
+            - beta: beta_nov16
             - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
             
         Returns
@@ -366,8 +379,8 @@ class ProteinPeptideScorer:
         assert len(mutations) == 1, "Peptide with more than one polymer chain is not supported."
 
         cplex.mutate(list(mutations.values())[0])
-        cplex.relax_peptide(distance=distance, cycles=cycles, scorefxn=scorefxn)
-        scores = cplex.score()
+        cplex.relax_peptide(distance=distance, cycles=cycles, scorefxn=relax_scorefxn)
+        scores = cplex.score(scorefxn)
         
         # Write PDB into a string
         buffer = pyrosetta.rosetta.std.stringbuf()
@@ -376,7 +389,7 @@ class ProteinPeptideScorer:
 
         return pdb_string, peptide, scores
     
-    def score_peptides(self, peptides, distance=9., cycles=5, scorefxn="beta_cart"):
+    def score_peptides(self, peptides, distance=9., cycles=5, relax_scorefxn="beta_design", scorefxn="beta"):
         """
         Scores peptides in parallel.
 
@@ -388,10 +401,23 @@ class ProteinPeptideScorer:
             The distance cutoff. The distance is from the center of mass atom, not from every atom in the molecule.
         cycles : int, default: 5
             The number of relax cycles.
-        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_cart"
+        design_scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_design"
             The name of the score function. List of suggested scoring functions:
             - beta_cart: beta_nov16_cart
             - beta_soft: beta_nov16_soft
+            - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
+            - beta_design: beta_nov16_cart with the following weights:
+                - voids_penalty: 1.0
+                - hbnet: 1.0
+                - hbond_sr_bb: 10.0
+                - hbond_lr_bb: 10.0
+                - hbond_bb_sc: 5.0
+                - hbond_sc: 3.0
+                - aspartimide_penalty: 1.0
+                - buried_unsatisfied_penalty: 0.5
+        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta"
+            The name of the score function. List of suggested scoring functions:
+            - beta: beta_nov16
             - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
 
         Returns
@@ -417,7 +443,7 @@ class ProteinPeptideScorer:
         # Process peptides in parallel
         refs = [self.process_peptide.remote(peptide, 
                                             self._filename, self._peptide_chain, self._params_filenames, 
-                                            distance, cycles, scorefxn) for peptide in peptides]
+                                            distance, cycles, relax_scorefxn, scorefxn) for peptide in peptides]
         results = ray.get(refs)
         
         # Collect results
