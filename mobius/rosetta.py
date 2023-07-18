@@ -4,17 +4,22 @@
 # PyRosetta
 #
 
-import os
 import joblib
 
 import numpy as np
 import pandas as pd
-import pyrosetta
 import ray
-from pyrosetta.rosetta.core.select.residue_selector import NeighborhoodResidueSelector, ChainSelector, ResidueIndexSelector
-from pyrosetta.rosetta.protocols.relax import FastRelax
-from pyrosetta.rosetta.protocols.simple_moves import MutateResidue
-from pyrosetta.rosetta.protocols.analysis import InterfaceAnalyzerMover
+
+try:
+    import pyrosetta
+    from pyrosetta.rosetta.core.select.residue_selector import NeighborhoodResidueSelector, ChainSelector, ResidueIndexSelector
+    from pyrosetta.rosetta.protocols.relax import FastRelax
+    from pyrosetta.rosetta.protocols.simple_moves import MutateResidue
+    from pyrosetta.rosetta.protocols.analysis import InterfaceAnalyzerMover
+except ImportError:
+    _has_pyrosetta = False
+else:
+    _has_pyrosetta = True
 
 from . import utils
 
@@ -50,6 +55,9 @@ class ProteinPeptideComplex:
             The filenames of the params files.
 
         """
+        if not _has_pyrosetta:
+            raise ImportError('PyRosetta is not installed.')
+
         options = '-no_optH false -ex1 -ex2 -mute all -beta -ignore_unrecognized_res true -load_PDB_components false -ignore_waters false'
         pyrosetta.init(extra_options=options)
         
@@ -318,6 +326,9 @@ class ProteinPeptideScorer:
             The number of processes to use. If -1, use all available CPUs.
         
         """
+        if not _has_pyrosetta:
+            raise ImportError('PyRosetta is not installed.')
+
         self._filename = pdb_filename
         self._params_filenames = params_filenames
         self._peptide_chain = chain
