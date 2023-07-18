@@ -135,8 +135,7 @@ class ProteinPeptideComplex:
                 - hbond_lr_bb: 10.0
                 - hbond_bb_sc: 5.0
                 - hbond_sc: 3.0
-                - aspartimide_penalty: 1.0
-                - buried_unsatisfied_penalty: 0.5
+                - buried_unsatisfied_penalty: 1.0
 
         """
         if not isinstance(scorefxn, pyrosetta.rosetta.core.scoring.ScoreFunction):
@@ -148,11 +147,7 @@ class ProteinPeptideComplex:
                 scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_lr_bb, 10.0)
                 scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_bb_sc, 5.0)
                 scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_sc, 3.0)
-                #scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.netcharge, 1.0)
-                #scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.aa_composition, 1.0)
-                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.aa_repeat, 1.0)
-                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.aspartimide_penalty, 1.0)
-                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.buried_unsatisfied_penalty, 0.5)
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.buried_unsatisfied_penalty, 1.0)
             else:
                 scorefxn = pyrosetta.create_score_function(scorefxn)
 
@@ -170,6 +165,8 @@ class ProteinPeptideComplex:
         relax.set_movemap_disables_packing_of_fixed_chi_positions(True)
         if '_cart' in scorefxn.get_name():
             relax.cartesian(True)
+            relax.minimize_bond_angles(True)
+            relax.minimize_bond_lengths(True)
         relax.min_type('dfpmin_armijo_nonmonotone')
         relax.apply(self.pose)
 
@@ -247,8 +244,9 @@ class ProteinPeptideComplex:
             - dG_separated: the energy difference between the complex and the separated chains
             - dSASA: the change in SASA upon complex formation
             - dG_separated/dSASAx100: the ratio between the energy and the change in SASA
-            - complementary_shape: the shape complementarity
+            - complementary_shape: the shape complementarity (0: bad, 1: good)
             - hbond_unsatisfied: the number of unsatisfied hydrogen bonds
+            - packstat: the packing statistic (0: bad, 1: good)
 
         """
         interface = self._get_interface(self._peptide_chain)
@@ -256,16 +254,19 @@ class ProteinPeptideComplex:
         if not isinstance(scorefxn, pyrosetta.rosetta.core.scoring.ScoreFunction):
             scorefxn = pyrosetta.create_score_function(scorefxn)
 
-        ia = InterfaceAnalyzerMover(interface)
+        ia = InterfaceAnalyzerMover()
+        ia.set_interface(interface)
         ia.set_scorefunction(scorefxn)
-        ia.apply(self.pose)
+        ia.set_compute_packstat(True)
+        ia.add_score_info_to_pose(self.pose)
         data = ia.get_all_data()
 
         results = {'dG_separated': np.around(ia.get_separated_interface_energy(), decimals=3),
                    'dSASA': np.around(ia.get_interface_delta_sasa(), decimals=3),
                    'dG_separated/dSASAx100': np.around(data.dG_dSASA_ratio * 100., decimals=3),
                    'complementary_shape': np.around(data.sc_value, decimals=3),
-                   'hbond_unsatisfied': np.around(ia.get_interface_delta_hbond_unsat(), decimals=3)}
+                   'hbond_unsatisfied': np.around(ia.get_interface_delta_hbond_unsat(), decimals=3),
+                   'packstat': np.around(data.packstat, decimals=3)}
 
         return results
 

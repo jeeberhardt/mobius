@@ -154,3 +154,53 @@ class PeptideSolubilityFilter():
                     break
     
         return passed
+
+
+class AARepeat():
+    """
+    Class for filtering peptides that contain sequence of repeated amino acids.
+    """
+
+    def __init__(self, max_repeat=2, **kwargs):
+        """
+        Initialize the AARepeat filter.
+
+        Parameters
+        ----------
+        max_repeat : int, default: 2
+            Maximum number of repeated amino acids allowed in the sequence.
+
+        """
+        self._max_repeat = max_repeat
+    
+    def apply(self, polymers):
+        """
+        Filter polymers that contain sequence of repeated amino acids.
+
+        Parameters
+        ----------
+        polymers : list of str
+            List of polymers in HELM format.
+
+        Returns
+        -------
+        ndarray
+            Numpy array of boolean values indicating which polymers
+            passed the filter.
+
+        """
+        # Will start matching after max_repeat + 1 consecutive amino acids
+        # if max_repeat = 2, then will match 3 or more consecutive amino acids
+        p = re.compile(r'(.)\1{%d,}' % (self._max_repeat))
+        passed = np.ones(shape=(len(polymers),), dtype=bool)
+
+        for i, complex_polymer in enumerate(polymers):
+            simple_polymers, _, _, _ = parse_helm(complex_polymer)
+
+            for _, simple_polymer in simple_polymers.items():
+                if p.search(''.join(simple_polymer)):
+                    passed[i] = False
+                    break
+
+        return passed
+
