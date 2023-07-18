@@ -74,7 +74,7 @@ for seq in homolog_scanning(lead_peptide):
 The seed library is then virtually tested (Make/Test) using the linear peptide emulator we defined earlier.
 WARNING: This is for benchmarking purpose only. This step is supposed to be an actual lab experiment.
 ```python
-pic50_seed_library = lpe.predict(seed_library)
+pic50_seed_library = lpe.score(seed_library)
 ```
 
 Once we got results from our first lab experiment we can now start the Bayesian Optimization (BO) First, 
@@ -139,7 +139,7 @@ for i in range(3):
     # Get the pIC50 (Make/Test) of all the suggested peptides using the MHC emulator
     # WARNING: This is for benchmarking purpose only. This 
     # step is supposed to be an actual lab experiment.
-    pic50_suggested_peptides = lpe.predict(suggested_peptides)
+    pic50_suggested_peptides = lpe.score(suggested_peptides)
     
     # Add all the new data
     peptides.extend(list(suggested_peptides))

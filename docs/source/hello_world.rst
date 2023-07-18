@@ -85,7 +85,7 @@ an IC50 of 1 nM, a pIC50 of 1 corresponds to an IC50 of 10 nM, etc.
 
 .. code-block:: python
 
-    pic50_seed_library = lpe.predict(seed_library)
+    pic50_seed_library = lpe.score(seed_library)
 
 Now that we have results from the initial lab experiment, we can start the Bayesian 
 Optimization. Define the molecular fingerprint, the surrogate model (Gaussian Process), 
@@ -161,7 +161,7 @@ Run three Design-Make-Test cycles, iterating through the following steps:
         # Virtually test the suggested peptides using the MHC emulator
         # You know the drill now, this is for benchmarking or demonstration 
         # purposes only and should be replaced with actual lab experiments.
-        pic50_suggested_peptides = lpe.predict(suggested_peptides)
+        pic50_suggested_peptides = lpe.score(suggested_peptides)
         
         peptides.extend(list(suggested_peptides))
         pic50_scores.extend(list(pic50_suggested_peptides))
