@@ -142,6 +142,7 @@ class ProteinPeptideComplex:
                 scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_sc, 3.0)
                 #scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.netcharge, 1.0)
                 #scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.aa_composition, 1.0)
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.aa_repeat, 1.0)
                 scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.aspartimide_penalty, 1.0)
                 scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.buried_unsatisfied_penalty, 0.5)
             else:
