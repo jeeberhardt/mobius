@@ -254,10 +254,9 @@ class ProteinPeptideComplex:
         if not isinstance(scorefxn, pyrosetta.rosetta.core.scoring.ScoreFunction):
             scorefxn = pyrosetta.create_score_function(scorefxn)
 
-        ia = InterfaceAnalyzerMover()
-        ia.set_interface(interface)
-        ia.set_scorefunction(scorefxn)
+        ia = InterfaceAnalyzerMover(interface)
         ia.set_compute_packstat(True)
+        ia.set_scorefunction(scorefxn)
         ia.add_score_info_to_pose(self.pose)
         data = ia.get_all_data()
 
@@ -367,8 +366,7 @@ class ProteinPeptideScorer:
                 - hbond_lr_bb: 10.0
                 - hbond_bb_sc: 5.0
                 - hbond_sc: 3.0
-                - aspartimide_penalty: 1.0
-                - buried_unsatisfied_penalty: 0.5
+                - buried_unsatisfied_penalty: 1.0
         scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta"
             The name of the score function. List of suggested scoring functions:
             - beta: beta_nov16
@@ -426,8 +424,7 @@ class ProteinPeptideScorer:
                 - hbond_lr_bb: 10.0
                 - hbond_bb_sc: 5.0
                 - hbond_sc: 3.0
-                - aspartimide_penalty: 1.0
-                - buried_unsatisfied_penalty: 0.5
+                - buried_unsatisfied_penalty: 1.0
         scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta"
             The name of the score function. List of suggested scoring functions:
             - beta: beta_nov16
