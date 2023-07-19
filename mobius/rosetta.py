@@ -256,7 +256,6 @@ class ProteinPeptideComplex:
 
         ia = InterfaceAnalyzerMover(interface)
         ia.set_scorefunction(scorefxn)
-        ia.set_compute_packstat(True)
         ia.add_score_info_to_pose(self.pose)
         data = ia.get_all_data()
 
