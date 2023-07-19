@@ -147,7 +147,7 @@ class ProteinPeptideComplex:
                 scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_lr_bb, 10.0)
                 scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_bb_sc, 5.0)
                 scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_sc, 3.0)
-                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.buried_unsatisfied_penalty, 1.0)
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.buried_unsatisfied_penalty, 0.5)
             else:
                 scorefxn = pyrosetta.create_score_function(scorefxn)
 
@@ -255,7 +255,9 @@ class ProteinPeptideComplex:
             scorefxn = pyrosetta.create_score_function(scorefxn)
 
         ia = InterfaceAnalyzerMover(interface)
+        ia.set_compute_packstat(True)
         ia.set_scorefunction(scorefxn)
+        ia.apply(self.pose)
         ia.add_score_info_to_pose(self.pose)
         data = ia.get_all_data()
 
