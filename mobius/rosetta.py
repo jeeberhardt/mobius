@@ -113,7 +113,7 @@ class ProteinPeptideComplex:
 
         return v
 
-    def relax_peptide(self, distance=9., cycles=5, scorefxn="beta_cart"):
+    def relax_peptide(self, distance=9., cycles=5, scorefxn="beta_design"):
         """
         Relaxes the peptide chain.
 
@@ -123,7 +123,7 @@ class ProteinPeptideComplex:
             The distance cutoff. The distance is from the center of mass atom, not from every atom in the molecule
         cycles : int, default: 5
             The number of relax cycles.
-        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_cart"
+        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_design"
             The name of the score function. List of suggested scoring functions:
             - beta_cart: beta_nov16_cart
             - beta_soft: beta_nov16_soft
@@ -135,7 +135,7 @@ class ProteinPeptideComplex:
                 - hbond_lr_bb: 10.0
                 - hbond_bb_sc: 5.0
                 - hbond_sc: 3.0
-                - buried_unsatisfied_penalty: 1.0
+                - buried_unsatisfied_penalty: 0.5
 
         """
         if not isinstance(scorefxn, pyrosetta.rosetta.core.scoring.ScoreFunction):
@@ -349,13 +349,13 @@ class ProteinPeptideScorer:
             The filename of the pdb file.
         peptide_chain : str
             The chain id of the peptide.
-        params_filenames : list of str, default: None
+        params_filenames : list of str
             The filenames of the params files.
-        distance : float, default: 9.
+        distance : float
             The distance cutoff. The distance is from the center of mass atom, not from every atom in the molecule
-        cycles : int, default: 5
+        cycles : int
             The number of relax cycles.
-        design_scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_cart"
+        relax_scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`
             The name of the score function. List of suggested scoring functions:
             - beta_cart: beta_nov16_cart
             - beta_soft: beta_nov16_soft
@@ -367,8 +367,8 @@ class ProteinPeptideScorer:
                 - hbond_lr_bb: 10.0
                 - hbond_bb_sc: 5.0
                 - hbond_sc: 3.0
-                - buried_unsatisfied_penalty: 1.0
-        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta"
+                - buried_unsatisfied_penalty: 0.5
+        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`
             The name of the score function. List of suggested scoring functions:
             - beta: beta_nov16
             - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
@@ -413,7 +413,7 @@ class ProteinPeptideScorer:
             The distance cutoff. The distance is from the center of mass atom, not from every atom in the molecule.
         cycles : int, default: 5
             The number of relax cycles.
-        design_scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_design"
+        relax_scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_design"
             The name of the score function. List of suggested scoring functions:
             - beta_cart: beta_nov16_cart
             - beta_soft: beta_nov16_soft
@@ -425,7 +425,7 @@ class ProteinPeptideScorer:
                 - hbond_lr_bb: 10.0
                 - hbond_bb_sc: 5.0
                 - hbond_sc: 3.0
-                - buried_unsatisfied_penalty: 1.0
+                - buried_unsatisfied_penalty: 0.5
         scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta"
             The name of the score function. List of suggested scoring functions:
             - beta: beta_nov16
