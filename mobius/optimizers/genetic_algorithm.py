@@ -532,7 +532,7 @@ class MOOSequenceGA():
 
     """
 
-    def __init__(self,problem,n_gen=5,n_pop=250,batch_size=96,cx_points=2,pm=0.1,minimum_mutations=1,maximum_mutations=None,**kwargs):
+    def __init__(self,problem,n_gen=5,n_pop=150,batch_size=96,cx_points=2,pm=0.1,minimum_mutations=1,maximum_mutations=None,**kwargs):
         
         """
         Initialize the SequenceGA multi-objective optimization.

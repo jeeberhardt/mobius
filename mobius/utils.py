@@ -958,6 +958,32 @@ def read_pssm_file(pssm_file):
 
     return pssm, intercept
 
+def global_min_pssm_score(pssm_pd,intercept):
+    """
+    Reads a PSSM data frame and returns the residue sequence
+    and its corresponding globally minimum pssm score.
+
+    Parameters
+    ----------
+    pssm : pandas dataframe
+        The data frame of each individual pssm score for an allele.
+    intercept : float
+        The intercept value from the PSSM file.
+
+    Returns
+    -------
+    global min peptide : str
+        String of residue corresponding to the lowest PSSM score possible for that matrix.
+
+    """
+
+    min_values = pssm_pd.min()
+    print(min_values)
+    min_row_titles = pssm_pd.idxmin()
+    min_score = min_values.sum()+intercept
+    result_string = "".join(min_row_titles)
+    return min_score, result_string
+
 def find_closest_points(full_set,subset,seed_library,k=96):
 
     full_set_coords = np.array([point[1:] for point in full_set],dtype=float)
