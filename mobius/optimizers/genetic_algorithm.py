@@ -13,9 +13,16 @@ import numpy as np
 import ray
 
 from .genetic_operators import GeneticOperators
+from .problem_moo import MyCrossover, MyMutation, MyDuplicateElimination
 from ..utils import generate_random_polymers_from_designs
 from ..utils import adjust_polymers_to_designs
 from ..utils import group_polymers_by_scaffold
+from ..utils import find_closest_points
+
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.optimize import minimize
+from pymoo.core.population import Population
+from pymoo.core.evaluator import Evaluator
 
 
 def _softmax_probability(scores):
@@ -516,6 +523,137 @@ class SequenceGA(_GeneticAlgorithm):
               f' - {self.polymers[0]} ({self.polymers[0].count(".")})')
 
         return self.polymers, self.scores
+    
+
+class MOOSequenceGA():
+
+    """
+    Sequence GA for optimising peptides for multiple objectives.
+
+    """
+
+    def __init__(self,problem,n_gen=5,n_pop=250,batch_size=96,cx_points=2,pm=0.1,minimum_mutations=1,maximum_mutations=None,**kwargs):
+        
+        """
+        Initialize the SequenceGA multi-objective optimization.
+
+        Parameters
+        ----------
+        problem: pymoo problem object
+            Defines number of objectives, variables & constraints
+        n_gen : int, default : 1000
+            Number of GA generation to run.
+        n_pop : int, default : 500
+            Number of children generated at each generation.
+        batch_size : int, default : 96
+            Number of polymers to return as suggested
+        cx_points : int, default : 2
+            Number of crossing over during the mating step.
+        pm : float, default : 0.1
+            Probability of mutation.
+        minimum_mutations : int, default : 1
+            Minimal number of mutations introduced in the new child.
+        maximum_mutations: int, default : None
+            Maximal number of mutations introduced in the new child.
+
+        """
+
+        self._parameters = {'n_gen': n_gen,
+                    'n_pop': n_pop,  
+                    'cx_points': cx_points, 
+                    'pm': pm,
+                    'minimum_mutations': minimum_mutations, 
+                    'maximum_mutations': maximum_mutations}
+        self._parameters.update(kwargs)
+
+        self.batch_size = batch_size
+
+        self.problem = problem
+        self.mutation = MyMutation()
+        self.crossover = MyCrossover()
+        self.dupes = MyDuplicateElimination()
+
+
+    def run(self, polymers):
+        """
+        Run the SequenceGA optimization.
+
+        Parameters
+        ----------
+        polymers : array-like of str
+            Polymers in HELM format.
+        scores : array-like of float or int
+            Score associated to each polymer.
+        acquisition_function : AcquisitionFunction
+            The acquisition function that will be used to score the polymer.
+        scaffold_designs : dictionary
+            Dictionary with scaffold polymers and defined set of monomers to use 
+            for each position.
+
+        Returns
+        -------
+        polymers : ndarray
+            Polymers found during the GA optimization.
+        scores : ndarray
+            Score for each polymer found.
+
+        """
+        # Make sure that inputs are numpy arrays
+        polymers = np.asarray(polymers)
+        X = np.full((len(polymers),1),None,dtype=object)
+
+        acqs = self.problem.get_acq_funs()
+        scores = np.full((len(polymers),len(acqs)),None)
+
+        for i in range(len(polymers)):
+
+            X[i,0] = polymers[i]
+
+            for j in range(len(acqs)):
+
+                score = acqs[j].forward(polymers[i])
+                ei = self.problem.get_scaling() * score.acq
+
+                scores[i][j] = ei[0]
+
+        pop = Population.new("X",X)
+        pop.set("F",scores)
+
+        algorithm = NSGA2(pop_size=self._parameters['n_pop'],
+                          sampling=pop,
+                          crossover=self.crossover,
+                          mutation=self.mutation,
+                          eliminate_duplicates=self.dupes)
+        
+        res = minimize(self.problem,
+                       algorithm,
+                       ('n_gen',self._parameters['n_gen']),
+                       verbose=True,
+                       save_history=True)
+        
+
+        all_populations = [e.pop for e in res.history if e.pop is not None]
+        final_pop = all_populations[-1]
+
+        final_polymers = final_pop.get("X")
+        final_scores = final_pop.get("F")
+
+        final_gen = np.column_stack((final_polymers,final_scores))
+
+        sol_polymers = res.X
+        sol_scores = res.F
+
+        print("Best Polymers found so far: ")
+        for sol in sol_polymers:
+            print(sol)
+
+        solutions = np.column_stack((sol_polymers,sol_scores))
+
+        self.polymers = find_closest_points(final_gen,solutions,polymers,self.batch_size)
+    
+        return self.polymers
+        
+
 
 
 class RandomGA():

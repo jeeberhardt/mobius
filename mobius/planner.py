@@ -351,3 +351,168 @@ class Planner(_Planner):
         suggested_polymers, predicted_values = self.ask(batch_size)
 
         return suggested_polymers, predicted_values
+    
+
+
+class MOOPlanner():
+    """
+    Class for setting up the design/optimization/filter protocols for multi-objective optimisation.
+
+    """
+
+    def __init__(self, acquisition_functions, optimizer, design_protocol, problem):
+        """
+        Initialize the polymer planner.
+
+        Parameters
+        ----------
+        acquisition_functions : `_AcquisitionFunction`
+            Array/List of acquisition functions that will be used to score the polymers.
+        optimizer : `_GeneticAlgorithm`
+            The optimizer that will be used to optimize the polymers.
+        design_protocol : str
+            Path of the YAML config file containing the design protocol 
+            (scaffolds + filters) used during polymers optimization.
+
+        Examples
+        --------
+
+        >>> from mobius import Planner
+        >>> ps = Planner(acq_fun, optimizer, design_protocole='config.yaml')
+
+        Example of `config.yaml` defining the scaffold design protocol and the 
+        different filters can also be defined to filter out polymers 
+        that do not satisfy certain criteria.
+
+        .. code:: yaml
+
+            design:
+                monomers: 
+                    default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
+                    APOLAR: [A, F, G, I, L, P, V, W]
+                    POLAR: [C, D, E, H, K, N, Q, R, K, S, T, M]
+                    AROMATIC: [F, H, W, Y]
+                    POS_CHARGED: [K, R]
+                    NEG_CHARGED: [D, E]
+                scaffolds:
+                    - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
+                        PEPTIDE1:
+                            1: [AROMATIC, NEG_CHARGED]
+                            4: POLAR
+                            8: [C, G, T, S, V, L, M]
+            filters:
+              - class_path: mobius.PeptideSelfAggregationFilter
+              - class_path: mobius.PeptideSolubilityFilter
+                init_args:
+                  hydrophobe_ratio: 0.5
+                  charged_per_amino_acids: 5
+
+        """
+        self._polymers = None
+        self._values = None
+        self._acq_funs = acquisition_functions
+        self._optimizer = optimizer
+        self._designs = _load_design_from_config(design_protocol)
+        self._filters = _load_filters_from_config(design_protocol)
+        self._problem = problem
+
+    def ask(self, batch_size=None):
+        """
+        Function to suggest new polymers/peptides based on previous experiments.
+
+        Parameters
+        ----------
+        batch_size : int, default: None
+            Total number of new polymers/peptides that will be returned. If not 
+            provided, it will return all the polymers found during the optimization.
+
+        Returns
+        -------
+        polymers : ndarray
+            Suggested polymers/peptides. The returned number of polymers 
+            will be equal to `batch_size`.
+        values : ndarray
+            Predicted values for each suggested polymers/peptides. The 
+            returned number will be equal to `batch_size`.
+
+        """
+        suggested_polymers = self._polymers.copy()
+        predicted_values = self._values.copy()
+
+        # suggested_polymers, predicted_values = self._optimizer.run(suggested_polymers, predicted_values, 
+        #                                                            self._acq_fun, scaffold_designs=self._designs)
+        suggested_polymers, predicted_values = self._optimizer#.run(variables to go here#)
+
+        # Apply filters on the suggested polymers
+        if self._filters:
+            passed = np.ones(len(suggested_polymers), dtype=bool)
+
+            for filter in self._filters:
+                passed = np.logical_and(passed, filter.apply(suggested_polymers))
+
+            suggested_polymers = suggested_polymers[passed]
+            predicted_values = predicted_values[passed]
+
+        # Sort polymers by scores in the decreasing order (best to worst)
+        # We want the best score to be the lowest, so we apply a scaling 
+        # factor (1 or -1). This scalng factor depends of the acquisition
+        # function nature.
+
+
+        # THIS HAS TO BE REPLACED BY THOSE CLOSEST TO SOLUTIONS
+        # pass batch size into closest 
+
+        sorted_indices = np.argsort(self._acq_fun.scaling_factor * predicted_values)
+
+        suggested_polymers = suggested_polymers[sorted_indices]
+        predicted_values = predicted_values[sorted_indices]
+
+        return suggested_polymers[:batch_size], predicted_values[:batch_size]
+
+    def tell(self, polymers, values):
+        """
+        Function to fit the surrogate model using data from past experiments.
+
+        Parameters
+        ----------
+        polymers : list of str
+            Polymers/peptides in HELM format.
+        values : list of int of float
+            Values associated to each polymer/peptide.
+
+        """
+        self._polymers = polymers
+        self._values = values
+        # self._acq_fun.surrogate_model.fit(polymers, values)
+
+        for acq in self._acq_funs:
+            acq.surrogate_model.fit(polymers,values)
+
+    def recommand(self, polymers, values, batch_size=None):
+        """
+        Function to suggest new polymers/peptides based on existing/previous data.
+
+        Parameters
+        ----------
+        polymers : list of str
+            Polymers/peptides in HELM format.
+        values : list of int of float
+            Value associated to each polymer/peptide.
+        batch_size : int, default: None
+            Total number of new polymers/peptides that will be returned. If not 
+            provided, it will return all the polymers found during the optimization.
+
+        Returns
+        -------
+        polymers : ndarray
+            Suggested polymers/peptides. The returned number of 
+            polymers/peptides will be equal to `batch_size`.
+        values : ndarray
+            Predicted values for each suggested polymers/peptides. The 
+            returned number will be equal to `batch_size`.
+
+        """
+        self.tell(polymers, values)
+        suggested_polymers, predicted_values = self.ask(batch_size)
+
+        return suggested_polymers, predicted_values

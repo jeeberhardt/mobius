@@ -16,6 +16,8 @@ import pandas as pd
 import torch
 from rdkit import Chem
 from rdkit import RDLogger
+from scipy.spatial.distance import cdist
+
 
 
 def constrained_sum_sample_pos(n, total):
@@ -956,27 +958,33 @@ def read_pssm_file(pssm_file):
 
     return pssm, intercept
 
-def global_min_pssm_score(pssm_pd,intercept):
-    """
-    Reads a PSSM data frame and returns the residue sequence
-    and its corresponding globally minimum pssm score.
+def find_closest_points(full_set,subset,seed_library,k=96):
 
-    Parameters
-    ----------
-    pssm : pandas dataframe
-        The data frame of each individual pssm score for an allele.
-    intercept : float
-        The intercept value from the PSSM file.
+    full_set_coords = np.array([point[1:] for point in full_set],dtype=float)
+    subset_coords = np.array([point[1:] for point in subset],dtype=float)
+    
+    n_subset_points = len(subset)
+    k = max(1,int(96 / n_subset_points))
 
-    Returns
-    -------
-    global min peptide : str
-        String of residue corresponding to the lowest PSSM score possible for that matrix.
+    selected_polymers = []
 
-    """
+    for subset_point in subset_coords:
+        subset_polymers = []
+        n_eval_polymers = 0
+        distances = cdist(np.array([subset_point]),full_set_coords)
+        sorted_indices = np.argsort(distances.ravel())
 
-    min_values = pssm_pd.min()
-    min_row_titles = pssm_pd.idxmin()
-    min_score = min_values.sum()+intercept
-    result_string = "".join(min_row_titles)
-    return min_score, result_string
+        while (len(subset_polymers) < k and n_eval_polymers < len(full_set)):
+
+            index_to_query = sorted_indices[n_eval_polymers]
+            polymer = full_set[index_to_query][0]
+
+            if polymer not in selected_polymers and polymer not in seed_library:
+                subset_polymers.append(polymer)
+
+            n_eval_polymers += 1
+        
+        for polymer in subset_polymers:
+            selected_polymers.append(polymer)
+
+    return selected_polymers
