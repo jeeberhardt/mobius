@@ -621,7 +621,7 @@ class MOOSequenceGA():
             for j in range(len(acqs)):
 
                 score = acqs[j].forward(polymers[i])
-                ei = self.problem.get_scaling() * score.acq
+                ei = acqs[j].scaling_factor * score.acq
 
                 scores[i][j] = ei[0]
 

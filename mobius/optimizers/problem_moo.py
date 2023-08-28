@@ -26,11 +26,11 @@ class MyProblem(ElementwiseProblem):
         assert len(acqs) == n_obj, "The number of acquisition functions is not equal to the number of objective functions."
         self.acqs = acqs
 
-        if greedy == False:
-            self.scaling = -1
+        # if greedy == False:
+        #     self.scaling = -1
 
-        else:
-            self.scaling = 1
+        # else:
+        #     self.scaling = 1
             
     def _evaluate(self, x, out, *args, **kwargs):
 
@@ -39,7 +39,7 @@ class MyProblem(ElementwiseProblem):
 
             for acq_fun in self.acqs:
                 score = acq_fun.forward(x)
-                ei = self.scaling*score.acq
+                ei = acq_fun.scaling_factor*score.acq
                 scores.append(ei[0])
 
             poly_track = [x[0]]
@@ -65,8 +65,8 @@ class MyProblem(ElementwiseProblem):
 
         return self.acqs
 
-    def get_scaling(self):
-        return self.scaling
+    # def get_scaling(self):
+    #     return self.scaling
 
     def polymer_tracking(self,scores):
 
