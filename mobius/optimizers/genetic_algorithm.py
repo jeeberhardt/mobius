@@ -654,8 +654,6 @@ class MOOSequenceGA():
         return self.polymers
         
 
-
-
 class RandomGA():
     """
     The RandomGA is for benchmark purpose only. It generates random polymers.

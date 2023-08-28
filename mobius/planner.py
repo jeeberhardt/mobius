@@ -360,14 +360,14 @@ class MOOPlanner():
 
     """
 
-    def __init__(self, acquisition_functions, optimizer, design_protocol, problem):
+    def __init__(self, problem, optimizer, design_protocol):
         """
         Initialize the polymer planner.
 
         Parameters
         ----------
-        acquisition_functions : `_AcquisitionFunction`
-            Array/List of acquisition functions that will be used to score the polymers.
+        problem : object
+            pymoo Problem object for multiple objective optimisation
         optimizer : `_GeneticAlgorithm`
             The optimizer that will be used to optimize the polymers.
         design_protocol : str
@@ -410,13 +410,12 @@ class MOOPlanner():
         """
         self._polymers = None
         self._values = None
-        self._acq_funs = acquisition_functions
         self._optimizer = optimizer
         self._designs = _load_design_from_config(design_protocol)
         self._filters = _load_filters_from_config(design_protocol)
         self._problem = problem
 
-    def ask(self, batch_size=None):
+    def ask(self):
         """
         Function to suggest new polymers/peptides based on previous experiments.
 
@@ -439,9 +438,7 @@ class MOOPlanner():
         suggested_polymers = self._polymers.copy()
         predicted_values = self._values.copy()
 
-        # suggested_polymers, predicted_values = self._optimizer.run(suggested_polymers, predicted_values, 
-        #                                                            self._acq_fun, scaffold_designs=self._designs)
-        suggested_polymers, predicted_values = self._optimizer#.run(variables to go here#)
+        suggested_polymers = self._optimizer.run(self._polymers)
 
         # Apply filters on the suggested polymers
         if self._filters:
@@ -451,7 +448,7 @@ class MOOPlanner():
                 passed = np.logical_and(passed, filter.apply(suggested_polymers))
 
             suggested_polymers = suggested_polymers[passed]
-            predicted_values = predicted_values[passed]
+            #predicted_values = predicted_values[passed]
 
         # Sort polymers by scores in the decreasing order (best to worst)
         # We want the best score to be the lowest, so we apply a scaling 
@@ -462,12 +459,7 @@ class MOOPlanner():
         # THIS HAS TO BE REPLACED BY THOSE CLOSEST TO SOLUTIONS
         # pass batch size into closest 
 
-        sorted_indices = np.argsort(self._acq_fun.scaling_factor * predicted_values)
-
-        suggested_polymers = suggested_polymers[sorted_indices]
-        predicted_values = predicted_values[sorted_indices]
-
-        return suggested_polymers[:batch_size], predicted_values[:batch_size]
+        return suggested_polymers
 
     def tell(self, polymers, values):
         """
@@ -483,12 +475,17 @@ class MOOPlanner():
         """
         self._polymers = polymers
         self._values = values
+
         # self._acq_fun.surrogate_model.fit(polymers, values)
 
-        for acq in self._acq_funs:
-            acq.surrogate_model.fit(polymers,values)
+        acqs = self._problem.get_acq_funs()
 
-    def recommand(self, polymers, values, batch_size=None):
+        for i in range(len(acqs)):
+            acq = acqs[i]
+
+            acq.surrogate_model.fit(polymers,values[:,i])
+
+    def recommand(self, polymers, values):
         """
         Function to suggest new polymers/peptides based on existing/previous data.
 
@@ -513,6 +510,6 @@ class MOOPlanner():
 
         """
         self.tell(polymers, values)
-        suggested_polymers, predicted_values = self.ask(batch_size)
+        suggested_polymers = self.ask()
 
-        return suggested_polymers, predicted_values
+        return suggested_polymers
