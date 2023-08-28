@@ -532,7 +532,8 @@ class MOOSequenceGA():
 
     """
 
-    def __init__(self,problem,n_gen=5,n_pop=150,batch_size=96,cx_points=2,pm=0.1,minimum_mutations=1,maximum_mutations=None,**kwargs):
+    def __init__(self,problem,n_gen=10,n_pop=250,batch_size=96,cx_points=2,
+    pm=0.1,minimum_mutations=1,maximum_mutations=None,keep_connections=True,design_protocol='design_protocol.yaml',**kwargs):
         
         """
         Initialize the SequenceGA multi-objective optimization.
@@ -541,9 +542,9 @@ class MOOSequenceGA():
         ----------
         problem: pymoo problem object
             Defines number of objectives, variables & constraints
-        n_gen : int, default : 1000
+        n_gen : int, default : 10
             Number of GA generation to run.
-        n_pop : int, default : 500
+        n_pop : int, default : 250
             Number of children generated at each generation.
         batch_size : int, default : 96
             Number of polymers to return as suggested
@@ -563,16 +564,24 @@ class MOOSequenceGA():
                     'cx_points': cx_points, 
                     'pm': pm,
                     'minimum_mutations': minimum_mutations, 
-                    'maximum_mutations': maximum_mutations}
+                    'maximum_mutations': maximum_mutations,
+                    'keep_connections': keep_connections}
         self._parameters.update(kwargs)
 
         self.batch_size = batch_size
 
+        self.design_protocol = design_protocol
+        print(design_protocol)
+
         self.problem = problem
-        self.mutation = MyMutation()
-        self.crossover = MyCrossover()
+        self.mutation = MyMutation(design_protocol,minimum_mutations,maximum_mutations,pm,keep_connections)
+        self.crossover = MyCrossover(cx_points)
         self.dupes = MyDuplicateElimination()
 
+
+    def get_design_protocol(self):
+
+        return self.design_protocol
 
     def run(self, polymers):
         """

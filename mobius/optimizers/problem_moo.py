@@ -77,22 +77,25 @@ class MyProblem(ElementwiseProblem):
         return self.polymer_cache
 
 class MyCrossover(Crossover):
-    def __init__(self):
+    def __init__(self,cx_points):
 
         # define the crossover: number of parents and number of offsprings
         super().__init__(2,2)
 
+        self._cx_points = cx_points
+
     def _do(self, problem, X, **kwargs):
 
         _rng = np.random.default_rng()
-        cx_points = 2
         # The input of has the following shape (n_parents, n_matings, n_var)
         offspring, n_matings, n_var = X.shape
+
+        cx_points = self._cx_points
 
         #print("matings",n_matings)
         #print("offspring",offspring)
         
-        # The output owith the shape (n_offsprings, n_matings, n_var)
+        # The output with the shape (n_offsprings, n_matings, n_var)
         # Because there the number of parents and offsprings are equal it keeps the shape of X
         Y = np.full_like(X, None, dtype=object)
 
@@ -138,33 +141,29 @@ class MyCrossover(Crossover):
         return Y
 
 class MyMutation(Mutation):
-    def __init__(self):
+    def __init__(self,design_protocol,minimum_mutations,maximum_mutations,pm,keep_connections):
         super().__init__()
+
+        self.design_protocol = design_protocol
+        self.maximum_mutations = maximum_mutations
+        self.minimum_mutations = minimum_mutations
+        self.pm = pm
+        self.keep_connections = keep_connections
 
     def _do(self, problem, X, **kwargs):
 
-        scaffold_designs = _load_design_from_config("design_protocol.yaml")
+        scaffold_designs = _load_design_from_config(self.design_protocol)
 
         _rng = np.random.default_rng()
-        
-        minimum_mutations = 1
-        maximum_mutations = None
-        keep_connections = True
 
         mutant_polymers = []
-
-        #mutts_made = 0
 
         # for each individual
         for i in range(len(X)):
 
             r = _rng.random()
-            #print("RNG Mutation Prob: ",r)
 
-            if r < 0.1:
-
-                #print("Randomly Mutated: r = ",r)
-                #mutts_made += 1
+            if r < self.pm:
 
                 polymer = X[i]
                 polymer = polymer[0]
@@ -183,7 +182,7 @@ class MyMutation(Mutation):
                     mutated_simple_polymer = list(simple_polymer)
 
                     # Residues involved in a connection within and between peptides won't be mutated
-                    if keep_connections and pid in complex_polymer.keys():
+                    if self.keep_connections and pid in complex_polymer.keys():
                         connection_resids = list(connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition'])
                         connection_resids += list(connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition'])
                         # -1, because positions are 1-based in HELM
@@ -193,14 +192,14 @@ class MyMutation(Mutation):
                         possible_positions = list(range(len(simple_polymer)))
 
                     # Choose a random number of mutations between min and max
-                    if minimum_mutations == maximum_mutations:
-                        number_mutations = maximum_mutations
-                    elif maximum_mutations is None:
-                        number_mutations = _rng.integers(low=minimum_mutations, high=len(possible_positions))
+                    if self.minimum_mutations == self.maximum_mutations:
+                        number_mutations = self.maximum_mutations
+                    elif self.maximum_mutations is None:
+                        number_mutations = _rng.integers(low=self.minimum_mutations, high=len(possible_positions))
                     else:
                         # The maximum number of mutations cannot be greater than the length of the polymer
-                        tmp_maximum_mutations = np.min([maximum_mutations, len(possible_positions)])
-                        number_mutations = _rng.integers(low=minimum_mutations, high=tmp_maximum_mutations)
+                        tmp_maximum_mutations = np.min([self.maximum_mutations, len(possible_positions)])
+                        number_mutations = _rng.integers(low=self.minimum_mutations, high=tmp_maximum_mutations)
 
                     # Choose positions to mutate
                     mutation_positions = _rng.choice(possible_positions, size=number_mutations, replace=False)
@@ -216,7 +215,7 @@ class MyMutation(Mutation):
 
 
                 if n_mutations > 0:
-                    if not keep_connections:
+                    if not self.keep_connections:
                         connections_to_keep = []
 
                         # Check if we have to remove connections due to the mutations
@@ -240,9 +239,6 @@ class MyMutation(Mutation):
                 polymer = X[i]
                 polymer = polymer[0]
                 mutant_polymers.append(polymer)
-
-
-        #print("No. of mutants: ",mutts_made,"Total Polymers: ",len(X))
 
         mutant_polymers = np.array(mutant_polymers).reshape(-1, 1)
 

@@ -360,7 +360,7 @@ class MOOPlanner():
 
     """
 
-    def __init__(self, problem, optimizer, design_protocol):
+    def __init__(self, problem, optimizer):
         """
         Initialize the polymer planner.
 
@@ -408,11 +408,14 @@ class MOOPlanner():
                   charged_per_amino_acids: 5
 
         """
+
+        protocol = optimizer.get_design_protocol()
+
         self._polymers = None
         self._values = None
         self._optimizer = optimizer
-        self._designs = _load_design_from_config(design_protocol)
-        self._filters = _load_filters_from_config(design_protocol)
+        self._designs = _load_design_from_config(protocol)
+        self._filters = _load_filters_from_config(protocol)
         self._problem = problem
 
     def ask(self):
