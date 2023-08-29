@@ -571,7 +571,6 @@ class MOOSequenceGA():
         self.batch_size = batch_size
 
         self.design_protocol = design_protocol
-        print(design_protocol)
 
         self.problem = problem
         self.mutation = MyMutation(design_protocol,minimum_mutations,maximum_mutations,pm,keep_connections)

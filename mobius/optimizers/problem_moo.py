@@ -14,23 +14,15 @@ from pymoo.core.duplicate import ElementwiseDuplicateElimination
 from ..utils import get_scaffold_from_helm_string, parse_helm, build_helm_string
 from ..planner import _load_design_from_config
 
-class MyProblem(ElementwiseProblem):
+class MOOProblem(ElementwiseProblem):
 
-    def __init__(self, acqs, n_var=1, n_obj=2, n_ieq_constr=0,greedy=False):
-        super().__init__(n_var=n_var,
-                         n_obj=n_obj,
-                         n_ieq_constr=n_ieq_constr)
+    def __init__(self, acqs, n_inequality_constr=0,greedy=False):
+        super().__init__(n_var=1,
+                         n_obj=len(acqs),
+                         n_ieq_constr=n_inequality_constr)
         
         self.polymer_cache = []
-        
-        assert len(acqs) == n_obj, "The number of acquisition functions is not equal to the number of objective functions."
         self.acqs = acqs
-
-        # if greedy == False:
-        #     self.scaling = -1
-
-        # else:
-        #     self.scaling = 1
             
     def _evaluate(self, x, out, *args, **kwargs):
 
@@ -64,9 +56,6 @@ class MyProblem(ElementwiseProblem):
     def get_acq_funs(self):
 
         return self.acqs
-
-    # def get_scaling(self):
-    #     return self.scaling
 
     def polymer_tracking(self,scores):
 
