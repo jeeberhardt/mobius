@@ -87,18 +87,13 @@ class MyCrossover(Crossover):
         # define the crossover: number of parents and number of offsprings
         super().__init__(2,2)
 
-        self._cx_points = cx_points
+        self.cx_points = cx_points
 
     def _do(self, problem, X, **kwargs):
 
         _rng = np.random.default_rng()
         # The input of has the following shape (n_parents, n_matings, n_var)
         offspring, n_matings, n_var = X.shape
-
-        cx_points = self._cx_points
-
-        #print("matings",n_matings)
-        #print("offspring",offspring)
         
         # The output with the shape (n_offsprings, n_matings, n_var)
         # Because there the number of parents and offsprings are equal it keeps the shape of X
@@ -129,7 +124,7 @@ class MyCrossover(Crossover):
     
                 # Choose positions to crossover
                 possible_positions = list(range(len(complex_polymer1[pid])))
-                cx_positions = _rng.choice(possible_positions, size=cx_points, replace=False)
+                cx_positions = _rng.choice(possible_positions, size=self.cx_points, replace=False)
                 cx_positions = np.sort(cx_positions)
     
                 for cx_position in cx_positions:

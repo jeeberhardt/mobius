@@ -984,13 +984,13 @@ def global_min_pssm_score(pssm_pd,intercept):
     result_string = "".join(min_row_titles)
     return min_score, result_string
 
-def find_closest_points(full_set,subset,seed_library,k=96):
+def find_closest_points(full_set,subset,seed_library,batch_size):
 
     full_set_coords = np.array([point[1:] for point in full_set],dtype=float)
     subset_coords = np.array([point[1:] for point in subset],dtype=float)
     
     n_subset_points = len(subset)
-    k = max(1,int(96 / n_subset_points))
+    k = max(1,int(batch_size / n_subset_points))
 
     selected_polymers = []
 
@@ -1003,14 +1003,13 @@ def find_closest_points(full_set,subset,seed_library,k=96):
         while (len(subset_polymers) < k and n_eval_polymers < len(full_set)):
 
             index_to_query = sorted_indices[n_eval_polymers]
-            polymer = full_set[index_to_query][0]
+            polymer = full_set[index_to_query]
 
-            if polymer not in selected_polymers and polymer not in seed_library:
+            if polymer[0] not in selected_polymers and polymer[0] not in seed_library:
                 subset_polymers.append(polymer)
 
             n_eval_polymers += 1
         
-        for polymer in subset_polymers:
-            selected_polymers.append(polymer)
+    selected_polymers_df = pd.DataFrame(subset_polymers,columns=full_set.dtype.names)
 
-    return selected_polymers
+    return selected_polymers_df
