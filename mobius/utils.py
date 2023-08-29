@@ -17,6 +17,10 @@ import torch
 from rdkit import Chem
 from rdkit import RDLogger
 from scipy.spatial.distance import cdist
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+
 
 
 
@@ -1013,3 +1017,34 @@ def find_closest_points(full_set,subset,seed_library,batch_size):
     selected_polymers_df = pd.DataFrame(subset_polymers,columns=full_set.dtype.names)
 
     return selected_polymers_df
+
+def visualise_2d(pic50_history):
+
+    fig, ax = plt.subplots()
+
+    colours = plt.cm.viridis(np.linspace(0,1,len(pic50_history)))
+    optimisation = 0
+
+    ax.set_xlabel("Objective Function 1")
+    ax.set_ylabel('Objective Function 2')
+
+    ax.axvline(x=0,color='black',linestyle=':')
+    ax.axvline(x=3,color='black',linestyle=':')
+    ax.axvline(x=6,color='black',linestyle=':')
+
+    ax.axhline(y=0,color='black',linestyle=':')
+    ax.axhline(y=3,color='black',linestyle=':')
+    ax.axhline(y=6,color='black',linestyle=':')
+
+    legend_handles = []
+    legend_labels = []
+
+    for array in pic50_history:
+        scatter = ax.scatter(array[:, 0], array[:, 1], color=[colours[optimisation]], alpha=0.5)
+        legend_handles.append(scatter)  # Add scatter plot handle to the legend
+        legend_labels.append(f"Optimisation {optimisation}")
+        optimisation += 1
+
+    ax.legend(legend_handles,legend_labels,loc='upper left', bbox_to_anchor=(1, 1))
+
+    return fig
