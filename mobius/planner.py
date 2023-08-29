@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from .utils import parse_helm, get_scaffold_from_helm_string
+from .optimizers.genetic_algorithm import MOOSequenceGA
 
 
 class _Planner(ABC):
@@ -360,7 +361,7 @@ class MOOPlanner():
 
     """
 
-    def __init__(self, problem, optimizer):
+    def __init__(self, problem, design_protocol='design_protocol.yaml',batch_size=96):
         """
         Initialize the polymer planner.
 
@@ -409,14 +410,15 @@ class MOOPlanner():
 
         """
 
-        protocol = optimizer.get_design_protocol()
+        self._protocol = design_protocol
+        self._batch_size = batch_size
 
         self._polymers = None
         self._values = None
-        self._optimizer = optimizer
-        self._designs = _load_design_from_config(protocol)
-        self._filters = _load_filters_from_config(protocol)
+        self._designs = _load_design_from_config(self._protocol)
+        self._filters = _load_filters_from_config(self._protocol)
         self._problem = problem
+        self._optimizer = MOOSequenceGA(self._problem,design_protocol=self._protocol,batch_size=self._batch_size)
 
     def ask(self):
         """

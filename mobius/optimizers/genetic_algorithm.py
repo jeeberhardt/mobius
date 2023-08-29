@@ -532,8 +532,7 @@ class MOOSequenceGA():
 
     """
 
-    def __init__(self,problem,n_gen=10,n_pop=250,batch_size=96,cx_points=2,
-    pm=0.1,minimum_mutations=1,maximum_mutations=None,keep_connections=True,design_protocol='design_protocol.yaml',**kwargs):
+    def __init__(self,problem,design_protocol='design_protocol.yaml',batch_size=96):
         
         """
         Initialize the SequenceGA multi-objective optimization.
@@ -559,22 +558,15 @@ class MOOSequenceGA():
 
         """
 
-        self._parameters = {'n_gen': n_gen,
-                    'n_pop': n_pop,  
-                    'cx_points': cx_points, 
-                    'pm': pm,
-                    'minimum_mutations': minimum_mutations, 
-                    'maximum_mutations': maximum_mutations,
-                    'keep_connections': keep_connections}
-        self._parameters.update(kwargs)
-
         self.batch_size = batch_size
 
         self.design_protocol = design_protocol
 
+        self._parameters = problem.get_params()
+
         self.problem = problem
-        self.mutation = MyMutation(design_protocol,minimum_mutations,maximum_mutations,pm,keep_connections)
-        self.crossover = MyCrossover(cx_points)
+        self.mutation = MyMutation(design_protocol,self._parameters['minimum_mutations'],self._parameters['maximum_mutations'],self._parameters['pm'],self._parameters['keep_connections'])
+        self.crossover = MyCrossover(self._parameters['cx_points'])
         self.dupes = MyDuplicateElimination()
 
 

@@ -16,13 +16,24 @@ from ..planner import _load_design_from_config
 
 class MOOProblem(ElementwiseProblem):
 
-    def __init__(self, acqs, n_inequality_constr=0,greedy=False):
+    def __init__(self, acqs, n_inequality_constr=0,n_equality_constr=0,n_gen=10,n_pop=250,cx_points=2,
+    pm=0.1,minimum_mutations=1,maximum_mutations=None,keep_connections=True,**kwargs):
         super().__init__(n_var=1,
                          n_obj=len(acqs),
-                         n_ieq_constr=n_inequality_constr)
+                         n_ieq_constr=n_inequality_constr,
+                         n_eq_constr=n_equality_constr)
         
         self.polymer_cache = []
         self.acqs = acqs
+
+        self._parameters = {'n_gen': n_gen,
+            'n_pop': n_pop,  
+            'cx_points': cx_points, 
+            'pm': pm,
+            'minimum_mutations': minimum_mutations, 
+            'maximum_mutations': maximum_mutations,
+            'keep_connections': keep_connections}
+        self._parameters.update(kwargs)
             
     def _evaluate(self, x, out, *args, **kwargs):
 
@@ -52,6 +63,11 @@ class MOOProblem(ElementwiseProblem):
 
                     out["F"] = np.array(scores,dtype=float)
                     break
+
+
+    def get_params(self):
+
+        return self._parameters
 
     def get_acq_funs(self):
 
