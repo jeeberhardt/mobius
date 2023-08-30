@@ -27,7 +27,7 @@ from .utils import affinity_binding_to_energy, energy_to_affinity_binding, ic50_
 from .utils import generate_random_linear_polymers, generate_random_polymers_from_designs
 from .utils import adjust_polymers_to_designs, check_polymers_with_designs
 from .utils import convert_FASTA_to_HELM, convert_HELM_to_FASTA, find_closest_points,global_min_pssm_score, visualise_2d, load_design_from_config
-from .utils import visualise_3d_scatter, visualise_radar
+from .utils import visualise_3d_scatter, visualise_radar, create_history
 
 __all__ = ['VirtualTarget', 'ForceField',
            'LinearPeptideEmulator', 'FindMe',
@@ -49,4 +49,4 @@ __all__ = ['VirtualTarget', 'ForceField',
            'ic50_to_pic50', 'pic50_to_ic50',
            'PeptideSelfAggregationFilter', 'PeptideSolubilityFilter',
            'convert_FASTA_to_HELM', 'convert_HELM_to_FASTA','find_closest_points','global_min_pssm_score','visualise_2d','load_design_from_config',
-           'visualise_3d_scatter','visualise_radar']
+           'visualise_3d_scatter','visualise_radar','create_history']

@@ -1065,21 +1065,51 @@ def visualise_3d_scatter(df, axis_labels=['f_1','f_2','f_3']):
 
     return fig, ax
 
-def visualise_radar(df,ideal,nadir,n):
+def visualise_radar(data_array, ideal, nadir):
+    # Extract the scores from the data_array
+    F = data_array[:, 1:].astype(float)
 
-    filtered_df = df[df['Optimisation']==n].filter(like='Score_')
-    F = filtered_df.values
-
-    assert np.shape(ideal) == np.shape(F[1]), "Ideal point must have the same number of objectives as DataFrame"
-    assert np.shape(nadir) == np.shape(F[1]), "Nadir point must have the same number of objectives as DataFrame"
-
-    plot = Radar(bounds=[ideal,nadir],
+    plot = Radar(bounds=[ideal, nadir],
                  axis_style={"color": 'black'},
                  point_style={"color": 'blue', 's': 30})
 
     plot.add(F, color="blue", alpha=0.5)
 
-    return plot 
+    return plot
+
+
+def create_history(n,df_old,polymers,scores):
+
+    if n == 0:
+        data = {
+            "Polymers": polymers,
+            "Optimisation": [n] * len(polymers)
+        }
+
+        # Add the dynamic array columns to the dictionary
+        for i in range(scores.shape[1]):
+            column_name = f"Score_{i+1}"
+            data[column_name] = scores[:, i]
+
+        # Create the DataFrame
+        df = pd.DataFrame(data)
+        return df
+    
+    else:
+        new_data = {
+            "Polymers": polymers,
+            "Optimisation": n,
+        }
+
+        for i in range(scores.shape[1]):
+            column_name = f"Score_{i+1}"
+            new_data[column_name] = scores[:,i].flatten()
+
+        df_new = pd.DataFrame(new_data)
+        df = pd.concat([df_old,df_new], ignore_index=True)
+
+        return df
+
 
 
 def load_design_from_config(config_filename):

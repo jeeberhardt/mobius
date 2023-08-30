@@ -569,7 +569,6 @@ class MOOSequenceGA():
         self.crossover = MyCrossover(self._parameters['cx_points'])
         self.dupes = MyDuplicateElimination()
 
-
     def get_design_protocol(self):
 
         return self.design_protocol
@@ -619,6 +618,8 @@ class MOOSequenceGA():
         pop = Population.new("X",X)
         pop.set("F",scores)
 
+        print("Initial population seeded...")
+
         algorithm = NSGA2(pop_size=self._parameters['n_pop'],
                           sampling=pop,
                           crossover=self.crossover,
@@ -651,7 +652,7 @@ class MOOSequenceGA():
 
         self.polymers = find_closest_points(final_gen,solutions,polymers,self.batch_size)
     
-        return self.polymers
+        return self.polymers, sol_polymers
         
 
 class RandomGA():

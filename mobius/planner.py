@@ -443,10 +443,11 @@ class MOOPlanner():
         suggested_polymers = self._polymers.copy()
         predicted_values = self._values.copy()
 
-        suggested_polymers = self._optimizer.run(self._polymers)
+        suggested_polymers, solution_polymers = self._optimizer.run(self._polymers)
 
         # Apply filters on the suggested polymers
         if self._filters:
+            print(">>>>>>> Entered")
             passed = np.ones(len(suggested_polymers), dtype=bool)
 
             for filter in self._filters:
@@ -464,7 +465,7 @@ class MOOPlanner():
         # THIS HAS TO BE REPLACED BY THOSE CLOSEST TO SOLUTIONS
         # pass batch size into closest 
 
-        return suggested_polymers
+        return suggested_polymers, solution_polymers
 
     def tell(self, polymers, values):
         """
@@ -515,6 +516,6 @@ class MOOPlanner():
 
         """
         self.tell(polymers, values)
-        suggested_polymers = self.ask()
+        suggested_polymers, solution_polymers = self.ask()
 
-        return suggested_polymers
+        return suggested_polymers, solution_polymers
