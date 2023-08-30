@@ -1,6 +1,6 @@
 # Mobius
 
-A python package for optimizing peptide sequences using Bayesian optimization (BO)
+A python package for optimizing peptide sequences using Bayesian optimization (BO) for multiple objectives.
 
 ## Installation
 
@@ -30,12 +30,17 @@ pip install git+https://git.scicore.unibas.ch/schwede/mobius.git@v0.3
 #
 
 import numpy as np
-from mobius import Planner, SequenceGA
+import pandas as pd
+import matplotlib.pyplot as plt
+
 from mobius import Map4Fingerprint
 from mobius import GPModel, ExpectedImprovement, TanimotoSimilarityKernel
 from mobius import LinearPeptideEmulator
-from mobius import homolog_scanning, alanine_scanning
+from mobius import homolog_scanning
 from mobius import convert_FASTA_to_HELM
+from mobius import MOOProblem,MOOPlanner
+from mobius import visualise_3d_scatter, visualise_radar
+from mobius import create_history
 ```
 
 Simple linear peptide emulator/oracle for MHC class I A*0201. The Position Specific Scoring Matrices
@@ -43,11 +48,13 @@ Simple linear peptide emulator/oracle for MHC class I A*0201. The Position Speci
 matrices of SMM and SMMPMBEC` section). WARNING: This is for benchmarking purpose only. This step should be an 
 actual lab experiment.
 ```python
-pssm_files = ['IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-8.txt',
-              'IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-9.txt',
-              'IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-10.txt',
-              'IEDB_MHC_I-2.9_matx_smm_smmpmbec/smmpmbec_matrix/HLA-A-02:01-11.txt']
-lpe = LinearPeptideEmulator(pssm_files)
+pssm_file_one = ['IEDB_MHC/smmpmbec_matrix/HLA-A-02:16-9.txt']
+pssm_file_two = ['IEDB_MHC/smmpmbec_matrix/HLA-A-02:11-9.txt']
+pssm_file_three = ['IEDB_MHC/smmpmbec_matrix/HLA-A-02:01-9.txt']
+
+lpe_one = LinearPeptideEmulator(pssm_file_one)
+lpe_two = LinearPeptideEmulator(pssm_file_two)
+lpe_three = LinearPeptideEmulator(pssm_file_three)
 ```
 
 Now we define a peptide sequence we want to optimize
@@ -60,9 +67,6 @@ and homolog scanning sequence-based strategies
 ```python
 seed_library = [lead_peptide]
 
-for seq in alanine_scanning(lead_peptide):
-    seed_library.append(seq)
-    
 for seq in homolog_scanning(lead_peptide):
     seed_library.append(seq)
 
@@ -74,17 +78,28 @@ for seq in homolog_scanning(lead_peptide):
 The seed library is then virtually tested (Make/Test) using the linear peptide emulator we defined earlier.
 WARNING: This is for benchmarking purpose only. This step is supposed to be an actual lab experiment.
 ```python
-pic50_seed_library = lpe.score(seed_library)
+pic50_one_seed_library = lpe_one.score(seed_library)
+pic50_two_seed_library = lpe_two.score(seed_library)
+pic50_three_seed_library = lpe_three.score(seed_library)
+
+pic50_scores = np.column_stack((pic50_one_seed_library,pic50_two_seed_library,pic50_three_seed_library))
 ```
 
-Once we got results from our first lab experiment we can now start the Bayesian Optimization (BO) First, 
-we define the molecular fingerprint we want to use as well as the surrogate model (Gaussian Process),  
-the acquisition function (Expected Improvement) and the optimization methode (SequenceGA).
+Once we have the results from our first lab experiment we can now start the Bayesian Optimization (BO) First, 
+we define the molecular fingerprint we want to use as well as the surrogate models for each objective (Gaussian Process) 
+and the acquisition functions (Expected Improvement).
 ```python
 map4 = Map4Fingerprint(input_type='helm_rdkit', dimensions=4096, radius=1)
-gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
-acq = ExpectedImprovement(gpmodel, maximize=False)
-optimizer = SequenceGA(total_attempts=5)
+
+gpmodel_one = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
+gpmodel_two = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
+gpmodel_three = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
+
+acq_one = ExpectedImprovement(gpmodel_one, maximize=False)
+acq_two = ExpectedImprovement(gpmodel_two, maximize=False)
+acq_three = ExpectedImprovement(gpmodel_three, maximize=False)
+
+acqs = [acq_one,acq_two,acq_three]
 ```
 
 ... and now let's define the search protocol in a YAML configuration file (`design_protocol.yaml`) that will be used 
@@ -118,37 +133,74 @@ filters:
 ```
 
 Once acquisition function / surrogate model are defined and the parameters set in the YAML 
-configuration file, we can initiate the planner method.
+configuration file, we can initiate the multi-objective problem we are optimising for and the planner method.
 ```python
-ps = Planner(acq, optimizer, design_protocol='design_protocol.yaml')
+problem = MOOProblem(acqs)
+planner = MOOPlanner(problem,design_protocol='design_protocol.yaml')
 ```
 
 Now it is time to run the optimization!!
 
 ```python
+# Initialise the DataFrame which records the progression of the optimisation
 peptides = list(seed_library)[:]
-pic50_scores = list(pic50_seed_library)[:]
+optimisation = 0
+
+pic50_history = pd.DataFrame()
+pic50_history = create_history(optimisation,pic50_history,peptides,pic50_scores)
 
 # Here we are going to do 3 DMT cycles
 for i in range(3):
+
+    optimisation += 1
+    
     # Run optimization, recommand 96 new peptides based on existing data
-    suggested_peptides, _ = ps.recommand(peptides, pic50_scores, batch_size=96)
+    suggested_peptides_df, sols = planner.recommand(peptides, pic50_scores)
+
+    suggested_peptides = suggested_peptides_df.iloc[:, 0].tolist()
 
     # Here you can add whatever methods you want to further filter out peptides
     
     # Get the pIC50 (Make/Test) of all the suggested peptides using the MHC emulator
     # WARNING: This is for benchmarking purpose only. This 
     # step is supposed to be an actual lab experiment.
-    pic50_suggested_peptides = lpe.score(suggested_peptides)
+    pic50_1_suggested_peptides = lpe_one.score(suggested_peptides)
+    pic50_2_suggested_peptides = lpe_two.score(suggested_peptides)
+    pic50_3_suggested_peptides = lpe_three.score(suggested_peptides)
+
+    pic50_suggested_peptides = np.column_stack((pic50_1_suggested_peptides,pic50_2_suggested_peptides,pic50_3_suggested_peptides))
     
     # Add all the new data
     peptides.extend(list(suggested_peptides))
-    pic50_scores.extend(list(pic50_suggested_peptides))
-    
-    best_seq = peptides[np.argmin(pic50_scores)]
-    best_pic50 = np.min(pic50_scores)
-    print('Best peptide found so far: %s / %.3f' % (best_seq, best_pic50))
-    print('')
+    pic50_scores = np.concatenate((pic50_scores,pic50_suggested_peptides),axis=0)
+
+    # Update the optimisation tracker
+    pic50_history = create_history(optimisation,pic50_history,suggested_peptides,pic50_suggested_peptides)
+```
+
+Now we can also visualise the progression of the optimisation:
+```python
+fig,_ = visualise_3d_scatter(pic50_history)
+fig.show()
+```
+
+And if we have theoretical limits of our objectives available, we can visualise the best performing polymers in each objective:
+```python
+# Scoring the solutions at the pareto front Mobius finds
+sols_list = [item[0] for item in sols]
+
+pic50_1_sols = lpe_one.score(sols_list)
+pic50_2_sols = lpe_two.score(sols_list)
+pic50_3_sols = lpe_three.score(sols_list)
+
+pic50_sols = np.column_stack((sols_list,pic50_1_sols,pic50_2_sols,pic50_3_sols))
+
+# Declare the ideal and worst performing scores for our objectives
+ideal = [-3,-3,-3]
+nadir = [7,7,7]
+
+fig = visualise_radar(pic50_sols,ideal,nadir)
+fig.show()
 ```
 
 ## Documentation
