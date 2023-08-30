@@ -12,7 +12,7 @@ from pymoo.core.mutation import Mutation
 from pymoo.core.duplicate import ElementwiseDuplicateElimination
 
 from ..utils import get_scaffold_from_helm_string, parse_helm, build_helm_string
-from ..planner import _load_design_from_config
+from ..utils import load_design_from_config
 
 class MOOProblem(ElementwiseProblem):
 
@@ -152,7 +152,7 @@ class MyMutation(Mutation):
 
     def _do(self, problem, X, **kwargs):
 
-        scaffold_designs = _load_design_from_config(self.design_protocol)
+        scaffold_designs = load_design_from_config(self.design_protocol)
 
         _rng = np.random.default_rng()
 

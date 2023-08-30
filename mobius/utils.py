@@ -17,9 +17,9 @@ import torch
 from rdkit import Chem
 from rdkit import RDLogger
 from scipy.spatial.distance import cdist
-import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
+import seaborn as sns
+from pymoo.visualization.radar import Radar
 
 
 
@@ -1018,33 +1018,154 @@ def find_closest_points(full_set,subset,seed_library,batch_size):
 
     return selected_polymers_df
 
-def visualise_2d(pic50_history):
+def visualise_2d(df, axis_labels=['f_1','f_2']):
 
     fig, ax = plt.subplots()
 
-    colours = plt.cm.viridis(np.linspace(0,1,len(pic50_history)))
-    optimisation = 0
+    colours = plt.cm.viridis(np.linspace(0, 1, len(df['Optimisation'].unique())))
 
-    ax.set_xlabel("Objective Function 1")
-    ax.set_ylabel('Objective Function 2')
-
-    ax.axvline(x=0,color='black',linestyle=':')
-    ax.axvline(x=3,color='black',linestyle=':')
-    ax.axvline(x=6,color='black',linestyle=':')
-
-    ax.axhline(y=0,color='black',linestyle=':')
-    ax.axhline(y=3,color='black',linestyle=':')
-    ax.axhline(y=6,color='black',linestyle=':')
+    ax.set_xlabel(axis_labels[0])
+    ax.set_ylabel(axis_labels[1])
 
     legend_handles = []
     legend_labels = []
 
-    for array in pic50_history:
-        scatter = ax.scatter(array[:, 0], array[:, 1], color=[colours[optimisation]], alpha=0.5)
-        legend_handles.append(scatter)  # Add scatter plot handle to the legend
+    for optimisation, group in df.groupby('Optimisation'):
+        scatter = ax.scatter(group['Score_1'], group['Score_2'], color=colours[optimisation], alpha=0.5)
+        legend_handles.append(scatter)
         legend_labels.append(f"Optimisation {optimisation}")
-        optimisation += 1
 
-    ax.legend(legend_handles,legend_labels,loc='upper left', bbox_to_anchor=(1, 1))
+    ax.legend(legend_handles, legend_labels, loc='upper left', bbox_to_anchor=(1, 1))
 
-    return fig
+    return fig, ax
+
+
+def visualise_3d_scatter(df, axis_labels=['f_1','f_2','f_3']):
+    colours = plt.cm.viridis(np.linspace(0, 1, len(df['Optimisation'].unique())))
+
+    sns.set(style="darkgrid")
+    fig = plt.figure(figsize=(15, 15))
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.set_xlabel(axis_labels[0])
+    ax.set_ylabel(axis_labels[1])
+    ax.set_zlabel(axis_labels[2])
+
+    ax.set_box_aspect((1, 1, 1)) 
+
+    legend_handles = []
+    legend_labels = []
+
+    for optimisation, group in df.groupby('Optimisation'):
+        scatter = ax.scatter(group['Score_1'], group['Score_2'], group['Score_3'], color=colours[optimisation], alpha=0.5)
+        legend_handles.append(scatter)
+        legend_labels.append(f"Optimisation {optimisation}")
+
+    ax.legend(legend_handles, legend_labels, loc='upper left', bbox_to_anchor=(1, 1))
+
+    return fig, ax
+
+def visualise_radar(df,ideal,nadir,n):
+
+    filtered_df = df[df['Optimisation']==n].filter(like='Score_')
+    F = filtered_df.values
+
+    assert np.shape(ideal) == np.shape(F[1]), "Ideal point must have the same number of objectives as DataFrame"
+    assert np.shape(nadir) == np.shape(F[1]), "Nadir point must have the same number of objectives as DataFrame"
+
+    plot = Radar(bounds=[ideal,nadir],
+                 axis_style={"color": 'black'},
+                 point_style={"color": 'blue', 's': 30})
+
+    plot.add(F, color="blue", alpha=0.5)
+
+    return plot 
+
+
+def load_design_from_config(config_filename):
+    """
+    Function to load the design protocol from the YAML config file.
+
+    Parameters
+    ----------
+    config_filename : YAML config filename
+        YAML config file containing the design protocol.
+
+    Returns
+    -------
+    designs : list of designs
+        List of designs to use during the polymer optimization.
+
+    """
+    designs = {}
+    monomers_collections = {}
+    default_monomers = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
+                        'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+
+    with open(config_filename, 'r') as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+
+    try:
+        design = config['design']
+    except:
+        # No design protocol defined
+        return designs
+
+    try:
+        monomers_collections = design['monomers']
+    except:
+        pass
+
+    try:
+        # Get the default monomers collection if redefined by the user
+        # otherwise we use the default monomers collection defined above
+        # composed of the 20 natural amino acids.
+        default_monomers = design['monomers']['default']
+    except:
+        pass
+
+    for scaffold_design in design['scaffolds']:
+        try:
+            scaffold_complex_polymer = list(scaffold_design.keys())[0]
+            scaffold_instructions = scaffold_design[scaffold_complex_polymer]
+        except:
+            scaffold_complex_polymer = scaffold_design
+            scaffold_instructions = {}
+
+        complex_polymer, _, _, _ = parse_helm(scaffold_complex_polymer)
+
+        for pid, simple_polymer in complex_polymer.items():
+            scaffold_instructions.setdefault(pid, {})
+
+            for i, monomer in enumerate(simple_polymer):
+                if monomer == 'X':
+                    try:
+                        user_defined_monomers = scaffold_instructions[pid][i + 1]
+                    except:
+                        # Use natural amino acids set for positions that are not defined.
+                        scaffold_instructions[pid][i + 1] = default_monomers
+                        continue
+
+                    if not isinstance(user_defined_monomers, list):
+                        user_defined_monomers = [user_defined_monomers]
+
+                    # if one the monomer is monomers collection, replace it by the monomers collection
+                    # The monomers collection must be defined in the YAML config file, otherwise it will be
+                    # considered as a monomer. 
+                    if set(user_defined_monomers).issubset(monomers_collections.keys()):
+                        for j, m in enumerate(user_defined_monomers):
+                            if m in monomers_collections:
+                                user_defined_monomers[j:j+1] = monomers_collections[m]
+
+                    scaffold_instructions[pid][i + 1] = user_defined_monomers
+                else:
+                    # We could had used the setdefault function here, but we will have
+                    # the issue when the user defined monomers for that position, but in the
+                    # scaffold the monomer defined is not X. In that case, we use the monomer
+                    # from the scaffold.
+                    scaffold_instructions[pid][i + 1] = [monomer]
+
+        scaffold = get_scaffold_from_helm_string(scaffold_complex_polymer)
+        designs[scaffold] = scaffold_instructions
+
+    return designs
