@@ -456,15 +456,6 @@ class MOOPlanner():
             suggested_polymers = suggested_polymers[passed]
             #predicted_values = predicted_values[passed]
 
-        # Sort polymers by scores in the decreasing order (best to worst)
-        # We want the best score to be the lowest, so we apply a scaling 
-        # factor (1 or -1). This scalng factor depends of the acquisition
-        # function nature.
-
-
-        # THIS HAS TO BE REPLACED BY THOSE CLOSEST TO SOLUTIONS
-        # pass batch size into closest 
-
         return suggested_polymers, solution_polymers
 
     def tell(self, polymers, values):

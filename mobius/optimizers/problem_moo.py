@@ -16,7 +16,7 @@ from ..utils import load_design_from_config
 
 class MOOProblem(ElementwiseProblem):
 
-    def __init__(self, acqs, n_inequality_constr=0,n_equality_constr=0,n_gen=10,n_pop=250,cx_points=2,
+    def __init__(self, acqs, n_inequality_constr=0,n_equality_constr=0,n_gen=5,n_pop=250,cx_points=2,
     pm=0.1,minimum_mutations=1,maximum_mutations=None,keep_connections=True,**kwargs):
         super().__init__(n_var=1,
                          n_obj=len(acqs),

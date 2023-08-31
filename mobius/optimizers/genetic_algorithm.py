@@ -647,6 +647,8 @@ class MOOSequenceGA():
         print("Best Polymers found so far: ")
         for sol in sol_polymers:
             print(sol)
+        print("")
+        print("")
 
         solutions = np.column_stack((sol_polymers,sol_scores))
 

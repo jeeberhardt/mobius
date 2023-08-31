@@ -996,25 +996,31 @@ def find_closest_points(full_set,subset,seed_library,batch_size):
     n_subset_points = len(subset)
     k = max(1,int(batch_size / n_subset_points))
 
-    selected_polymers = []
+    selected_polymers = np.empty((0,np.shape(subset)[1]))
 
     for subset_point in subset_coords:
-        subset_polymers = []
+
+        subset_polymers = np.empty((0,np.shape(subset)[1]))
+
         n_eval_polymers = 0
         distances = cdist(np.array([subset_point]),full_set_coords)
         sorted_indices = np.argsort(distances.ravel())
 
-        while (len(subset_polymers) < k and n_eval_polymers < len(full_set)):
+        while (np.shape(subset_polymers)[0] < k and n_eval_polymers < len(full_set)):
 
             index_to_query = sorted_indices[n_eval_polymers]
             polymer = full_set[index_to_query]
 
-            if polymer[0] not in selected_polymers and polymer[0] not in seed_library:
-                subset_polymers.append(polymer)
+            if np.isin(polymer[0],selected_polymers[:,0]) == False and polymer[0] not in seed_library:
+                subset_polymers = np.vstack((subset_polymers,polymer))
 
             n_eval_polymers += 1
-        
-    selected_polymers_df = pd.DataFrame(subset_polymers,columns=full_set.dtype.names)
+
+        selected_polymers = np.vstack((selected_polymers,subset_polymers))
+
+    num_scores = len(selected_polymers[0])-1
+    col_names = ["Polymers"] + [f"Score{i}" for i in range(1, num_scores+1)]
+    selected_polymers_df = pd.DataFrame(selected_polymers,columns=col_names)
 
     return selected_polymers_df
 

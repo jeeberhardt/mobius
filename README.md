@@ -62,8 +62,7 @@ Now we define a peptide sequence we want to optimize
 lead_peptide = convert_FASTA_to_HELM('HMTEVVRRC')[0]
 ```
 
-Then we generate the first seed library of 96 peptides using a combination of both alanine scanning 
-and homolog scanning sequence-based strategies
+Then we generate the first seed library of 96 peptides using homolog scanning sequence-based strategies
 ```python
 seed_library = [lead_peptide]
 
