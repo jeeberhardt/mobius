@@ -445,17 +445,17 @@ class MOOPlanner():
 
         suggested_polymers, solution_polymers = self._optimizer.run(self._polymers)
 
+        polymers_to_filter = suggested_polymers.iloc[:,0].tolist()
+
         # Apply filters on the suggested polymers
         if self._filters:
-            print(">>>>>>> Entered")
-            passed = np.ones(len(suggested_polymers), dtype=bool)
+            passed = np.ones(len(polymers_to_filter), dtype=bool)
 
             for filter in self._filters:
-                passed = np.logical_and(passed, filter.apply(suggested_polymers))
+                passed = np.logical_and(passed, filter.apply(polymers_to_filter))
 
             suggested_polymers = suggested_polymers[passed]
-            #predicted_values = predicted_values[passed]
-
+            
         return suggested_polymers, solution_polymers
 
     def tell(self, polymers, values):

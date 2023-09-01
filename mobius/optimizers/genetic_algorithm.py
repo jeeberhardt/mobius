@@ -19,10 +19,12 @@ from ..utils import adjust_polymers_to_designs
 from ..utils import group_polymers_by_scaffold
 from ..utils import find_closest_points
 
+
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.optimize import minimize
 from pymoo.core.population import Population
 from pymoo.core.evaluator import Evaluator
+from pymoo.algorithms.moo.age2 import AGEMOEA2
 
 
 def _softmax_probability(scores):

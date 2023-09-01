@@ -57,12 +57,12 @@ lpe_two = LinearPeptideEmulator(pssm_file_two)
 lpe_three = LinearPeptideEmulator(pssm_file_three)
 ```
 
-Now we define a peptide sequence we want to optimize
+Now we define a peptide sequence we want to optimize:
 ```python
 lead_peptide = convert_FASTA_to_HELM('HMTEVVRRC')[0]
 ```
 
-Then we generate the first seed library of 96 peptides using homolog scanning sequence-based strategies
+Then we generate the first seed library of 96 peptides using a homolog scanning sequence-based strategy.
 ```python
 seed_library = [lead_peptide]
 
@@ -84,8 +84,8 @@ pic50_three_seed_library = lpe_three.score(seed_library)
 pic50_scores = np.column_stack((pic50_one_seed_library,pic50_two_seed_library,pic50_three_seed_library))
 ```
 
-Once we have the results from our first lab experiment we can now start the Bayesian Optimization (BO) First, 
-we define the molecular fingerprint we want to use as well as the surrogate models for each objective (Gaussian Process) 
+Once we have the results from our first lab experiment we can now start the Bayesian Optimization (BO). First, 
+we define the molecular fingerprint we want to use as well as the surrogate models for each objective (Gaussian Processes) 
 and the acquisition functions (Expected Improvement).
 ```python
 map4 = Map4Fingerprint(input_type='helm_rdkit', dimensions=4096, radius=1)
@@ -131,7 +131,7 @@ filters:
 
 ```
 
-Once acquisition function / surrogate model are defined and the parameters set in the YAML 
+Once acquisition functions / surrogate models are defined and the parameters set in the YAML 
 configuration file, we can initiate the multi-objective problem we are optimising for and the planner method.
 ```python
 problem = MOOProblem(acqs)
@@ -141,10 +141,10 @@ planner = MOOPlanner(problem,design_protocol='design_protocol.yaml')
 Now it is time to run the optimization!!
 
 ```python
-# Initialise the DataFrame which records the progression of the optimisation
 peptides = list(seed_library)[:]
-optimisation = 0
 
+# Initialise the DataFrame which records the progression of the optimisation
+optimisation = 0
 pic50_history = pd.DataFrame()
 pic50_history = create_history(optimisation,pic50_history,peptides,pic50_scores)
 
@@ -155,7 +155,6 @@ for i in range(3):
     
     # Run optimization, recommand 96 new peptides based on existing data
     suggested_peptides_df, sols = planner.recommand(peptides, pic50_scores)
-
     suggested_peptides = suggested_peptides_df.iloc[:, 0].tolist()
 
     # Here you can add whatever methods you want to further filter out peptides
@@ -183,7 +182,7 @@ fig,_ = visualise_3d_scatter(pic50_history)
 fig.show()
 ```
 
-And if we have theoretical limits of our objectives available, we can visualise the best performing polymers in each objective:
+And if we have theoretical limits of our objectives available, we can visualise the performance of our pareto set in each objective:
 ```python
 # Scoring the solutions at the pareto front Mobius finds
 sols_list = [item[0] for item in sols]

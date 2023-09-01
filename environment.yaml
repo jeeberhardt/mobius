@@ -21,3 +21,4 @@ dependencies:
   - pip:
     - mhfp
     - ray
+    - pymoo
