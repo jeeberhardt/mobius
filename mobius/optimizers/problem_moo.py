@@ -80,6 +80,10 @@ class MOOProblem(ElementwiseProblem):
     def get_polymer_cache(self):
 
         return self.polymer_cache
+    
+    def reset_cache(self):
+
+        self.polymer_cache = []
 
 class MyCrossover(Crossover):
     def __init__(self,cx_points):

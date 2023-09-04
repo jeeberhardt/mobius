@@ -621,6 +621,7 @@ class MOOSequenceGA():
         pop.set("F",scores)
 
         print("Initial population seeded...")
+        print("NSGA2")
 
         algorithm = NSGA2(pop_size=self._parameters['n_pop'],
                           sampling=pop,
@@ -651,10 +652,12 @@ class MOOSequenceGA():
             print(sol)
         print("")
         print("")
-
+    
         solutions = np.column_stack((sol_polymers,sol_scores))
 
         self.polymers = find_closest_points(final_gen,solutions,polymers,self.batch_size)
+
+        self.problem.reset_cache()
     
         return self.polymers, sol_polymers
         
