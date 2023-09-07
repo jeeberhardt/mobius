@@ -39,8 +39,8 @@ from mobius import LinearPeptideEmulator
 from mobius import homolog_scanning
 from mobius import convert_FASTA_to_HELM
 from mobius import MOOProblem,MOOPlanner
-from mobius import visualise_3d_scatter, visualise_radar
-from mobius import create_history
+from mobius import visualise_3d_scatter
+from mobius import optimisation_tracker
 ```
 
 Simple linear peptide emulator/oracle for MHC class I A*0201. The Position Specific Scoring Matrices
@@ -135,7 +135,7 @@ Once acquisition functions / surrogate models are defined and the parameters set
 configuration file, we can initiate the multi-objective problem we are optimising for and the planner method.
 ```python
 problem = MOOProblem(acqs)
-planner = MOOPlanner(problem,design_protocol='design_protocol.yaml')
+planner = MOOPlanner(problem,design_protocol='design_protocol.yaml',batch_size=96)
 ```
 
 Now it is time to run the optimization!!
@@ -154,7 +154,7 @@ for i in range(3):
     optimisation += 1
     
     # Run optimization, recommand 96 new peptides based on existing data
-    suggested_peptides_df, sols = planner.recommand(peptides, pic50_scores)
+    suggested_peptides_df, _ = planner.recommand(peptides, pic50_scores)
     suggested_peptides = suggested_peptides_df.iloc[:, 0].tolist()
 
     # Here you can add whatever methods you want to further filter out peptides
