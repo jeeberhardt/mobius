@@ -13,7 +13,7 @@ import numpy as np
 import ray
 
 from .genetic_operators import GeneticOperators
-from .problem_moo import MyCrossover, MyMutation, MyDuplicateElimination
+from .problem_moo import Crossover, Mutation, DuplicateElimination
 from ..utils import generate_random_polymers_from_designs
 from ..utils import adjust_polymers_to_designs
 from ..utils import group_polymers_by_scaffold
@@ -543,21 +543,6 @@ class MOOSequenceGA():
         ----------
         problem: pymoo problem object
             Defines number of objectives, variables & constraints
-        n_gen : int, default : 10
-            Number of GA generation to run.
-        n_pop : int, default : 250
-            Number of children generated at each generation.
-        batch_size : int, default : 96
-            Number of polymers to return as suggested
-        cx_points : int, default : 2
-            Number of crossing over during the mating step.
-        pm : float, default : 0.1
-            Probability of mutation.
-        minimum_mutations : int, default : 1
-            Minimal number of mutations introduced in the new child.
-        maximum_mutations: int, default : None
-            Maximal number of mutations introduced in the new child.
-
         """
 
         self.batch_size = batch_size
@@ -567,15 +552,15 @@ class MOOSequenceGA():
         self._parameters = problem.get_params()
 
         self.problem = problem
-        self.mutation = MyMutation(design_protocol,self._parameters['minimum_mutations'],self._parameters['maximum_mutations'],self._parameters['pm'],self._parameters['keep_connections'])
-        self.crossover = MyCrossover(self._parameters['cx_points'])
-        self.dupes = MyDuplicateElimination()
+        self.mutation = Mutation(design_protocol,self._parameters['minimum_mutations'],self._parameters['maximum_mutations'],self._parameters['pm'],self._parameters['keep_connections'])
+        self.crossover = Crossover(self._parameters['cx_points'])
+        self.dupes = DuplicateElimination()
 
     def get_design_protocol(self):
 
         return self.design_protocol
 
-    def run(self, polymers):
+    def run(self, polymers, values):
         """
         Run the SequenceGA optimization.
 
@@ -583,21 +568,13 @@ class MOOSequenceGA():
         ----------
         polymers : array-like of str
             Polymers in HELM format.
-        scores : array-like of float or int
-            Score associated to each polymer.
-        acquisition_function : AcquisitionFunction
-            The acquisition function that will be used to score the polymer.
-        scaffold_designs : dictionary
-            Dictionary with scaffold polymers and defined set of monomers to use 
-            for each position.
 
         Returns
         -------
-        polymers : ndarray
-            Polymers found during the GA optimization.
-        scores : ndarray
-            Score for each polymer found.
-
+        polymers: pd dataframe
+            New suggested polymers from GA with their associated acquisition function scores
+        sol_polymers: pd dataframe
+            Polymers found at the Pareto front and their associated acquisition function scores
         """
         # Make sure that inputs are numpy arrays
         polymers = np.asarray(polymers)
@@ -610,18 +587,13 @@ class MOOSequenceGA():
 
             X[i,0] = polymers[i]
 
-            for j in range(len(acqs)):
-
-                score = acqs[j].forward(polymers[i])
-                ei = acqs[j].scaling_factor * score.acq
-
-                scores[i][j] = ei[0]
-
+        # Set initial population scores
         pop = Population.new("X",X)
-        pop.set("F",scores)
+        pop.set("F",values)
 
         print("Initial population seeded...")
-        print("NSGA2")
+
+        # Define GA and run
 
         algorithm = NSGA2(pop_size=self._parameters['n_pop'],
                           sampling=pop,
@@ -635,6 +607,8 @@ class MOOSequenceGA():
                        verbose=True,
                        save_history=True)
         
+
+        # Obtain final population to find suggested polymers
 
         all_populations = [e.pop for e in res.history if e.pop is not None]
         final_pop = all_populations[-1]
@@ -655,8 +629,11 @@ class MOOSequenceGA():
     
         solutions = np.column_stack((sol_polymers,sol_scores))
 
+
+        #suggest new polymers from vicinity to Pareto front
         self.polymers = find_closest_points(final_gen,solutions,polymers,self.batch_size)
 
+        # reset acquisition scores before retraining gaussian processes
         self.problem.reset_cache()
     
         return self.polymers, sol_polymers

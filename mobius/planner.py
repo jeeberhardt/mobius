@@ -379,7 +379,7 @@ class MOOPlanner():
         --------
 
         >>> from mobius import Planner
-        >>> ps = Planner(acq_fun, optimizer, design_protocole='config.yaml')
+        >>> ps = Planner(problem, optimizer, design_protocole='config.yaml')
 
         Example of `config.yaml` defining the scaffold design protocol and the 
         different filters can also be defined to filter out polymers 
@@ -411,43 +411,36 @@ class MOOPlanner():
         """
 
         self._protocol = design_protocol
-        self._batch_size = batch_size
+        self.batch_size = batch_size
 
         self._polymers = None
         self._values = None
         self._designs = _load_design_from_config(self._protocol)
         self._filters = _load_filters_from_config(self._protocol)
         self._problem = problem
-        self._optimizer = MOOSequenceGA(self._problem,design_protocol=self._protocol,batch_size=self._batch_size)
+        self._optimizer = MOOSequenceGA(self._problem,design_protocol=self._protocol,batch_size=self.batch_size)
 
     def ask(self):
         """
         Function to suggest new polymers/peptides based on previous experiments.
 
-        Parameters
-        ----------
-        batch_size : int, default: None
-            Total number of new polymers/peptides that will be returned. If not 
-            provided, it will return all the polymers found during the optimization.
-
         Returns
         -------
-        polymers : ndarray
-            Suggested polymers/peptides. The returned number of polymers 
-            will be equal to `batch_size`.
-        values : ndarray
-            Predicted values for each suggested polymers/peptides. The 
-            returned number will be equal to `batch_size`.
+        suggested_polymers : pd dataframe
+            Suggested polymers/peptides with their associated acquisition function scores. 
+            The returned number of polymers will be equal to `batch_size`.
+        solution_polymers : pd dataframe
+            Polymers found at the Pareto front of optimisation. WARNING: These are not guaranteed
+            to be the best performing polymers in real-experiments.
 
         """
-        suggested_polymers = self._polymers.copy()
-        predicted_values = self._values.copy()
 
-        suggested_polymers, solution_polymers = self._optimizer.run(self._polymers)
+        # Run Optimisation of polymers
+        suggested_polymers, solution_polymers = self._optimizer.run(self._polymers, self._values)
 
         polymers_to_filter = suggested_polymers.iloc[:,0].tolist()
 
-        # Apply filters on the suggested polymers
+        # Apply filters from .yaml design file on the suggested polymers
         if self._filters:
             passed = np.ones(len(polymers_to_filter), dtype=bool)
 
@@ -460,7 +453,7 @@ class MOOPlanner():
 
     def tell(self, polymers, values):
         """
-        Function to fit the surrogate model using data from past experiments.
+        Function to fit the surrogate models using data from past experiments.
 
         Parameters
         ----------
@@ -473,14 +466,12 @@ class MOOPlanner():
         self._polymers = polymers
         self._values = values
 
-        # self._acq_fun.surrogate_model.fit(polymers, values)
-
         acqs = self._problem.get_acq_funs()
 
+        # training surrogate model associated with each acquisition function
         for i in range(len(acqs)):
             acq = acqs[i]
-
-            acq.surrogate_model.fit(polymers,values[:,i])
+            acq.surrogate_model.fit(self._polymers,self._values[:,i])
 
     def recommand(self, polymers, values):
         """
@@ -492,18 +483,15 @@ class MOOPlanner():
             Polymers/peptides in HELM format.
         values : list of int of float
             Value associated to each polymer/peptide.
-        batch_size : int, default: None
-            Total number of new polymers/peptides that will be returned. If not 
-            provided, it will return all the polymers found during the optimization.
 
         Returns
         -------
-        polymers : ndarray
-            Suggested polymers/peptides. The returned number of 
-            polymers/peptides will be equal to `batch_size`.
-        values : ndarray
-            Predicted values for each suggested polymers/peptides. The 
-            returned number will be equal to `batch_size`.
+        suggested_polymers : pd dataframe
+            Suggested polymers/peptides with their associated acquisition function scores. 
+            The returned number of polymers will be equal to `batch_size`.
+        solution_polymers : pd dataframe
+            Polymers found at the Pareto front of optimisation. WARNING: These are not guaranteed
+            to be the best performing polymers in real-experiments.
 
         """
         self.tell(polymers, values)

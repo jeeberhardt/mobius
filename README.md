@@ -146,7 +146,7 @@ peptides = list(seed_library)[:]
 # Initialise the DataFrame which records the progression of the optimisation
 optimisation = 0
 pic50_history = pd.DataFrame()
-pic50_history = create_history(optimisation,pic50_history,peptides,pic50_scores)
+pic50_history = optimisation_tracker(optimisation,pic50_history,peptides,pic50_scores)
 
 # Here we are going to do 3 DMT cycles
 for i in range(3):
@@ -173,31 +173,12 @@ for i in range(3):
     pic50_scores = np.concatenate((pic50_scores,pic50_suggested_peptides),axis=0)
 
     # Update the optimisation tracker
-    pic50_history = create_history(optimisation,pic50_history,suggested_peptides,pic50_suggested_peptides)
+    pic50_history = optimisation_tracker(optimisation,pic50_history,suggested_peptides,pic50_suggested_peptides)
 ```
 
 Now we can also visualise the progression of the optimisation:
 ```python
 fig,_ = visualise_3d_scatter(pic50_history)
-fig.show()
-```
-
-And if we have theoretical limits of our objectives available, we can visualise the performance of our pareto set in each objective:
-```python
-# Scoring the solutions at the pareto front Mobius finds
-sols_list = [item[0] for item in sols]
-
-pic50_1_sols = lpe_one.score(sols_list)
-pic50_2_sols = lpe_two.score(sols_list)
-pic50_3_sols = lpe_three.score(sols_list)
-
-pic50_sols = np.column_stack((sols_list,pic50_1_sols,pic50_2_sols,pic50_3_sols))
-
-# Declare the ideal and worst performing scores for our objectives
-ideal = [-3,-3,-3]
-nadir = [7,7,7]
-
-fig = visualise_radar(pic50_sols,ideal,nadir)
 fig.show()
 ```
 
