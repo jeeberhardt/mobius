@@ -411,14 +411,14 @@ class MOOPlanner():
         """
 
         self._protocol = design_protocol
-        self.batch_size = batch_size
+        self._batch_size = batch_size
+        self._problem = problem
+        self._designs = _load_design_from_config(self._protocol)
+        self._filters = _load_filters_from_config(self._protocol)
 
         self._polymers = None
         self._values = None
-        self._designs = _load_design_from_config(self._protocol)
-        self._filters = _load_filters_from_config(self._protocol)
-        self._problem = problem
-        self._optimizer = MOOSequenceGA(self._problem,design_protocol=self._protocol,batch_size=self.batch_size)
+        self._optimizer = MOOSequenceGA(self._problem,design_protocol=self._protocol,batch_size=self._batch_size)
 
     def ask(self):
         """

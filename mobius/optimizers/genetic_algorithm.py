@@ -544,23 +544,29 @@ class MOOSequenceGA():
         ----------
         problem: pymoo problem object
             Defines number of objectives, variables & constraints
+        design_protocol : str
+            Path of the YAML config file containing the design protocol 
+            (scaffolds + filters) used during polymers optimisation.
+        batch_size : int, default : 96
+            Number of polymers to be returned by optimisation process.
         """
 
-        self.batch_size = batch_size
+        self._batch_size = batch_size
+        self._design_protocol = design_protocol
 
-        self.design_protocol = design_protocol
-
+        self._problem = problem
         self._parameters = problem.get_params()
 
-        self.problem = problem
-        self.mutation = Mutation(design_protocol,self._parameters['minimum_mutations'],self._parameters['maximum_mutations'],self._parameters['pm'],self._parameters['keep_connections'])
-        self.crossover = Crossover(self._parameters['cx_points'])
-        self.dupes = DuplicateElimination()
-        self.designs = load_design_from_config(design_protocol)
+        self._mutation = Mutation(design_protocol,self._parameters['minimum_mutations'],self._parameters['maximum_mutations'],self._parameters['pm'],self._parameters['keep_connections'])
+        self._crossover = Crossover(self._parameters['cx_points'])
+        self._dupes = DuplicateElimination()
+        self._designs = load_design_from_config(design_protocol)
+
+        self.polymers = None
 
     def get_design_protocol(self):
 
-        return self.design_protocol
+        return self._design_protocol
 
     def run(self, polymers):
         """
@@ -582,13 +588,13 @@ class MOOSequenceGA():
         polymers = np.asarray(polymers)
 
         # Starts by automatically adjusting the input polymers to the scaffold designs
-        polymers, _ = adjust_polymers_to_designs(polymers, self.designs)
+        polymers, _ = adjust_polymers_to_designs(polymers, self._designs)
 
         # Group/cluster them by scaffold
         groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
 
         # Check that all the scaffold designs are defined for all the polymers
-        scaffolds_not_present = list(set(groups.keys()).difference(self.designs.keys()))
+        scaffolds_not_present = list(set(groups.keys()).difference(self._designs.keys()))
 
         if scaffolds_not_present:
             msg_error = 'The following scaffolds are not defined: \n'
@@ -603,10 +609,10 @@ class MOOSequenceGA():
         # generate 10 random polymers per scaffold. We do thzt in the
         # case we want to explore different scaffolds that are not in
         # the initial dataset.
-        scaffolds_not_present = list(set(self.designs.keys()).difference(groups.keys()))
+        scaffolds_not_present = list(set(self._designs.keys()).difference(groups.keys()))
 
         if scaffolds_not_present:
-            tmp_scaffolds_designs = {key: self.designs[key] for key in scaffolds_not_present}
+            tmp_scaffolds_designs = {key: self._designs[key] for key in scaffolds_not_present}
             # We generate them
             n_polymers = [42] * len(tmp_scaffolds_designs)
             new_polymers = generate_random_polymers_from_designs(n_polymers, tmp_scaffolds_designs)
@@ -634,11 +640,11 @@ class MOOSequenceGA():
 
         algorithm = NSGA2(pop_size=self._parameters['n_pop'],
                           sampling=pop,
-                          crossover=self.crossover,
-                          mutation=self.mutation,
-                          eliminate_duplicates=self.dupes)
+                          crossover=self._crossover,
+                          mutation=self._mutation,
+                          eliminate_duplicates=self._dupes)
         
-        res = minimize(self.problem,
+        res = minimize(self._problem,
                        algorithm,
                        ('n_gen',self._parameters['n_gen']),
                        verbose=True,
@@ -667,11 +673,11 @@ class MOOSequenceGA():
         solutions = np.column_stack((sol_polymers,sol_scores))
 
 
-        #suggest new polymers from vicinity to Pareto front
-        self.polymers = find_closest_points(final_gen,solutions,polymers,self.batch_size)
+        #suggest new polymers from vicinity of Pareto front
+        self.polymers = find_closest_points(final_gen,solutions,polymers,self._batch_size)
 
         # reset acquisition scores before retraining gaussian processes
-        self.problem.reset_cache()
+        self._problem.reset_cache()
     
         return self.polymers, sol_polymers
         
