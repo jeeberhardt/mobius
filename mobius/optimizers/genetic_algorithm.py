@@ -18,6 +18,7 @@ from ..utils import generate_random_polymers_from_designs
 from ..utils import adjust_polymers_to_designs
 from ..utils import group_polymers_by_scaffold
 from ..utils import find_closest_points
+from ..utils import load_design_from_config
 
 
 from pymoo.algorithms.moo.nsga2 import NSGA2
@@ -555,12 +556,13 @@ class MOOSequenceGA():
         self.mutation = Mutation(design_protocol,self._parameters['minimum_mutations'],self._parameters['maximum_mutations'],self._parameters['pm'],self._parameters['keep_connections'])
         self.crossover = Crossover(self._parameters['cx_points'])
         self.dupes = DuplicateElimination()
+        self.designs = load_design_from_config(design_protocol)
 
     def get_design_protocol(self):
 
         return self.design_protocol
 
-    def run(self, polymers, values):
+    def run(self, polymers):
         """
         Run the SequenceGA optimization.
 
@@ -578,18 +580,53 @@ class MOOSequenceGA():
         """
         # Make sure that inputs are numpy arrays
         polymers = np.asarray(polymers)
-        X = np.full((len(polymers),1),None,dtype=object)
 
-        acqs = self.problem.get_acq_funs()
-        scores = np.full((len(polymers),len(acqs)),None)
+        # Starts by automatically adjusting the input polymers to the scaffold designs
+        polymers, _ = adjust_polymers_to_designs(polymers, self.designs)
+
+        # Group/cluster them by scaffold
+        groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
+
+        # Check that all the scaffold designs are defined for all the polymers
+        scaffolds_not_present = list(set(groups.keys()).difference(self.designs.keys()))
+
+        if scaffolds_not_present:
+            msg_error = 'The following scaffolds are not defined: \n'
+            for scaffold_not_present in scaffolds_not_present:
+                msg_error += f'- {scaffold_not_present}\n'
+
+            raise RuntimeError(msg_error)
+        
+        # Do the contrary now: check that at least one polymer is defined 
+        # per scaffold. We need to generate at least one polymer per 
+        # scaffold to be able to start the GA optimization. Here we 
+        # generate 10 random polymers per scaffold. We do thzt in the
+        # case we want to explore different scaffolds that are not in
+        # the initial dataset.
+        scaffolds_not_present = list(set(self.designs.keys()).difference(groups.keys()))
+
+        if scaffolds_not_present:
+            tmp_scaffolds_designs = {key: self.designs[key] for key in scaffolds_not_present}
+            # We generate them
+            n_polymers = [42] * len(tmp_scaffolds_designs)
+            new_polymers = generate_random_polymers_from_designs(n_polymers, tmp_scaffolds_designs)
+            # Add them to the rest
+            polymers = np.concatenate([polymers, new_polymers])
+            # Recluster all of them again (easier than updating the groups)
+            groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
+
+        # Remove duplicates
+        polymers, unique_indices = np.unique(polymers, return_index=True)
+
+
+        X = np.full((len(polymers),1),None,dtype=object)
 
         for i in range(len(polymers)):
 
             X[i,0] = polymers[i]
 
-        # Set initial population scores
+        # Create new population of polymers
         pop = Population.new("X",X)
-        pop.set("F",values)
 
         print("Initial population seeded...")
 

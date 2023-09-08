@@ -436,7 +436,7 @@ class MOOPlanner():
         """
 
         # Run Optimisation of polymers
-        suggested_polymers, solution_polymers = self._optimizer.run(self._polymers, self._values)
+        suggested_polymers, solution_polymers = self._optimizer.run(self._polymers)
 
         polymers_to_filter = suggested_polymers.iloc[:,0].tolist()
 
