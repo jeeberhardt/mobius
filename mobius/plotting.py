@@ -102,3 +102,85 @@ def plot_results(df, run_name):
 
     plt.savefig('figure_%s.png' % run_name, dpi=300, bbox_inches='tight')
     plt.show()
+
+
+def visualise_2d(df, axis_labels=['f_1','f_2']):
+
+    """
+    Reads a data frame and returns a 2D visualisation of optimisation progression.
+
+    Parameters
+    ----------
+    df : pandas dataframe
+        The data frame of each polymer suggested and their associated objective scores.
+    axis_labels : ndarray of strings
+        Allows for customisation of the axis labels.
+
+    Returns
+    -------
+    fig, ax : matpyplot objects
+        Allows for visualising the resulting graph with plt.show().
+
+    """
+
+    fig, ax = plt.subplots()
+
+    colours = plt.cm.viridis(np.linspace(0, 1, len(df['Optimisation'].unique())))
+
+    ax.set_xlabel(axis_labels[0])
+    ax.set_ylabel(axis_labels[1])
+
+    legend_handles = []
+    legend_labels = []
+
+    for optimisation, group in df.groupby('Optimisation'):
+        scatter = ax.scatter(group['Score_1'], group['Score_2'], color=colours[optimisation], alpha=0.5)
+        legend_handles.append(scatter)
+        legend_labels.append(f"Optimisation {optimisation}")
+
+    ax.legend(legend_handles, legend_labels, loc='upper left', bbox_to_anchor=(1, 1))
+
+    return fig, ax
+
+
+def visualise_3d_scatter(df, axis_labels=['f_1','f_2','f_3']):
+    """
+    Reads a data frame and returns a 2D visualisation of optimisation progression.
+
+    Parameters
+    ----------
+    df : pandas dataframe
+        The data frame of each polymer suggested and their associated objective scores.
+    axis_labels : ndarray of strings
+        Allows for customisation of the axis labels.
+
+    Returns
+    -------
+    fig, ax : pyplot objects
+        Allows for visualising the resulting graph with plt.show().
+
+    """
+
+    colours = plt.cm.viridis(np.linspace(0, 1, len(df['Optimisation'].unique())))
+
+    sns.set(style="darkgrid")
+    fig = plt.figure(figsize=(15, 15))
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.set_xlabel(axis_labels[0])
+    ax.set_ylabel(axis_labels[1])
+    ax.set_zlabel(axis_labels[2])
+
+    ax.set_box_aspect((1, 1, 1)) 
+
+    legend_handles = []
+    legend_labels = []
+
+    for optimisation, group in df.groupby('Optimisation'):
+        scatter = ax.scatter(group['Score_1'], group['Score_2'], group['Score_3'], color=colours[optimisation], alpha=0.5)
+        legend_handles.append(scatter)
+        legend_labels.append(f"Optimisation {optimisation}")
+
+    ax.legend(legend_handles, legend_labels, loc='upper left', bbox_to_anchor=(1, 1))
+
+    return fig, ax

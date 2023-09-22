@@ -6,6 +6,5 @@
 
 from .genetic_algorithm import SequenceGA, RandomGA, MOOSequenceGA
 from .pool import Pool
-from .problem_moo import MOOProblem
 
-__all__ = ['SequenceGA', 'RandomGA','MOOSequenceGA','Pool','MOOProblem']
+__all__ = ['SequenceGA', 'RandomGA','MOOSequenceGA','Pool']

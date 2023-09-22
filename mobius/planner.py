@@ -202,18 +202,20 @@ def _load_filters_from_config(config_filename):
 
 class Planner(_Planner):
     """
-    Class for setting up the design/optimization/filter protocols.
+    Class for setting up the design/optimization/filter protocols for single and multi-objective optimizations.
 
     """
 
-    def __init__(self, acquisition_function, optimizer, design_protocol):
+    def __init__(self, acquisition_functions, optimizer, design_protocol):
         """
         Initialize the polymer planner.
 
         Parameters
         ----------
-        acquisition_function : `_AcquisitionFunction`
-            The acquisition function that will be used to score the polymers.
+        acquisition_function : `_AcquisitionFunction` or list of `_AcquisitionFunction`
+            The acquisition functions that will be used to score the polymers. For single-objective
+            optimisation, only one acquisition function is required. For multi-objective optimisation,
+            a list of acquisition functions is required.
         optimizer : `_GeneticAlgorithm`
             The optimizer that will be used to optimize the polymers.
         design_protocol : str
@@ -224,7 +226,7 @@ class Planner(_Planner):
         --------
 
         >>> from mobius import Planner
-        >>> ps = Planner(acq_fun, optimizer, design_protocole='config.yaml')
+        >>> ps = Planner(acq_funs, optimizer, design_protocole='config.yaml')
 
         Example of `config.yaml` defining the scaffold design protocol and the 
         different filters can also be defined to filter out polymers 
@@ -256,7 +258,9 @@ class Planner(_Planner):
         """
         self._polymers = None
         self._values = None
-        self._acq_fun = acquisition_function
+        if not isinstance(acquisition_functions, list):
+            acquisition_functions = [acquisition_functions]
+        self._acq_funs = acquisition_functions
         self._optimizer = optimizer
         self._designs = _load_design_from_config(design_protocol)
         self._filters = _load_filters_from_config(design_protocol)
@@ -284,8 +288,10 @@ class Planner(_Planner):
         suggested_polymers = self._polymers.copy()
         predicted_values = self._values.copy()
 
+        # Run the optimizer to suggest new polymers
         suggested_polymers, predicted_values = self._optimizer.run(suggested_polymers, predicted_values, 
-                                                                   self._acq_fun, scaffold_designs=self._designs)
+                                                                   self._acq_funs, scaffold_designs=self._designs,
+                                                                   batch_size=batch_size)
 
         # Apply filters on the suggested polymers
         if self._filters:
@@ -297,15 +303,6 @@ class Planner(_Planner):
             suggested_polymers = suggested_polymers[passed]
             predicted_values = predicted_values[passed]
 
-        # Sort polymers by scores in the decreasing order (best to worst)
-        # We want the best score to be the lowest, so we apply a scaling 
-        # factor (1 or -1). This scalng factor depends of the acquisition
-        # function nature.
-        sorted_indices = np.argsort(self._acq_fun.scaling_factor * predicted_values)
-
-        suggested_polymers = suggested_polymers[sorted_indices]
-        predicted_values = predicted_values[sorted_indices]
-
         return suggested_polymers[:batch_size], predicted_values[:batch_size]
 
     def tell(self, polymers, values):
@@ -316,13 +313,19 @@ class Planner(_Planner):
         ----------
         polymers : list of str
             Polymers/peptides in HELM format.
-        values : list of int of float
+        values : array-like of shape (n_samples, n_objectives)
             Values associated to each polymer/peptide.
 
         """
         self._polymers = polymers
-        self._values = values
-        self._acq_fun.surrogate_model.fit(polymers, values)
+        self._values = np.asarray(values)
+
+        msg = f'Number of acquisition functions ({len(self._acq_funs)}) and objective values ({self._values.shape[1]}) do not match.'
+        assert len(self._acq_funs) == self._values.shape[1], msg
+
+        # We fit the surrogate model associated with each acquisition function
+        for i in range(len(self._acq_funs)):
+            self._acq_funs[i].surrogate_model.fit(self._polymers, self._values[:,i])
 
     def recommand(self, polymers, values, batch_size=None):
         """
@@ -352,149 +355,4 @@ class Planner(_Planner):
         suggested_polymers, predicted_values = self.ask(batch_size)
 
         return suggested_polymers, predicted_values
-    
 
-
-class MOOPlanner():
-    """
-    Class for setting up the design/optimization/filter protocols for multi-objective optimisation.
-
-    """
-
-    def __init__(self, problem, design_protocol='design_protocol.yaml',batch_size=96):
-        """
-        Initialize the polymer planner.
-
-        Parameters
-        ----------
-        problem : object
-            pymoo Problem object for multiple objective optimisation
-        optimizer : `_GeneticAlgorithm`
-            The optimizer that will be used to optimize the polymers.
-        design_protocol : str
-            Path of the YAML config file containing the design protocol 
-            (scaffolds + filters) used during polymers optimization.
-
-        Examples
-        --------
-
-        >>> from mobius import Planner
-        >>> ps = Planner(problem, optimizer, design_protocole='config.yaml')
-
-        Example of `config.yaml` defining the scaffold design protocol and the 
-        different filters can also be defined to filter out polymers 
-        that do not satisfy certain criteria.
-
-        .. code:: yaml
-
-            design:
-                monomers: 
-                    default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
-                    APOLAR: [A, F, G, I, L, P, V, W]
-                    POLAR: [C, D, E, H, K, N, Q, R, K, S, T, M]
-                    AROMATIC: [F, H, W, Y]
-                    POS_CHARGED: [K, R]
-                    NEG_CHARGED: [D, E]
-                scaffolds:
-                    - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
-                        PEPTIDE1:
-                            1: [AROMATIC, NEG_CHARGED]
-                            4: POLAR
-                            8: [C, G, T, S, V, L, M]
-            filters:
-              - class_path: mobius.PeptideSelfAggregationFilter
-              - class_path: mobius.PeptideSolubilityFilter
-                init_args:
-                  hydrophobe_ratio: 0.5
-                  charged_per_amino_acids: 5
-
-        """
-
-        self._protocol = design_protocol
-        self._batch_size = batch_size
-        self._problem = problem
-        self._designs = _load_design_from_config(self._protocol)
-        self._filters = _load_filters_from_config(self._protocol)
-
-        self._polymers = None
-        self._values = None
-        self._optimizer = MOOSequenceGA(self._problem,design_protocol=self._protocol,batch_size=self._batch_size)
-
-    def ask(self):
-        """
-        Function to suggest new polymers/peptides based on previous experiments.
-
-        Returns
-        -------
-        suggested_polymers : pd dataframe
-            Suggested polymers/peptides with their associated acquisition function scores. 
-            The returned number of polymers will be equal to `batch_size`.
-        solution_polymers : pd dataframe
-            Polymers found at the Pareto front of optimisation. WARNING: These are not guaranteed
-            to be the best performing polymers in real-experiments.
-
-        """
-
-        # Run Optimisation of polymers
-        suggested_polymers, solution_polymers = self._optimizer.run(self._polymers)
-
-        polymers_to_filter = suggested_polymers.iloc[:,0].tolist()
-
-        # Apply filters from .yaml design file on the suggested polymers
-        if self._filters:
-            passed = np.ones(len(polymers_to_filter), dtype=bool)
-
-            for filter in self._filters:
-                passed = np.logical_and(passed, filter.apply(polymers_to_filter))
-
-            suggested_polymers = suggested_polymers[passed]
-            
-        return suggested_polymers, solution_polymers
-
-    def tell(self, polymers, values):
-        """
-        Function to fit the surrogate models using data from past experiments.
-
-        Parameters
-        ----------
-        polymers : list of str
-            Polymers/peptides in HELM format.
-        values : list of int of float
-            Values associated to each polymer/peptide.
-
-        """
-        self._polymers = polymers
-        self._values = values
-
-        acqs = self._problem.get_acq_funs()
-
-        # training surrogate model associated with each acquisition function
-        for i in range(len(acqs)):
-            acq = acqs[i]
-            acq.surrogate_model.fit(self._polymers,self._values[:,i])
-
-    def recommand(self, polymers, values):
-        """
-        Function to suggest new polymers/peptides based on existing/previous data.
-
-        Parameters
-        ----------
-        polymers : list of str
-            Polymers/peptides in HELM format.
-        values : list of int of float
-            Value associated to each polymer/peptide.
-
-        Returns
-        -------
-        suggested_polymers : pd dataframe
-            Suggested polymers/peptides with their associated acquisition function scores. 
-            The returned number of polymers will be equal to `batch_size`.
-        solution_polymers : pd dataframe
-            Polymers found at the Pareto front of optimisation. WARNING: These are not guaranteed
-            to be the best performing polymers in real-experiments.
-
-        """
-        self.tell(polymers, values)
-        suggested_polymers, solution_polymers = self.ask()
-
-        return suggested_polymers, solution_polymers

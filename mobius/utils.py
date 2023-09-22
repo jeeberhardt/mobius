@@ -989,7 +989,8 @@ def global_min_pssm_score(pssm_pd,intercept):
     result_string = "".join(min_row_titles)
     return min_score, result_string
 
-def find_closest_points(full_set,subset,seed_library,batch_size):
+
+def find_closest_points(full_set, subset, seed_library, batch_size):
 
     """
     Finds the closest points in a full space of points via Euclidean distance to the subset provided.
@@ -1013,131 +1014,47 @@ def find_closest_points(full_set,subset,seed_library,batch_size):
         The closest n (batch_size) polymers to the subset points located on the pareto front.
 
     """
-
     # Taking only the coordinates in n-d space of each set
-    full_set_coords = np.array([point[1:] for point in full_set],dtype=float)
-    subset_coords = np.array([point[1:] for point in subset],dtype=float)
-    
+    full_set_coords = np.array([point[1:] for point in full_set], dtype=float)
+    subset_coords = np.array([point[1:] for point in subset], dtype=float)
+
     n_subset_points = len(subset)
 
     # the number of polymers in the vicinity of each solution to select
     # WARNING: if the number of non-dominated solutions is above batch_size will return one
     # closest point for each member of the pareto front
-    k = max(1,int(batch_size / n_subset_points))
+    k = max(1, int(batch_size / n_subset_points))
 
-    selected_polymers = np.empty((0,np.shape(subset)[1]))
+    selected_polymers = np.empty((0, np.shape(subset)[1]))
 
     for subset_point in subset_coords:
-
-        subset_polymers = np.empty((0,np.shape(subset)[1]))
+        subset_polymers = np.empty((0, np.shape(subset)[1]))
 
         n_eval_polymers = 0
-        distances = cdist(np.array([subset_point]),full_set_coords)
+        distances = cdist(np.array([subset_point]), full_set_coords)
         sorted_indices = np.argsort(distances.ravel())
 
         # finding k points for each subset or no new points in full set remain
         while (np.shape(subset_polymers)[0] < k and n_eval_polymers < len(full_set)):
-
             index_to_query = sorted_indices[n_eval_polymers]
             polymer = full_set[index_to_query]
 
             # checking polymer selected has not already been selected for or is not already seen in seed lib
-            if np.isin(polymer[0],selected_polymers[:,0]) == False and polymer[0] not in seed_library:
-                subset_polymers = np.vstack((subset_polymers,polymer))
+            if np.isin(polymer[0], selected_polymers[:,0]) == False and polymer[0] not in seed_library:
+                subset_polymers = np.vstack((subset_polymers, polymer))
 
             n_eval_polymers += 1
 
-        selected_polymers = np.vstack((selected_polymers,subset_polymers))
+        selected_polymers = np.vstack((selected_polymers, subset_polymers))
 
-    num_scores = len(selected_polymers[0])-1
+    num_scores = len(selected_polymers[0]) - 1
     col_names = ["Polymers"] + [f"Score{i}" for i in range(1, num_scores+1)]
-    selected_polymers_df = pd.DataFrame(selected_polymers,columns=col_names)
+    selected_polymers_df = pd.DataFrame(selected_polymers, columns=col_names)
 
     return selected_polymers_df
 
-def visualise_2d(df, axis_labels=['f_1','f_2']):
 
-    """
-    Reads a data frame and returns a 2D visualisation of optimisation progression.
-
-    Parameters
-    ----------
-    df : pandas dataframe
-        The data frame of each polymer suggested and their associated objective scores.
-    axis_labels : ndarray of strings
-        Allows for customisation of the axis labels.
-
-    Returns
-    -------
-    fig, ax : matpyplot objects
-        Allows for visualising the resulting graph with plt.show().
-
-    """
-
-    fig, ax = plt.subplots()
-
-    colours = plt.cm.viridis(np.linspace(0, 1, len(df['Optimisation'].unique())))
-
-    ax.set_xlabel(axis_labels[0])
-    ax.set_ylabel(axis_labels[1])
-
-    legend_handles = []
-    legend_labels = []
-
-    for optimisation, group in df.groupby('Optimisation'):
-        scatter = ax.scatter(group['Score_1'], group['Score_2'], color=colours[optimisation], alpha=0.5)
-        legend_handles.append(scatter)
-        legend_labels.append(f"Optimisation {optimisation}")
-
-    ax.legend(legend_handles, legend_labels, loc='upper left', bbox_to_anchor=(1, 1))
-
-    return fig, ax
-
-
-def visualise_3d_scatter(df, axis_labels=['f_1','f_2','f_3']):
-    """
-    Reads a data frame and returns a 2D visualisation of optimisation progression.
-
-    Parameters
-    ----------
-    df : pandas dataframe
-        The data frame of each polymer suggested and their associated objective scores.
-    axis_labels : ndarray of strings
-        Allows for customisation of the axis labels.
-
-    Returns
-    -------
-    fig, ax : pyplot objects
-        Allows for visualising the resulting graph with plt.show().
-
-    """
-
-    colours = plt.cm.viridis(np.linspace(0, 1, len(df['Optimisation'].unique())))
-
-    sns.set(style="darkgrid")
-    fig = plt.figure(figsize=(15, 15))
-    ax = fig.add_subplot(111, projection='3d')
-
-    ax.set_xlabel(axis_labels[0])
-    ax.set_ylabel(axis_labels[1])
-    ax.set_zlabel(axis_labels[2])
-
-    ax.set_box_aspect((1, 1, 1)) 
-
-    legend_handles = []
-    legend_labels = []
-
-    for optimisation, group in df.groupby('Optimisation'):
-        scatter = ax.scatter(group['Score_1'], group['Score_2'], group['Score_3'], color=colours[optimisation], alpha=0.5)
-        legend_handles.append(scatter)
-        legend_labels.append(f"Optimisation {optimisation}")
-
-    ax.legend(legend_handles, legend_labels, loc='upper left', bbox_to_anchor=(1, 1))
-
-    return fig, ax
-
-
-def optimisation_tracker(n,df_old,polymers,scores):
+def optimisation_tracker(n, df_old, polymers,scores):
 
     """
     Record optimisation progression of suggested polymers.
@@ -1189,7 +1106,6 @@ def optimisation_tracker(n,df_old,polymers,scores):
         df = pd.concat([df_old,df_new], ignore_index=True)
 
         return df
-
 
 
 def load_design_from_config(config_filename):
