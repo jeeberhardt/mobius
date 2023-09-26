@@ -4,7 +4,7 @@
 # Mobius - optimizers
 #
 
-from .genetic_algorithm import SequenceGA, RandomGA, MOOSequenceGA
+from .genetic_algorithm import SequenceGA, RandomGA
 from .pool import Pool
 
-__all__ = ['SequenceGA', 'RandomGA','MOOSequenceGA','Pool']
+__all__ = ['SequenceGA', 'RandomGA', 'Pool']

@@ -11,14 +11,13 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import ray
-from pymoo.core.problem import ElementwiseProblem, Problem
+from pymoo.core.problem import Problem
 from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.algorithms.soo.nonconvex.ga import GA
 from pymoo.optimize import minimize
 from pymoo.core.population import Population
 from pymoo.algorithms.moo.age2 import AGEMOEA2
 from pymoo.core.evaluator import Evaluator
-from pymoo.util.running_metric import RunningMetric
-from pymoo.termination.default import DefaultMultiObjectiveTermination
 
 from .genetic_operators import GeneticOperators, Mutation, Crossover, DuplicateElimination
 from ..utils import generate_random_polymers_from_designs
@@ -252,7 +251,7 @@ class _GeneticAlgorithm(ABC):
         return self.polymers, self.scores
 
 
-class SerialSequenceGA(_GeneticAlgorithm):
+class _SerialSequenceGA(_GeneticAlgorithm):
     """
     Use Serial version of the GA optimization to search for new polymer 
     candidates using the acquisition function for scoring.
@@ -355,8 +354,7 @@ class SerialSequenceGA(_GeneticAlgorithm):
 
         return self.polymers, self.scores
 
-
-class SequenceGA(_GeneticAlgorithm):
+class _SequenceGA(_GeneticAlgorithm):
     """
     Parallel version of the SequenceGA optimization to search for new polymer candidates 
     using the acquisition function for scoring.
@@ -481,7 +479,7 @@ class SequenceGA(_GeneticAlgorithm):
             # Recluster all of them again (easier than updating the groups)
             groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
 
-        seq_gao = SerialSequenceGA(**self._parameters)
+        seq_gao = _SerialSequenceGA(**self._parameters)
 
         if len(group_indices) == 1:
             # There is only one scaffold, run it on a single CPU
@@ -629,9 +627,9 @@ class Problem(Problem):
         self._pre_evaluation = False
 
 
-class MOOSequenceGA():
+class SerialSequenceGA():
     """
-    Sequence GA for optimising peptides for multiple objectives.
+    Serial MOOSequence GA for optimising peptides for multiple objectives.
 
     """
 
@@ -643,7 +641,8 @@ class MOOSequenceGA():
         Parameters
         ----------
         algorithm : str, default : 'NSGA2'
-            Algorithm to use for the optimization. Can be 'NSGA2' or 'AGEMOEA2'.
+            Algorithm to use for the optimization. Can be 'GA' for single-objective 
+            optimization, or 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
         n_gen : int, default : 10
             Number of GA generation to run.
         n_population : int, default : 250
@@ -661,15 +660,18 @@ class MOOSequenceGA():
             Maximal number of mutations introduced in the new child.
 
         """
-        available_algorithms = {'NSGA2' : NSGA2, 
+        self.available_algorithms = {'GA': GA,
+                                'NSGA2' : NSGA2, 
                                 'AGEMOEA2': AGEMOEA2}
 
-        assert algorithm in available_algorithms, f'Only NSGA2 and AGEMOEA2 are supported, not {algorithm}'
+        msg_error = f'Only GA, NSGA2 and AGEMOEA2 are supported, not {algorithm}'
+        assert algorithm in self.available_algorithms, msg_error
 
+        self.results = None
         self.polymers = None
         self.scores = None
         # Parameters
-        self._parameters = {'algorithm': available_algorithms[algorithm],
+        self._parameters = {'algorithm': algorithm,
                             'n_gen': n_gen,
                             'n_pop': n_pop, 
                             'total_attempts': total_attempts, 
@@ -678,8 +680,8 @@ class MOOSequenceGA():
                             'minimum_mutations': minimum_mutations, 
                             'maximum_mutations': maximum_mutations}
         self._parameters.update(kwargs)
-
-    def run(self, polymers, scores, acquisition_functions, scaffold_designs, batch_size=96):
+    
+    def run(self, polymers, scores, acquisition_functions, scaffold_designs):
         """
         Run the Multi-Objectives SequenceGA optimization.
 
@@ -689,24 +691,138 @@ class MOOSequenceGA():
             Polymers in HELM format.
         scores : array-like of float or int
             Score associated to each polymer.
-        acquisition_function : `AcquisitionFunction`
-            The acquisition function that will be used to score the polymer.
+        acquisition_function : `AcquisitionFunction` or list of `AcquisitionFunction` objects
+            The acquisition function(s) that will be used to score the polymer.
         scaffold_designs : dictionary
             Dictionary with scaffold polymers and sets of monomers to 
             use for each position.
-        batch_size : int, default : 96
-            Number of polymers to be returned by optimisation process.
 
         Returns
         -------
-        polymers: pd dataframe
-            New suggested polymers from GA with their associated acquisition function scores
-        sol_polymers: pd dataframe
-            Polymers found at the Pareto front and their associated acquisition function scores
+        results : `pymoo.model.result.Result`
+            Object containing the results of the optimization.
 
         """
         # Make sure that inputs are numpy arrays
         polymers = np.asarray(polymers)
+        scores = np.asarray(scores)
+
+        # Initialize the problem
+        problem = Problem(polymers, scores, acquisition_functions)
+
+        # ... and pre-initialize the population with the experimental data.
+        # This is only for the first GA generation.
+        X = polymers.reshape(polymers.shape[0], -1)
+        pop = Population.new("X", X)
+        Evaluator().eval(problem, pop)
+
+        # Turn off the pre-evaluation mode
+        # Now it will use the acquisition scores from the surrogate models
+        problem.eval()
+
+        # Initialize genetic operators
+        self._mutation = Mutation(scaffold_designs, self._parameters['pm'], 
+                                  self._parameters['minimum_mutations'], 
+                                  self._parameters['maximum_mutations'])
+        self._crossover = Crossover(self._parameters['cx_points'])
+        self._duplicates = DuplicateElimination()
+
+        # Initialize the GA method
+        GA_method = self.available_algorithms[self._parameters['algorithm']]
+        algorithm = GA_method(pop_size=self._parameters['n_pop'], sampling=pop, 
+                       crossover=self._crossover, mutation=self._mutation,
+                       eliminate_duplicates=self._duplicates)
+
+        # ... and run!
+        self.results = minimize(problem, algorithm, ('n_gen', self._parameters['n_gen']),
+                            verbose=True, save_history=True)
+        
+        return self.results
+
+
+class SequenceGA():
+    """
+    Class for the Single/Multi-Objectives SequenceGA optimization.
+
+    """
+
+    def __init__(self, algorithm='NSGA2', n_gen=10, n_pop=250, total_attempts=50,
+                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=None, 
+                 n_process=-1, **kwargs):
+        """
+        Initialize the Single/Multi-Objectives SequenceGA optimization.
+
+        Parameters
+        ----------
+        algorithm : str, default : 'NSGA2'
+            Algorithm to use for the optimization. Can be 'GA' for single-objective 
+            optimization, or 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
+        n_gen : int, default : 10
+            Number of GA generation to run.
+        n_population : int, default : 250
+            Size of the population generated at each generation.
+        total_attempt : int, default : 50
+            Stopping criteria. Number of attempt before stopping the search. If no
+            improvement is observed after `total_attempt` generations, we stop.
+        cx_points : int, default : 2
+            Number of crossing over during the mating step.
+        pm : float, default : 0.1
+            Probability of mutation.
+        minimum_mutations : int, default : 1
+            Minimal number of mutations introduced in the new child.
+        maximum_mutations: int, default : None
+            Maximal number of mutations introduced in the new child.
+        n_process : int, default : -1
+            Number of process to run in parallel. Per default, use all the available core.
+
+        """
+        self.available_algorithms = {'GA': GA,
+                                     'NSGA2' : NSGA2, 
+                                     'AGEMOEA2': AGEMOEA2}
+
+        msg_error = f'Only GA, NSGA2 and AGEMOEA2 are supported, not {algorithm}'
+        assert algorithm in self.available_algorithms, msg_error
+
+        self.results = None
+        self.polymers = None
+        self.scores = None
+        # Parameters
+        self._n_process = n_process
+        self._parameters = {'algorithm': algorithm,
+                            'n_gen': n_gen,
+                            'n_pop': n_pop, 
+                            'total_attempts': total_attempts, 
+                            'cx_points': cx_points, 
+                            'pm': pm,
+                            'minimum_mutations': minimum_mutations, 
+                            'maximum_mutations': maximum_mutations}
+        self._parameters.update(kwargs)
+
+    def run(self, polymers, scores, acquisition_functions, scaffold_designs):
+        """
+        Run the Multi-Objectives SequenceGA optimization.
+
+        Parameters
+        ----------
+        polymers : array-like of str
+            Polymers in HELM format.
+        scores : array-like of float or int
+            Score associated to each polymer.
+        acquisition_function : `AcquisitionFunction` or list of `AcquisitionFunction` objects
+            The acquisition function(s) that will be used to score the polymer.
+        scaffold_designs : dictionary
+            Dictionary with scaffold polymers and sets of monomers to 
+            use for each position.
+
+        Returns
+        -------
+        results : `pymoo.model.result.Result` or list of `pymoo.model.result.Result`
+            Object or list of object containing the results of the optimization.
+
+        """
+        # Make sure that inputs are numpy arrays
+        polymers = np.asarray(polymers)
+        scores = np.asarray(scores)
 
         # Starts by automatically adjusting the input polymers to the scaffold designs
         polymers, _ = adjust_polymers_to_designs(polymers, scaffold_designs)
@@ -723,11 +839,11 @@ class MOOSequenceGA():
                 msg_error += f'- {scaffold_not_present}\n'
 
             raise RuntimeError(msg_error)
-        
+
         # Do the contrary now: check that at least one polymer is defined 
         # per scaffold. We need to generate at least one polymer per 
         # scaffold to be able to start the GA optimization. Here we 
-        # generate 10 random polymers per scaffold. We do thzt in the
+        # generate 42 random polymers per scaffold. We do that in the
         # case we want to explore different scaffolds that are not in
         # the initial dataset.
         scaffolds_not_present = list(set(scaffold_designs.keys()).difference(groups.keys()))
@@ -737,69 +853,40 @@ class MOOSequenceGA():
             # We generate them
             n_polymers = [42] * len(tmp_scaffolds_designs)
             new_polymers = generate_random_polymers_from_designs(n_polymers, tmp_scaffolds_designs)
+            # We score them
+            new_scores = np.zeros(shape=(len(new_polymers), len(acquisition_functions)))
+            for i, acq_fun in enumerate(acquisition_functions):
+                new_scores[:, i] = acq_fun.forward(new_polymers).acq
             # Add them to the rest
             polymers = np.concatenate([polymers, new_polymers])
+            scores = np.concatenate([scores, new_scores])
             # Recluster all of them again (easier than updating the groups)
             groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
 
-        # Remove duplicates
-        polymers, unique_indices = np.unique(polymers, return_index=True)
+        seq_gao = SerialSequenceGA(**self._parameters)
 
-        # Initialize the problem
-        problem = Problem(polymers, scores, acquisition_functions)
+        if len(group_indices) == 1:
+            results = seq_gao.run(polymers, scores, acquisition_functions, scaffold_designs)
+        else:
+            # Take the minimal amount of CPUs needed or available
+            if self._n_process == -1:
+                self._n_process = min([os.cpu_count(), len(group_indices)])
+            
+            # Dispatch all the scaffold accross different independent Sequence GA opt.
+            ray.init(num_cpus=self._n_process, ignore_reinit_error=True)
 
-        # ... and pre-initialize the population with the experimental data.
-        # This is only for the first GA generation.
-        X = polymers.reshape(polymers.shape[0], -1)
-        pop = Population.new("X", X)
-        Evaluator().eval(problem, pop)
-        
-        # Turn off the pre-evaluation mode
-        # Now it will use the acquisition scores from the surrogate models
-        problem.eval()
+            refs = [parallel_ga.remote(seq_gao, polymers[seq_ids], scores[seq_ids], acquisition_functions, scaffold_designs) 
+                    for _, seq_ids in group_indices.items()]
 
-        # Initialize genetic operators
-        self._mutation = Mutation(scaffold_designs, self._parameters['pm'], 
-                                  self._parameters['minimum_mutations'], self._parameters['maximum_mutations'])
-        self._crossover = Crossover(self._parameters['cx_points'])
-        self._duplicates = DuplicateElimination()
+            try:
+                results = ray.get(refs)
+            except:
+                ray.shutdown()
+                sys.exit(0)
 
-        # Initialize the GA method
-        GA = self._parameters['algorithm']
-        algorithm = GA(pop_size=self._parameters['n_pop'], sampling=pop, 
-                          crossover=self._crossover, mutation=self._mutation,
-                          eliminate_duplicates=self._duplicates,
-                          callback=RunningMetric(10))
-        
-        termination = DefaultMultiObjectiveTermination(
-            xtol=1e-8,
-            cvtol=1e-6,
-            ftol=0.0025,
-            period=30,
-            n_max_gen=1000,
-            n_max_evals=100000
-        )
-        
-        # ... and run!
-        res = minimize(problem, algorithm, ('n_gen', self._parameters['n_gen']),
-                       verbose=True, save_history=True)
+            ray.shutdown()
 
-        # Obtain final population to find suggested polymers
-        all_populations = [e.pop for e in res.history if e.pop is not None]
-        final_pop = all_populations[-1]
-
-        final_polymers = final_pop.get("X")
-        final_scores = final_pop.get("F")
-        final_gen = np.column_stack((final_polymers, final_scores))
-
-        sol_polymers = res.X
-        sol_scores = res.F
-        solutions = np.column_stack((sol_polymers, sol_scores))
-
-        #suggest new polymers from vicinity of Pareto front
-        self.polymers = find_closest_points(final_gen, solutions, polymers, batch_size)
-    
-        return self.polymers, sol_polymers
+        return results
         
 
 class RandomGA():

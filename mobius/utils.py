@@ -1047,11 +1047,7 @@ def find_closest_points(full_set, subset, seed_library, batch_size):
 
         selected_polymers = np.vstack((selected_polymers, subset_polymers))
 
-    num_scores = len(selected_polymers[0]) - 1
-    col_names = ["Polymers"] + [f"Score{i}" for i in range(1, num_scores+1)]
-    selected_polymers_df = pd.DataFrame(selected_polymers, columns=col_names)
-
-    return selected_polymers_df
+    return selected_polymers
 
 
 def optimisation_tracker(n, df_old, polymers,scores):

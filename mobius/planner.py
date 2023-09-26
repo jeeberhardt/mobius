@@ -11,7 +11,6 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from .utils import parse_helm, get_scaffold_from_helm_string
-from .optimizers.genetic_algorithm import MOOSequenceGA
 
 
 class _Planner(ABC):
@@ -256,6 +255,7 @@ class Planner(_Planner):
                   charged_per_amino_acids: 5
 
         """
+        self._results = None
         self._polymers = None
         self._values = None
         if not isinstance(acquisition_functions, list):
@@ -285,13 +285,31 @@ class Planner(_Planner):
             returned number will be equal to `batch_size`.
 
         """
+        self._results = None
         suggested_polymers = self._polymers.copy()
         predicted_values = self._values.copy()
 
         # Run the optimizer to suggest new polymers
-        suggested_polymers, predicted_values = self._optimizer.run(suggested_polymers, predicted_values, 
-                                                                   self._acq_funs, scaffold_designs=self._designs,
-                                                                   batch_size=batch_size)
+        self._results = self._optimizer.run(suggested_polymers, predicted_values, 
+                                            self._acq_funs, scaffold_designs=self._designs)
+        
+        
+        
+        """
+        # Obtain final population to find suggested polymers
+        final_pop = self.results.history[-1].pop
+        final_gen = np.column_stack((final_pop.get("X"), final_pop.get("F")))
+        solutions = np.column_stack((self.results.X, self.results.F))
+
+        # suggest new polymers from vicinity of Pareto front
+        results = find_closest_points(final_gen, solutions, polymers, batch_size)
+
+        self.polymers = results[:, 0]
+        self.scores = np.asarray(results[:, 1:], dtype=float)
+
+        #return self.res.X, self.res.F
+        return self.polymers, self.scores
+        """
 
         # Apply filters on the suggested polymers
         if self._filters:
@@ -317,10 +335,20 @@ class Planner(_Planner):
             Values associated to each polymer/peptide.
 
         """
-        self._polymers = polymers
-        self._values = np.asarray(values)
+        self._results = None
+        self._polymers = np.asarray(polymers).copy()
+        self._values = np.asarray(values).copy()
 
-        msg = f'Number of acquisition functions ({len(self._acq_funs)}) and objective values ({self._values.shape[1]}) do not match.'
+        if self._values.ndim == 1:
+            raise ValueError(
+                "Expected 2D array, got 1D array instead:\narray={}.\n"
+                "Reshape your data either using array.reshape(-1, 1) if "
+                "your data has a single feature or array.reshape(1, -1) "
+                "if it contains a single sample.".format(self._values)
+            )
+
+        msg = f'Number of acquisition functions ({len(self._acq_funs)}) '
+        msg += f'and objective values ({self._values.shape[1]}) do not match.'
         assert len(self._acq_funs) == self._values.shape[1], msg
 
         # We fit the surrogate model associated with each acquisition function

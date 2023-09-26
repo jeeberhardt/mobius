@@ -13,7 +13,7 @@ from .mobius import Mobius
 from .planner import Planner
 from .descriptors import SimplePolymerDescriptors
 from .fingerprints import MHFingerprint, Map4Fingerprint, MorganFingerprint
-from .optimizers import SequenceGA, RandomGA, MOOSequenceGA
+from .optimizers import SequenceGA, RandomGA
 from .optimizers import Pool
 from .surrogate_models import GPModel, DummyModel, RFModel
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning
@@ -38,7 +38,7 @@ __all__ = ['VirtualTarget', 'ForceField',
            'TanimotoSimilarityKernel', 'CosineSimilarityKernel',
            'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement', 'UpperConfidenceBound',
            'MHFingerprint', 'Map4Fingerprint', 'MorganFingerprint', 'SimplePolymerDescriptors',
-           'SequenceGA', 'RandomGA', 'Pool','MOOProblem','MOOSequenceGA',
+           'SequenceGA', 'RandomGA', 'Pool',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 
            'scrumbled_scanning', 'homolog_scanning',
            'ProteinPeptideScorer',
