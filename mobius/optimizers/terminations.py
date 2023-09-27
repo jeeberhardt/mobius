@@ -4,58 +4,34 @@
 # Mobius - termination criteria
 #
 
-import numpy as np
-from pymoo.util.running_metric import RunningMetric
 from pymoo.core.termination import Termination
 
 
-class RunningMetricTermination(Termination):
-
-    def __init__(self, tol=1e-4):
+class NoChange(Termination):
+    def __init__(self, only_feas=True, **kwargs):
         """
-        Terminate if the running metric is smaller than delta_fmin.
-
-        Parameters
-        ----------
-        tol : float
-            Minimum tol value to terminate the algorithm.
-
+        Terminate if the best sequence does not change.
 
         """
-        super().__init__()
-        self.tol = tol
-        self.running = RunningMetric()
+        super().__init__(**kwargs)
+        self.only_feas = only_feas
+        self._current_best = set()
 
     def _update(self, algorithm):
-        """
-        Update the running metric.
-        
-        Parameters
-        ----------
-        algorithm : pymoo.model.algorithm.Algorithm
-            The algorithm object.
+        opt = algorithm.opt
+        X = opt.get("X")
 
-        Returns
-        -------
-        float
-            The progress of the algorithm. Returns 0 if the running metric is empty.
-            Returns 1 if the delta_f is zero, meaning that the algorithm has converged.
+        if self.only_feas:
+            X = X[opt.get("feas")]
 
-        """
-        running = self.running
+        X = X.ravel()
 
-        # Update the running metric to have the most recent information
-        self.running.update(algorithm)
+        diff = set(X).symmetric_difference(self._current_best)
 
-        # Remove the trailing zero
-        delta_f = np.asarray(running.delta_f)[:-2]
+        print(diff)
 
-        if delta_f.size == 0:
-            return 0.0
+        if len(diff) == 0:
+            return 1.0
         else:
-            # Small trick to avoid division by zero
-            # Source: https://stackoverflow.com/a/68118106
-            progress = delta_f[-1] and self.tol / delta_f[-1] or 1
-            # Clip progress pct to be between 0 and 1
-            progress = np.clip(progress, 0.0, 1.0)
-            return progress
+            self._current_best = set(X)
+            return 0.0

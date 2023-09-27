@@ -18,12 +18,11 @@ from pymoo.optimize import minimize
 from pymoo.core.population import Population
 from pymoo.algorithms.moo.age2 import AGEMOEA2
 from pymoo.core.evaluator import Evaluator
-from pymoo.termination.ftol import SingleObjectiveSpaceTermination
+from pymoo.core.termination import TerminateIfAny 
 from pymoo.termination.max_gen import MaximumGenerationTermination
-from pymoo.core.termination import TerminateIfAny
 from pymoo.termination.robust import RobustTermination
 
-from .terminations import RunningMetricTermination
+from .terminations import NoChange
 from .genetic_operators import GeneticOperators, Mutation, Crossover, DuplicateElimination
 from ..utils import generate_random_polymers_from_designs
 from ..utils import adjust_polymers_to_designs
@@ -634,14 +633,14 @@ class Problem(Problem):
 
 class SerialSequenceGA():
     """
-    Serial MOOSequence GA for optimising peptides for multiple objectives.
+    Class for the Single/Multi-Objectives SequenceGA optimization.
 
     """
 
-    def __init__(self, algorithm='NSGA2', n_gen=1000, n_pop=250, tolerance=1e-3, period=50,
+    def __init__(self, algorithm='NSGA2', n_gen=1000, n_pop=250, period=50,
                  cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=None, **kwargs):
         """
-        Initialize the Multi-Objectives SequenceGA optimization.
+        Initialize the Single/Multi-Objectives SequenceGA optimization.
 
         Parameters
         ----------
@@ -652,8 +651,6 @@ class SerialSequenceGA():
             Number of GA generation to run.
         n_population : int, default : 250
             Size of the population generated at each generation.
-        tolerance : float, default : 1e-3
-            Tolerance for the stoping criteria.
         period : int, default : 50
             Stopping criteria. Number of attempt before stopping the search. If no
             improvement is observed after `period` generations, we stop.
@@ -682,7 +679,6 @@ class SerialSequenceGA():
         self._parameters = {'algorithm': algorithm, 
                             'n_gen': n_gen,
                             'n_pop': n_pop, 
-                            'tolerance': tolerance,
                             'period': period, 
                             'cx_points': cx_points, 
                             'pm': pm,
@@ -692,7 +688,7 @@ class SerialSequenceGA():
     
     def run(self, polymers, scores, acquisition_functions, scaffold_designs):
         """
-        Run the Multi-Objectives SequenceGA optimization.
+        Run the Single/Multi-Objectives SequenceGA optimization.
 
         Parameters
         ----------
@@ -742,16 +738,10 @@ class SerialSequenceGA():
                        crossover=self._crossover, mutation=self._mutation,
                        eliminate_duplicates=self._duplicates)
 
-        # Define termination criteria
-        if self._optimization == 'single':
-            obj_termination = SingleObjectiveSpaceTermination(tol=self._parameters['tolerance'])
-        else:
-            obj_termination = RunningMetricTermination(tol=self._parameters['tolerance'])
-
-        # Make them robust to noise
-        obj_termination = RobustTermination(obj_termination, period=self._parameters['period'])
+        # Define termination criteria and make them robust to noise
+        no_change_termination = RobustTermination(NoChange(), period=self._parameters['period'])
         max_gen_termination = MaximumGenerationTermination(self._parameters['n_gen'])
-        termination = TerminateIfAny(max_gen_termination, obj_termination)
+        termination = TerminateIfAny(max_gen_termination, no_change_termination)
 
         # ... and run!
         self.results = minimize(problem, algorithm, 
@@ -767,7 +757,7 @@ class SequenceGA():
 
     """
 
-    def __init__(self, algorithm='NSGA2', n_gen=1000, n_pop=250, tolerance=1e-3, period=50,
+    def __init__(self, algorithm='NSGA2', n_gen=1000, n_pop=250, period=50,
                  cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=None, 
                  n_process=-1, **kwargs):
         """
@@ -782,8 +772,6 @@ class SequenceGA():
             Number of GA generation to run.
         n_population : int, default : 250
             Size of the population generated at each generation.
-        tolerance : float, default : 1e-3
-            Tolerance for the stopping criteria.
         period : int, default : 50
             Stopping criteria. Number of attempt before stopping the search. If no
             improvement is observed after `period` generations, we stop.
@@ -814,7 +802,6 @@ class SequenceGA():
         self._parameters = {'algorithm': algorithm,
                             'n_gen': n_gen,
                             'n_pop': n_pop, 
-                            'tolerance': tolerance,
                             'period': period, 
                             'cx_points': cx_points, 
                             'pm': pm,
@@ -824,7 +811,7 @@ class SequenceGA():
 
     def run(self, polymers, scores, acquisition_functions, scaffold_designs):
         """
-        Run the Multi-Objectives SequenceGA optimization.
+        Run the Single/Multi-Objectives SequenceGA optimization.
 
         Parameters
         ----------
