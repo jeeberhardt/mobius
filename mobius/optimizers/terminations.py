@@ -28,8 +28,6 @@ class NoChange(Termination):
 
         diff = set(X).symmetric_difference(self._current_best)
 
-        print(diff)
-
         if len(diff) == 0:
             return 1.0
         else:

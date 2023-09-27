@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from .utils import parse_helm, get_scaffold_from_helm_string
+from .utils import batch_selection
 
 
 class _Planner(ABC):

@@ -17,11 +17,6 @@ import torch
 from rdkit import Chem
 from rdkit import RDLogger
 from scipy.spatial.distance import cdist
-import matplotlib.pyplot as plt
-import seaborn as sns
-from pymoo.visualization.radar import Radar
-
-
 
 
 def constrained_sum_sample_pos(n, total):
@@ -990,7 +985,7 @@ def global_min_pssm_score(pssm_pd,intercept):
     return min_score, result_string
 
 
-def find_closest_points(full_set, subset, seed_library, batch_size):
+def batch_selection(full_set, subset, seed_library, batch_size):
 
     """
     Finds the closest points in a full space of points via Euclidean distance to the subset provided.
