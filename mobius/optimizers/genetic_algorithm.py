@@ -18,7 +18,12 @@ from pymoo.optimize import minimize
 from pymoo.core.population import Population
 from pymoo.algorithms.moo.age2 import AGEMOEA2
 from pymoo.core.evaluator import Evaluator
+from pymoo.termination.ftol import SingleObjectiveSpaceTermination
+from pymoo.termination.max_gen import MaximumGenerationTermination
+from pymoo.core.termination import TerminateIfAny
+from pymoo.termination.robust import RobustTermination
 
+from .terminations import RunningMetricTermination
 from .genetic_operators import GeneticOperators, Mutation, Crossover, DuplicateElimination
 from ..utils import generate_random_polymers_from_designs
 from ..utils import adjust_polymers_to_designs
@@ -633,7 +638,7 @@ class SerialSequenceGA():
 
     """
 
-    def __init__(self, algorithm='NSGA2', n_gen=10, n_pop=250, total_attempts=50,
+    def __init__(self, algorithm='NSGA2', n_gen=1000, n_pop=250, tolerance=1e-3, period=50,
                  cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=None, **kwargs):
         """
         Initialize the Multi-Objectives SequenceGA optimization.
@@ -643,13 +648,15 @@ class SerialSequenceGA():
         algorithm : str, default : 'NSGA2'
             Algorithm to use for the optimization. Can be 'GA' for single-objective 
             optimization, or 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
-        n_gen : int, default : 10
+        n_gen : int, default : 1000
             Number of GA generation to run.
         n_population : int, default : 250
             Size of the population generated at each generation.
-        total_attempt : int, default : 50
+        tolerance : float, default : 1e-3
+            Tolerance for the stoping criteria.
+        period : int, default : 50
             Stopping criteria. Number of attempt before stopping the search. If no
-            improvement is observed after `total_attempt` generations, we stop.
+            improvement is observed after `period` generations, we stop.
         cx_points : int, default : 2
             Number of crossing over during the mating step.
         pm : float, default : 0.1
@@ -660,21 +667,23 @@ class SerialSequenceGA():
             Maximal number of mutations introduced in the new child.
 
         """
-        self.available_algorithms = {'GA': GA,
-                                'NSGA2' : NSGA2, 
-                                'AGEMOEA2': AGEMOEA2}
+        self._single = {'GA': GA}
+        self._multi = {'NSGA2' : NSGA2, 'AGEMOEA2': AGEMOEA2}
+        self.available_algorithms = self._single | self._multi
 
-        msg_error = f'Only GA, NSGA2 and AGEMOEA2 are supported, not {algorithm}'
+        msg_error = f'Only {list(self.available_algorithms.keys())} are supported, not {algorithm}'
         assert algorithm in self.available_algorithms, msg_error
 
         self.results = None
         self.polymers = None
         self.scores = None
         # Parameters
-        self._parameters = {'algorithm': algorithm,
+        self._optimization = 'single' if algorithm in self._single else 'multi'
+        self._parameters = {'algorithm': algorithm, 
                             'n_gen': n_gen,
                             'n_pop': n_pop, 
-                            'total_attempts': total_attempts, 
+                            'tolerance': tolerance,
+                            'period': period, 
                             'cx_points': cx_points, 
                             'pm': pm,
                             'minimum_mutations': minimum_mutations, 
@@ -733,9 +742,21 @@ class SerialSequenceGA():
                        crossover=self._crossover, mutation=self._mutation,
                        eliminate_duplicates=self._duplicates)
 
+        # Define termination criteria
+        if self._optimization == 'single':
+            obj_termination = SingleObjectiveSpaceTermination(tol=self._parameters['tolerance'])
+        else:
+            obj_termination = RunningMetricTermination(tol=self._parameters['tolerance'])
+
+        # Make them robust to noise
+        obj_termination = RobustTermination(obj_termination, period=self._parameters['period'])
+        max_gen_termination = MaximumGenerationTermination(self._parameters['n_gen'])
+        termination = TerminateIfAny(max_gen_termination, obj_termination)
+
         # ... and run!
-        self.results = minimize(problem, algorithm, ('n_gen', self._parameters['n_gen']),
-                            verbose=True, save_history=True)
+        self.results = minimize(problem, algorithm, 
+                                termination=termination,
+                                verbose=True, save_history=True)
         
         return self.results
 
@@ -746,7 +767,7 @@ class SequenceGA():
 
     """
 
-    def __init__(self, algorithm='NSGA2', n_gen=10, n_pop=250, total_attempts=50,
+    def __init__(self, algorithm='NSGA2', n_gen=1000, n_pop=250, tolerance=1e-3, period=50,
                  cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=None, 
                  n_process=-1, **kwargs):
         """
@@ -757,13 +778,15 @@ class SequenceGA():
         algorithm : str, default : 'NSGA2'
             Algorithm to use for the optimization. Can be 'GA' for single-objective 
             optimization, or 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
-        n_gen : int, default : 10
+        n_gen : int, default : 1000
             Number of GA generation to run.
         n_population : int, default : 250
             Size of the population generated at each generation.
-        total_attempt : int, default : 50
+        tolerance : float, default : 1e-3
+            Tolerance for the stopping criteria.
+        period : int, default : 50
             Stopping criteria. Number of attempt before stopping the search. If no
-            improvement is observed after `total_attempt` generations, we stop.
+            improvement is observed after `period` generations, we stop.
         cx_points : int, default : 2
             Number of crossing over during the mating step.
         pm : float, default : 0.1
@@ -776,11 +799,11 @@ class SequenceGA():
             Number of process to run in parallel. Per default, use all the available core.
 
         """
-        self.available_algorithms = {'GA': GA,
-                                     'NSGA2' : NSGA2, 
-                                     'AGEMOEA2': AGEMOEA2}
+        self._single = {'GA': GA}
+        self._multi = {'NSGA2' : NSGA2, 'AGEMOEA2': AGEMOEA2}
+        self.available_algorithms = self._single | self._multi
 
-        msg_error = f'Only GA, NSGA2 and AGEMOEA2 are supported, not {algorithm}'
+        msg_error = f'Only {list(self.available_algorithms.keys())} are supported, not {algorithm}'
         assert algorithm in self.available_algorithms, msg_error
 
         self.results = None
@@ -791,7 +814,8 @@ class SequenceGA():
         self._parameters = {'algorithm': algorithm,
                             'n_gen': n_gen,
                             'n_pop': n_pop, 
-                            'total_attempts': total_attempts, 
+                            'tolerance': tolerance,
+                            'period': period, 
                             'cx_points': cx_points, 
                             'pm': pm,
                             'minimum_mutations': minimum_mutations, 
