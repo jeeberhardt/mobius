@@ -9,9 +9,9 @@ import importlib
 from abc import ABC, abstractmethod
 
 import numpy as np
+from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
 
 from .utils import parse_helm, get_scaffold_from_helm_string
-from .utils import batch_selection
 
 
 class _Planner(ABC):
@@ -200,6 +200,66 @@ def _load_filters_from_config(config_filename):
     return _load_methods_from_config(config_filename, yaml_key='filters')
 
 
+def batch_selection(results, filters=None, batch_size=96):
+    """
+    Function for selecting the polymer batch to be synthesized next.
+
+    Parameters
+    ----------
+    results : `pymoo.model.result.Result` or list of `pymoo.model.result.Result`
+        Object or list of object containing the results of the optimization.
+    filters : list of `_Filter`, default: None
+        List of filters to apply on the polymers. If not provided, no filter will be applied.
+    batch_size : int, default: 96
+        Number of polymers to select.
+
+    Returns
+    -------
+    suggested_polymers : numpy.ndarray
+        Array containing the suggested polymers.
+    predicted_values : numpy.ndarray
+        Array containing the predicted values of the suggested polymers.
+
+    """
+    suggested_polymers = []
+    predicted_values = []
+
+    if not isinstance(results, list):
+        results = [results]
+    
+    # Get the polymers and predicted values from the pymoo results
+    for result in results:
+        suggested_polymers.append(result.pop.get('X'))
+        predicted_values.append(result.pop.get('F'))
+
+    suggested_polymers = np.concatenate(suggested_polymers).flatten()
+    predicted_values = np.concatenate(predicted_values)
+
+    # Apply filters on the suggested polymers
+    if filters:
+        passed = np.ones(len(suggested_polymers), dtype=bool)
+
+        for filter in filters:
+            passed = np.logical_and(passed, filter.apply(suggested_polymers))
+
+        suggested_polymers = suggested_polymers[passed]
+        predicted_values = predicted_values[passed]
+
+    # Do the selection based on the predicted values
+    if predicted_values.shape[1] == 1:
+        # Top-k naive batch selection for single-objective optimization
+        sorted_indices = np.argsort(predicted_values.flatten())
+    else:
+        # Non-dominated sorting rank batch selection for multi-objective optimization
+        _, rank = NonDominatedSorting().do(predicted_values, return_rank=True)
+        sorted_indices = np.argsort(rank)
+    
+    suggested_polymers = suggested_polymers[sorted_indices[:batch_size]]
+    predicted_values = predicted_values[sorted_indices[:batch_size]]
+
+    return suggested_polymers, predicted_values
+
+
 class Planner(_Planner):
     """
     Class for setting up the design/optimization/filter protocols for single and multi-objective optimizations.
@@ -294,35 +354,10 @@ class Planner(_Planner):
         self._results = self._optimizer.run(suggested_polymers, predicted_values, 
                                             self._acq_funs, scaffold_designs=self._designs)
         
+        # Select batch polyners to be synthesized
+        suggested_polymers, predicted_values = batch_selection(self._results, self._filters, batch_size)
         
-        
-        """
-        # Obtain final population to find suggested polymers
-        final_pop = self.results.history[-1].pop
-        final_gen = np.column_stack((final_pop.get("X"), final_pop.get("F")))
-        solutions = np.column_stack((self.results.X, self.results.F))
-
-        # suggest new polymers from vicinity of Pareto front
-        results = find_closest_points(final_gen, solutions, polymers, batch_size)
-
-        self.polymers = results[:, 0]
-        self.scores = np.asarray(results[:, 1:], dtype=float)
-
-        #return self.res.X, self.res.F
-        return self.polymers, self.scores
-        """
-
-        # Apply filters on the suggested polymers
-        if self._filters:
-            passed = np.ones(len(suggested_polymers), dtype=bool)
-
-            for filter in self._filters:
-                passed = np.logical_and(passed, filter.apply(suggested_polymers))
-
-            suggested_polymers = suggested_polymers[passed]
-            predicted_values = predicted_values[passed]
-
-        return suggested_polymers[:batch_size], predicted_values[:batch_size]
+        return suggested_polymers, predicted_values
 
     def tell(self, polymers, values):
         """
