@@ -19,7 +19,7 @@ pip install moebius
 
 You can also get it directly from the source code:
 ```bash
-pip install git+https://git.scicore.unibas.ch/schwede/mobius.git@v0.3
+pip install git+https://git.scicore.unibas.ch/schwede/mobius.git@v0.4
 ```
 
 ## Quick tutorial

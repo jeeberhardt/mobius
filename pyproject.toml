@@ -1,6 +1,6 @@
 [project]
 name = "moebius"
-version = "0.3.dev3"
+version = "0.4"
 description = "Python package for optimizing peptide sequences using Bayesian optimization (BO)"
 authors = [
     { name = "Jerome Eberhardt", email = "jerome.eberhardt@unibas.ch" },
