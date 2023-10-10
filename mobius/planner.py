@@ -226,7 +226,7 @@ def batch_selection(results, filters=None, batch_size=96):
 
     if not isinstance(results, list):
         results = [results]
-    
+
     # Get the polymers and predicted values from the pymoo results
     for result in results:
         suggested_polymers.append(result.pop.get('X'))
@@ -245,6 +245,10 @@ def batch_selection(results, filters=None, batch_size=96):
         suggested_polymers = suggested_polymers[passed]
         predicted_values = predicted_values[passed]
 
+    # Return all the polymers if batch_size is not provided
+    if batch_size is None:
+        return suggested_polymers, predicted_values
+
     # Do the selection based on the predicted values
     if predicted_values.shape[1] == 1:
         # Top-k naive batch selection for single-objective optimization
@@ -253,7 +257,7 @@ def batch_selection(results, filters=None, batch_size=96):
         # Non-dominated sorting rank batch selection for multi-objective optimization
         _, rank = NonDominatedSorting().do(predicted_values, return_rank=True)
         sorted_indices = np.argsort(rank)
-    
+
     suggested_polymers = suggested_polymers[sorted_indices[:batch_size]]
     predicted_values = predicted_values[sorted_indices[:batch_size]]
 
@@ -353,10 +357,10 @@ class Planner(_Planner):
         # Run the optimizer to suggest new polymers
         self._results = self._optimizer.run(suggested_polymers, predicted_values, 
                                             self._acq_funs, scaffold_designs=self._designs)
-        
+
         # Select batch polyners to be synthesized
         suggested_polymers, predicted_values = batch_selection(self._results, self._filters, batch_size)
-        
+
         return suggested_polymers, predicted_values
 
     def tell(self, polymers, values):
