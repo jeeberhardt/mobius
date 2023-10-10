@@ -38,9 +38,7 @@ from mobius import GPModel, ExpectedImprovement, TanimotoSimilarityKernel
 from mobius import LinearPeptideEmulator
 from mobius import homolog_scanning
 from mobius import convert_FASTA_to_HELM
-from mobius import MOOProblem,MOOPlanner
-from mobius import visualise_3d_scatter
-from mobius import optimisation_tracker
+from mobius import Planner, SequenceGA
 ```
 
 Simple linear peptide emulator/oracle for MHC class I A*0201. The Position Specific Scoring Matrices
@@ -48,13 +46,9 @@ Simple linear peptide emulator/oracle for MHC class I A*0201. The Position Speci
 matrices of SMM and SMMPMBEC` section). WARNING: This is for benchmarking purpose only. This step should be an 
 actual lab experiment.
 ```python
-pssm_file_one = ['IEDB_MHC/smmpmbec_matrix/HLA-A-02:16-9.txt']
-pssm_file_two = ['IEDB_MHC/smmpmbec_matrix/HLA-A-02:11-9.txt']
-pssm_file_three = ['IEDB_MHC/smmpmbec_matrix/HLA-A-02:01-9.txt']
-
-lpe_one = LinearPeptideEmulator(pssm_file_one)
-lpe_two = LinearPeptideEmulator(pssm_file_two)
-lpe_three = LinearPeptideEmulator(pssm_file_three)
+lpe_one = LinearPeptideEmulator('IEDB_MHC/smmpmbec_matrix/HLA-A-02:16-9.txt')
+lpe_two = LinearPeptideEmulator('IEDB_MHC/smmpmbec_matrix/HLA-A-02:11-9.txt')
+lpe_three = LinearPeptideEmulator('IEDB_MHC/smmpmbec_matrix/HLA-A-02:01-9.txt')
 ```
 
 Now we define a peptide sequence we want to optimize:
@@ -80,8 +74,9 @@ WARNING: This is for benchmarking purpose only. This step is supposed to be an a
 pic50_one_seed_library = lpe_one.score(seed_library)
 pic50_two_seed_library = lpe_two.score(seed_library)
 pic50_three_seed_library = lpe_three.score(seed_library)
-
-pic50_scores = np.column_stack((pic50_one_seed_library,pic50_two_seed_library,pic50_three_seed_library))
+pic50_scores = np.column_stack((pic50_one_seed_library, 
+                                pic50_two_seed_library, 
+                                pic50_three_seed_library))
 ```
 
 Once we have the results from our first lab experiment we can now start the Bayesian Optimization (BO). First, 
@@ -97,8 +92,6 @@ gpmodel_three = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map
 acq_one = ExpectedImprovement(gpmodel_one, maximize=False)
 acq_two = ExpectedImprovement(gpmodel_two, maximize=False)
 acq_three = ExpectedImprovement(gpmodel_three, maximize=False)
-
-acqs = [acq_one,acq_two,acq_three]
 ```
 
 ... and now let's define the search protocol in a YAML configuration file (`design_protocol.yaml`) that will be used 
@@ -131,31 +124,21 @@ filters:
 
 ```
 
-Once acquisition functions / surrogate models are defined and the parameters set in the YAML 
-configuration file, we can initiate the multi-objective problem we are optimising for and the planner method.
+Once acquisition functions are defined and the parameters set in the YAML configuration file, we can initiate 
+the multi-objective problem we are optimising for and the planner method.
 ```python
-problem = MOOProblem(acqs)
-planner = MOOPlanner(problem,design_protocol='design_protocol.yaml',batch_size=96)
+optimizer = SequenceGA(algorithm='NSGA2', period=5)
+planner = Planner([acq_one, acq_two, acq_three], optimizer, design_protocol='design_protocol.yaml')
 ```
 
 Now it is time to run the optimization!!
-
 ```python
 peptides = list(seed_library)[:]
 
-# Initialise the DataFrame which records the progression of the optimisation
-optimisation = 0
-pic50_history = pd.DataFrame()
-pic50_history = optimisation_tracker(optimisation,pic50_history,peptides,pic50_scores)
-
 # Here we are going to do 3 DMT cycles
 for i in range(3):
-
-    optimisation += 1
-    
     # Run optimization, recommand 96 new peptides based on existing data
-    suggested_peptides_df, _ = planner.recommand(peptides, pic50_scores)
-    suggested_peptides = suggested_peptides_df.iloc[:, 0].tolist()
+    suggested_peptides, _ = ps.recommand(peptides, pic50_scores, batch_size=96)
 
     # Here you can add whatever methods you want to further filter out peptides
     
@@ -165,21 +148,13 @@ for i in range(3):
     pic50_1_suggested_peptides = lpe_one.score(suggested_peptides)
     pic50_2_suggested_peptides = lpe_two.score(suggested_peptides)
     pic50_3_suggested_peptides = lpe_three.score(suggested_peptides)
-
-    pic50_suggested_peptides = np.column_stack((pic50_1_suggested_peptides,pic50_2_suggested_peptides,pic50_3_suggested_peptides))
+    pic50_suggested_peptides = np.column_stack((pic50_1_suggested_peptides, 
+                                                pic50_2_suggested_peptides, 
+                                                pic50_3_suggested_peptides))
     
     # Add all the new data
     peptides.extend(list(suggested_peptides))
-    pic50_scores = np.concatenate((pic50_scores,pic50_suggested_peptides),axis=0)
-
-    # Update the optimisation tracker
-    pic50_history = optimisation_tracker(optimisation,pic50_history,suggested_peptides,pic50_suggested_peptides)
-```
-
-Now we can also visualise the progression of the optimisation:
-```python
-fig,_ = visualise_3d_scatter(pic50_history)
-fig.show()
+    pic50_scores = np.concatenate((pic50_scores, pic50_suggested_peptides), axis=0)
 ```
 
 ## Documentation
