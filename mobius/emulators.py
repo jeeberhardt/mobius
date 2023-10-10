@@ -146,6 +146,9 @@ class LinearPeptideEmulator(_Emulator):
         self._pssm = {}
         self._intercept = {}
 
+        if not isinstance(pssm_files, (list, tuple)):
+            pssm_files = [pssm_files]
+
         # Read PSS Matrices
         for pssm_file in pssm_files:
             pssm, intercept = read_pssm_file(pssm_file)
