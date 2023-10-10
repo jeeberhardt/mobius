@@ -92,6 +92,7 @@ gpmodel_three = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map
 acq_one = ExpectedImprovement(gpmodel_one, maximize=False)
 acq_two = ExpectedImprovement(gpmodel_two, maximize=False)
 acq_three = ExpectedImprovement(gpmodel_three, maximize=False)
+acqs = [acq_one, acq_two, acq_three]
 ```
 
 ... and now let's define the search protocol in a YAML configuration file (`design_protocol.yaml`) that will be used 
@@ -128,7 +129,7 @@ Once acquisition functions are defined and the parameters set in the YAML config
 the multi-objective problem we are optimising for and the planner method.
 ```python
 optimizer = SequenceGA(algorithm='NSGA2', period=5)
-planner = Planner([acq_one, acq_two, acq_three], optimizer, design_protocol='design_protocol.yaml')
+planner = Planner(acqs, optimizer, design_protocol='design_protocol.yaml')
 ```
 
 Now it is time to run the optimization!!
