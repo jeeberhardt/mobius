@@ -115,7 +115,7 @@ class Problem(Problem):
                 self._polymers_cache.update(dict(zip(polymers[to_evaluate_idx], scores[to_evaluate_idx])))
 
         out["F"] = scores
-    
+
     def pre_eval(self):
         """
         Function to set pre-evaluation mode on. In pre-evaluation mode, the scores will be
@@ -177,7 +177,7 @@ class SerialSequenceGA():
         self.polymers = None
         self.scores = None
         # Parameters
-        self._optimization = 'single' if algorithm in self._single else 'multi'
+        self._optimization_type = 'single' if algorithm in self._single else 'multi'
         self._parameters = {'algorithm': algorithm, 
                             'n_gen': n_gen,
                             'n_pop': n_pop, 
@@ -187,7 +187,7 @@ class SerialSequenceGA():
                             'minimum_mutations': minimum_mutations, 
                             'maximum_mutations': maximum_mutations}
         self._parameters.update(kwargs)
-    
+
     def run(self, polymers, scores, acquisition_functions, scaffold_designs):
         """
         Run the Single/Multi-Objectives SequenceGA optimization.
@@ -213,6 +213,14 @@ class SerialSequenceGA():
         # Make sure that inputs are numpy arrays
         polymers = np.asarray(polymers)
         scores = np.asarray(scores)
+
+        if self._optimization_type == 'single':
+            msg_error = 'Only one score per polymer is allowed for single-objective optimization.'
+            assert scores.shape[1] == 1, msg_error
+        else:
+            msg_error = 'Only one score per polymer provided. '
+            msg_error += 'You need at least two scores per polymer for multi-objective optimization.'
+            assert scores.shape[1] >= 2, msg_error
 
         # Initialize the problem
         problem = Problem(polymers, scores, acquisition_functions)
@@ -249,7 +257,7 @@ class SerialSequenceGA():
         self.results = minimize(problem, algorithm, 
                                 termination=termination,
                                 verbose=True, save_history=True)
-        
+
         return self.results
 
 
@@ -300,6 +308,7 @@ class SequenceGA():
         self.polymers = None
         self.scores = None
         # Parameters
+        self._optimization_type = 'single' if algorithm in self._single else 'multi'
         self._n_process = n_process
         self._parameters = {'algorithm': algorithm,
                             'n_gen': n_gen,
@@ -336,6 +345,9 @@ class SequenceGA():
         # Make sure that inputs are numpy arrays
         polymers = np.asarray(polymers)
         scores = np.asarray(scores)
+
+        if self._optimization_type == 'single':
+            assert scores.shape[1] == 1, 'Only one score per polymer is allowed for single-objective optimization'
 
         # Starts by automatically adjusting the input polymers to the scaffold designs
         polymers, _ = adjust_polymers_to_designs(polymers, scaffold_designs)
@@ -384,7 +396,7 @@ class SequenceGA():
             # Take the minimal amount of CPUs needed or available
             if self._n_process == -1:
                 self._n_process = min([os.cpu_count(), len(group_indices)])
-            
+
             # Dispatch all the scaffold accross different independent Sequence GA opt.
             ray.init(num_cpus=self._n_process, ignore_reinit_error=True)
 
