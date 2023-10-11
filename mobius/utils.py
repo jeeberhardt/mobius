@@ -733,7 +733,7 @@ def write_design_protocol_yaml_file_from_polymers(polymers, filename='design.yam
         yaml.dump(design_protocol, f)
 
 
-def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
+def MolFromHELM(polymers, HELM_extra_library_filename=None):
     """
     Generate a list of RDKit molecules from HELM strings.
 
@@ -741,9 +741,11 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
     ----------
     polymers : str or List or tuple or numpy.ndarray
         The polymer in HELM format to convert to RDKit molecules.
-    HELMCoreLibrary_filename : str, default : None
-        The filename of the HELM core library JSON file. 
-        If not provided, the default HELMCoreLibrary JSON file will be used.
+    HELM_extra_library_filename : str, default : None
+        The path to a HELM Library file containing extra monomers.
+        Extra monomers will be added to the internal monomers library. 
+        Internal monomers can be overriden by providing a monomer with
+        the same MonomerID.
 
     Returns
     -------
@@ -756,15 +758,25 @@ def MolFromHELM(polymers, HELMCoreLibrary_filename=None):
     if not isinstance(polymers, (list, tuple, np.ndarray)):
             polymers = [polymers]
 
-    if HELMCoreLibrary_filename is None:
-        d = path_module("mobius")
-        HELMCoreLibrary_filename = os.path.join(d, "data/monomer_library.json")
+    # Read HELM Core Library
+    d = path_module("mobius")
+    HELMCoreLibrary_filename = os.path.join(d, "data/monomer_library.json")
 
     with open(HELMCoreLibrary_filename) as f:
         data = json.load(f)
 
     # Re-organize monomer data in a dictionary for faster access
     HELMCoreLibrary = {monomer['MonomerID']: monomer for monomer in data}
+
+    # Read HELM Extra Library
+    if HELM_extra_library_filename is not None:
+        with open(HELM_extra_library_filename) as f:
+            data = json.load(f)
+
+        HELMExtraLibrary = {monomer['MonomerID']: monomer for monomer in data}
+        # Add new monomers to the internal monomers library or
+        # override existing monomers with the same MonomerID
+        HELMCoreLibrary.update(HELMExtraLibrary)
 
     RDLogger.DisableLog('rdApp.warning')
 

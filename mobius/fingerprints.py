@@ -35,7 +35,7 @@ class MAP4Calculator:
         Returns:
             tmap VectorUint -- minhashed fingerprint
         """
-        
+
         atom_env_pairs = self._calculate(mol)
         return self._fold(atom_env_pairs)
 
@@ -115,7 +115,8 @@ class Map4Fingerprint:
 
     """
 
-    def __init__(self, input_type='helm_rdkit', dimensions=4096, radius=1, is_counted=False, HELMCoreLibrary_filename=None):
+    def __init__(self, input_type='helm', dimensions=4096, radius=1, is_counted=False, 
+                 HELM_parser='mobius', HELM_extra_library_filename=None):
         """
         Constructs a new instance of the MAP4 fingerprint class.
 
@@ -134,16 +135,28 @@ class Map4Fingerprint:
             the subgraph instead of a binary vector.
         is_folded : bool, optional (default=True)
             If True, the fingerprint will be folded.
-        HELMCoreLibrary_filename : str, optional (default=None)
-            The path to the HELM Core Library file for HELM inputs.
+        HELM_parser : str, optional (default='mobius')
+            The HELM parser to be used. It can be 'mobius' or 'rdkit'. 
+            When using 'rdkit' parser, only D or L standard amino acids
+            are supported with disulfide bridges for macrocyclic polymers.
+            Using the (slower) internal 'mobius' HELM parser, all kind of
+            scaffolds and monomers can be supported. Monomers library can 
+            be easily extended by providing an extra HELM Library file using 
+            the `HELM_extra_library_filename` parameter.
+        HELM_extra_library_filename : str, optional (default=None)
+            The path to a HELM Library file containing extra monomers.
+            Extra monomers will be added to the internal monomers library. 
+            Internal monomers can be overriden by providing a monomer with
+            the same MonomerID.
 
         """
-        msg_error = 'Format (%s) not handled. Please use FASTA, HELM_rdkit, HELM or SMILES format.'
-        assert input_type.lower() in ['fasta', 'helm_rdkit', 'helm', 'smiles'], msg_error
+        msg_error = 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
+        assert input_type.lower() in ['fasta', 'helm', 'smiles'], msg_error
 
         self._map4calc = MAP4Calculator(dimensions=dimensions, radius=radius, is_counted=is_counted)
         self._input_type = input_type.lower()
-        self._HELMCoreLibrary_filename = HELMCoreLibrary_filename
+        self._HELM_parser = HELM_parser.lower()
+        self._HELM_extra_library_filename = HELM_extra_library_filename
 
     def transform(self, polymers):
         """
@@ -166,10 +179,10 @@ class Map4Fingerprint:
         try:
             if self._input_type == 'fasta':
                 mols = [Chem.rdmolfiles.MolFromFASTA(c) for c in polymers]
-            elif self._input_type == 'helm_rdkit':
+            elif self._input_type == 'helm' and self._HELM_parser == 'rdkit':
                 mols = [Chem.rdmolfiles.MolFromHELM(c) for c in polymers]
-            elif self._input_type == 'helm':
-                mols = MolFromHELM(polymers, self._HELMCoreLibrary_filename)
+            elif self._input_type == 'helm' and self._HELM_parser == 'mobius':
+                mols = MolFromHELM(polymers, self._HELM_extra_library_filename)
             else:
                 mols = [Chem.rdmolfiles.MolFromSmiles(c) for c in polymers]
         except AttributeError:
@@ -188,7 +201,8 @@ class MHFingerprint:
 
     """
 
-    def __init__(self, input_type='helm_rdkit', dimensions=4096, radius=3, rings=True, kekulize=True, HELMCoreLibrary_filename=None):
+    def __init__(self, input_type='helm_rdkit', dimensions=4096, radius=3, rings=True, kekulize=True, 
+                 HELM_parser='mobius', HELM_extra_library_filename=None):
         """
         Constructs a new instance of the MHFingerprint class.
 
@@ -207,13 +221,23 @@ class MHFingerprint:
         kekulize : bool, default True
             Whether to kekulize the structures before generating 
             the fingerprints.
-        HELMCoreLibrary_filename : str or None, default None
-            The file path to the HELM Core Library containing 
-            the definitions of the monomers.
+        HELM_parser : str, optional (default='mobius')
+            The HELM parser to be used. It can be 'mobius' or 'rdkit'. 
+            When using 'rdkit' parser, only D or L standard amino acids
+            are supported with disulfide bridges for macrocyclic polymers.
+            Using the (slower) internal 'mobius' HELM parser, all kind of
+            scaffolds and monomers can be supported. Monomers library can 
+            be easily extended by providing an extra HELM Library file using 
+            the `HELM_extra_library_filename` parameter.
+        HELM_extra_library_filename : str, optional (default=None)
+            The path to a HELM Library file containing extra monomers.
+            Extra monomers will be added to the internal monomers library. 
+            Internal monomers can be overriden by providing a monomer with
+            the same MonomerID.
 
         """
-        msg_error = 'Format (%s) not handled. Please use FASTA, HELM_rdkit, HELM or SMILES format.'
-        assert input_type.lower() in ['fasta', 'helm_rdkit', 'helm', 'smiles'], msg_error
+        msg_error = 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
+        assert input_type.lower() in ['fasta', 'helm', 'smiles'], msg_error
 
         self._dimensions = dimensions
         self._radius = radius
@@ -221,7 +245,8 @@ class MHFingerprint:
         self._kekulize = kekulize
         self._encoder = MHFPEncoder()
         self._input_type = input_type.lower()
-        self._HELMCoreLibrary_filename = HELMCoreLibrary_filename
+        self._HELM_parser = HELM_parser.lower()
+        self._HELM_extra_library_filename = HELM_extra_library_filename
 
     def transform(self, polymers):
         """
@@ -244,10 +269,10 @@ class MHFingerprint:
         try:
             if self._input_type == 'fasta':
                 mols = [Chem.rdmolfiles.MolFromFASTA(c) for c in polymers]
-            elif self._input_type == 'helm_rdkit':
+            elif self._input_type == 'helm' and self._HELM_parser == 'rdkit':
                 mols = [Chem.rdmolfiles.MolFromHELM(c) for c in polymers]
-            elif self._input_type == 'helm':
-                mols = MolFromHELM(polymers, self._HELMCoreLibrary_filename)
+            elif self._input_type == 'helm' and self._HELM_parser == 'mobius':
+                mols = MolFromHELM(polymers, self._HELM_extra_library_filename)
             else:
                 mols = [Chem.rdmolfiles.MolFromSmiles(c) for c in polymers]
         except AttributeError:
@@ -266,7 +291,8 @@ class MorganFingerprint:
 
     """
 
-    def __init__(self, input_type='helm_rdkit', dimensions=4096, radius=2, HELMCoreLibrary_filename=None):
+    def __init__(self, input_type='helm_rdkit', dimensions=4096, radius=2, 
+                 HELM_parser='mobius', HELM_extra_library_filename=None):
         """
         Constructs a new instance of the MorganFingerprint class.
 
@@ -279,18 +305,29 @@ class MorganFingerprint:
             The length of the fingerprint vector.
         radius : int, default : 2
             The radius of the Morgan fingerprint.
-        HELMCoreLibrary_filename : str, default : None
-            The filename of the HELMCore library. Only required if 
-            input_type is 'helm' or 'helm_rdkit.
+        HELM_parser : str, optional (default='mobius')
+            The HELM parser to be used. It can be 'mobius' or 'rdkit'. 
+            When using 'rdkit' parser, only D or L standard amino acids
+            are supported with disulfide bridges for macrocyclic polymers.
+            Using the (slower) internal 'mobius' HELM parser, all kind of
+            scaffolds and monomers can be supported. Monomers library can 
+            be easily extended by providing an extra HELM Library file using 
+            the `HELM_extra_library_filename` parameter.
+        HELM_extra_library_filename : str, optional (default=None)
+            The path to a HELM Library file containing extra monomers.
+            Extra monomers will be added to the internal monomers library. 
+            Internal monomers can be overriden by providing a monomer with
+            the same MonomerID.
 
         """
-        msg_error = 'Format (%s) not handled. Please use FASTA, HELM_rdkit, HELM or SMILES format.'
-        assert input_type.lower() in ['fasta', 'helm_rdkit', 'helm', 'smiles'], msg_error
+        msg_error = 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
+        assert input_type.lower() in ['fasta', 'helm', 'smiles'], msg_error
 
         self._radius = radius
         self._dimensions = dimensions
         self._input_type = input_type.lower()
-        self._HELMCoreLibrary_filename = HELMCoreLibrary_filename
+        self._HELM_parser = HELM_parser.lower()
+        self._HELM_extra_library_filename = HELM_extra_library_filename
 
     def transform(self, polymers):
         """
@@ -313,10 +350,10 @@ class MorganFingerprint:
         try:
             if self._input_type == 'fasta':
                 mols = [Chem.rdmolfiles.MolFromFASTA(c) for c in polymers]
-            elif self._input_type == 'helm_rdkit':
+            elif self._input_type == 'helm' and self._HELM_parser == 'rdkit':
                 mols = [Chem.rdmolfiles.MolFromHELM(c) for c in polymers]
-            elif self._input_type == 'helm':
-                mols = MolFromHELM(polymers, self._HELMCoreLibrary_filename)
+            elif self._input_type == 'helm' and self._HELM_parser == 'mobius':
+                mols = MolFromHELM(polymers, self._HELM_extra_library_filename)
             else:
                 mols = [Chem.rdmolfiles.MolFromSmiles(c) for c in polymers]
         except AttributeError:
