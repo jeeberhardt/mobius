@@ -290,7 +290,7 @@ class Planner(_Planner):
         --------
 
         >>> from mobius import Planner
-        >>> ps = Planner(acq_funs, optimizer, design_protocole='config.yaml')
+        >>> ps = Planner(acq_funs, optimizer, design_protocol='config.yaml')
 
         Example of `config.yaml` defining the scaffold design protocol and the 
         different filters can also be defined to filter out polymers 
