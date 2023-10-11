@@ -76,7 +76,7 @@ Once we have the results from our first lab experiment we can now start the Baye
 we define the molecular fingerprint we want to use as well as the surrogate models for each objective (Gaussian Processes) 
 and the acquisition functions (Expected Improvement).
 ```python
-map4 = Map4Fingerprint(input_type='helm_rdkit', dimensions=4096, radius=1)
+map4 = Map4Fingerprint(input_type='helm', dimensions=4096, radius=1)
 
 gpmodel_one = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
 gpmodel_two = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
