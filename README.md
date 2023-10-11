@@ -30,9 +30,6 @@ pip install git+https://git.scicore.unibas.ch/schwede/mobius.git@v0.4
 #
 
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
 from mobius import Map4Fingerprint
 from mobius import GPModel, ExpectedImprovement, TanimotoSimilarityKernel
 from mobius import LinearPeptideEmulator
@@ -48,7 +45,6 @@ actual lab experiment.
 ```python
 lpe_one = LinearPeptideEmulator('IEDB_MHC/smmpmbec_matrix/HLA-A-02:16-9.txt')
 lpe_two = LinearPeptideEmulator('IEDB_MHC/smmpmbec_matrix/HLA-A-02:11-9.txt')
-lpe_three = LinearPeptideEmulator('IEDB_MHC/smmpmbec_matrix/HLA-A-02:01-9.txt')
 ```
 
 Now we define a peptide sequence we want to optimize:
@@ -73,10 +69,7 @@ WARNING: This is for benchmarking purpose only. This step is supposed to be an a
 ```python
 pic50_one_seed_library = lpe_one.score(seed_library)
 pic50_two_seed_library = lpe_two.score(seed_library)
-pic50_three_seed_library = lpe_three.score(seed_library)
-pic50_scores = np.column_stack((pic50_one_seed_library, 
-                                pic50_two_seed_library, 
-                                pic50_three_seed_library))
+pic50_scores = np.column_stack((pic50_one_seed_library, pic50_two_seed_library))
 ```
 
 Once we have the results from our first lab experiment we can now start the Bayesian Optimization (BO). First, 
@@ -87,12 +80,9 @@ map4 = Map4Fingerprint(input_type='helm_rdkit', dimensions=4096, radius=1)
 
 gpmodel_one = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
 gpmodel_two = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
-gpmodel_three = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
 
 acq_one = ExpectedImprovement(gpmodel_one, maximize=False)
 acq_two = ExpectedImprovement(gpmodel_two, maximize=False)
-acq_three = ExpectedImprovement(gpmodel_three, maximize=False)
-acqs = [acq_one, acq_two, acq_three]
 ```
 
 ... and now let's define the search protocol in a YAML configuration file (`design_protocol.yaml`) that will be used 
@@ -129,12 +119,13 @@ Once acquisition functions are defined and the parameters set in the YAML config
 the multi-objective problem we are optimising for and the planner method.
 ```python
 optimizer = SequenceGA(algorithm='NSGA2', period=5)
-planner = Planner(acqs, optimizer, design_protocol='design_protocol.yaml')
+planner = Planner([acq_one, acq_two], optimizer, design_protocol='design_protocol.yaml')
 ```
 
 Now it is time to run the optimization!!
 ```python
 peptides = list(seed_library)[:]
+pic50_scores = list(pic50_seed_library)[:]
 
 # Here we are going to do 3 DMT cycles
 for i in range(3):
@@ -148,10 +139,7 @@ for i in range(3):
     # step is supposed to be an actual lab experiment.
     pic50_1_suggested_peptides = lpe_one.score(suggested_peptides)
     pic50_2_suggested_peptides = lpe_two.score(suggested_peptides)
-    pic50_3_suggested_peptides = lpe_three.score(suggested_peptides)
-    pic50_suggested_peptides = np.column_stack((pic50_1_suggested_peptides, 
-                                                pic50_2_suggested_peptides, 
-                                                pic50_3_suggested_peptides))
+    pic50_suggested_peptides = np.column_stack((pic50_1_suggested_peptides, pic50_2_suggested_peptides))
     
     # Add all the new data
     peptides.extend(list(suggested_peptides))
