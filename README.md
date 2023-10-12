@@ -133,4 +133,4 @@ The installation instructions, documentation and tutorials can be found on [read
 
 ## Citation
 
-* [J. Eberhardt, M. Lill, T. Schwede. (2023). Combining Bayesian optimization with sequence- or structure-based strategies for optimization of peptide-binding protein.](https://doi.org/10.26434/chemrxiv-2023-b7l81) (Mobius version used: v0.2; to see all the new features see branch [v0.3](https://git.scicore.unibas.ch/schwede/mobius/-/tree/v0.3?ref_type=heads))
+* [J. Eberhardt, M. Lill, T. Schwede. (2023). Combining Bayesian optimization with sequence- or structure-based strategies for optimization of peptide-binding protein.](https://doi.org/10.26434/chemrxiv-2023-b7l81) (Mobius version used: v0.2; to see all the new features see branch [v0.4](https://git.scicore.unibas.ch/schwede/mobius/-/tree/v0.4?ref_type=heads))
