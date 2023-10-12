@@ -331,7 +331,7 @@ class SerialSequenceGA():
         results : `pymoo.model.result.Result`
             Object containing the results of the optimization.
 
-        """        
+        """
         # Starts by automatically adjusting the input polymers to the design
         polymers, _ = adjust_polymers_to_designs(polymers, self._designs)
 
