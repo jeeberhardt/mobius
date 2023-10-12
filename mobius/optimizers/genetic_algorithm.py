@@ -220,22 +220,25 @@ class SerialSequenceGA():
 
     """
 
-    def __init__(self, algorithm='NSGA2', design_protocol_filename=None, 
+    def __init__(self, algorithm='NSGA2', designs=None, filters=None,
                  n_gen=1000, n_pop=250, period=50, cx_points=2, pm=0.1, 
                  minimum_mutations=1, maximum_mutations=None, **kwargs):
         """
-        Initialize the Single/Multi-Objectives SequenceGA optimization.
+        Initialize the Single/Multi-Objectives SequenceGA optimization. The 
+        SerialSequenceGA is not meant to be used directly. It is used by the
+        SequenceGA class to run the optimization in parallel.
 
         Parameters
         ----------
         algorithm : str, default : 'NSGA2'
             Algorithm to use for the optimization. Can be 'GA' for single-objective 
             optimization, or 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
-        design_protocol_filename : str, default: None
-            Path of the YAML config file containing the design protocol 
-            (scaffolds + filters) used during polymers optimization. If not
-            provided, the design protocol will be generated automatically
-            based on the polymers provided during the optimization.
+        designs : list of designs, default: None
+            List of designs to use during the polymer optimization. If not provided,
+            a default design protocol will be generated automatically based on the
+            polymers provided during the optimization, with no filters.
+        filters : list of filter methods, default: None
+            List of filter methods to use during the polymer optimization.
         n_gen : int, default : 1000
             Number of GA generation to run.
         n_population : int, default : 250
@@ -288,26 +291,27 @@ class SerialSequenceGA():
         """
         self._single = {'GA': GA}
         self._multi = {'NSGA2' : NSGA2, 'AGEMOEA2': AGEMOEA2}
-        self.available_algorithms = self._single | self._multi
+        self._available_algorithms = self._single | self._multi
 
-        msg_error = f'Only {list(self.available_algorithms.keys())} are supported, not {algorithm}'
-        assert algorithm in self.available_algorithms, msg_error
+        msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
+        assert algorithm in self._available_algorithms, msg_error
 
         self.results = None
         self.polymers = None
         self.scores = None
+        # Design protocol
+        self._designs = designs
+        self._filters = filters
         # GA Parameters
         self._optimization_type = 'single' if algorithm in self._single else 'multi'
-        self._parameters = {'algorithm': algorithm, 
-                            'design_protocol_filename': design_protocol_filename,
-                            'n_gen': n_gen,
-                            'n_pop': n_pop, 
-                            'period': period, 
-                            'cx_points': cx_points, 
-                            'pm': pm,
-                            'minimum_mutations': minimum_mutations, 
-                            'maximum_mutations': maximum_mutations}
-        self._parameters.update(kwargs)
+        self._method = self._available_algorithms[algorithm]
+        self._n_gen = n_gen
+        self._n_pop = n_pop
+        self._period = period
+        self._cx_points = cx_points
+        self._pm = pm
+        self._minimum_mutations = minimum_mutations
+        self._maximum_mutations = maximum_mutations
 
     def run(self, polymers, scores, acquisition_functions):
         """
@@ -327,19 +331,9 @@ class SerialSequenceGA():
         results : `pymoo.model.result.Result`
             Object containing the results of the optimization.
 
-        """
-        # If we didn't provide a design protocol at the initialization, we generate a 
-        # default design protocol based on the input polymers
-        if self._parameters['design_protocol_filename'] is None:
-            design_protocol = generate_design_protocol_from_polymers(polymers)
-            designs = _load_design_from_config(design_protocol)
-            filters = None
-        else:
-            designs = _load_design_from_config(self._parameters['design_protocol_filename'])
-            filters = _load_filters_from_config(self._parameters['design_protocol_filename'])
-        
-        # Starts by automatically adjusting the input polymers to the scaffold designs
-        polymers, _ = adjust_polymers_to_designs(polymers, designs)
+        """        
+        # Starts by automatically adjusting the input polymers to the design
+        polymers, _ = adjust_polymers_to_designs(polymers, self._designs)
 
         # Initialize the problem
         problem = Problem(polymers, scores, acquisition_functions)
@@ -355,21 +349,18 @@ class SerialSequenceGA():
         problem.eval()
 
         # Initialize genetic operators
-        self._mutation = Mutation(designs, self._parameters['pm'], 
-                                  self._parameters['minimum_mutations'], 
-                                  self._parameters['maximum_mutations'])
-        self._crossover = Crossover(self._parameters['cx_points'])
+        self._mutation = Mutation(self._designs, self._pm, self._minimum_mutations, self._maximum_mutations)
+        self._crossover = Crossover(self._cx_points)
         self._duplicates = DuplicateElimination()
 
         # Initialize the GA method
-        GA_method = self.available_algorithms[self._parameters['algorithm']]
-        algorithm = GA_method(pop_size=self._parameters['n_pop'], sampling=pop, 
-                       crossover=self._crossover, mutation=self._mutation,
-                       eliminate_duplicates=self._duplicates)
+        algorithm = self._method(pop_size=self._n_pop, sampling=pop, 
+                                 crossover=self._crossover, mutation=self._mutation,
+                                 eliminate_duplicates=self._duplicates)
 
         # Define termination criteria and make them robust to noise
-        no_change_termination = RobustTermination(NoChange(), period=self._parameters['period'])
-        max_gen_termination = MaximumGenerationTermination(self._parameters['n_gen'])
+        no_change_termination = RobustTermination(NoChange(), period=self._period)
+        max_gen_termination = MaximumGenerationTermination(self._n_gen)
         termination = TerminateIfAny(max_gen_termination, no_change_termination)
 
         # ... and run!
@@ -456,19 +447,17 @@ class SequenceGA():
         """
         self._single = {'GA': GA}
         self._multi = {'NSGA2' : NSGA2, 'AGEMOEA2': AGEMOEA2}
-        self.available_algorithms = self._single | self._multi
+        self._available_algorithms = self._single | self._multi
 
-        msg_error = f'Only {list(self.available_algorithms.keys())} are supported, not {algorithm}'
-        assert algorithm in self.available_algorithms, msg_error
+        msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
+        assert algorithm in self._available_algorithms, msg_error
 
         self.results = None
         self.polymers = None
         self.scores = None
-        # Design protocol, this should be in the SerialSequenceGA
-        if design_protocol_filename is not None:
-            self._filters = _load_filters_from_config(design_protocol_filename)
-        else:
-            self._filters = None
+        # Design protocol
+        self._designs = None
+        self._filters = None
         # Parameters
         self._optimization_type = 'single' if algorithm in self._single else 'multi'
         self._n_process = n_process
@@ -520,14 +509,15 @@ class SequenceGA():
         # the input polymers.
         if self._parameters['design_protocol_filename'] is None:
             design_protocol = generate_design_protocol_from_polymers(polymers)
-            designs = _load_design_from_config(design_protocol)
+            self._designs = _load_design_from_config(design_protocol)
         else:
-            designs = _load_design_from_config(self._parameters['design_protocol_filename'])
+            self._designs = _load_design_from_config(self._parameters['design_protocol_filename'])
+            self._filters = _load_filters_from_config(self._parameters['design_protocol_filename'])
 
         # Second, check that all the scaffold designs are defined for each polymers 
         # by clustering them based on their scaffold.
         groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
-        scaffolds_not_present = list(set(groups.keys()).difference(designs.keys()))
+        scaffolds_not_present = list(set(groups.keys()).difference(self._designs.keys()))
 
         if scaffolds_not_present:
             msg_error = 'The following scaffolds are not defined: \n'
@@ -541,10 +531,10 @@ class SequenceGA():
         # one polymer per scaffold to be able to start the GA optimization. Here we 
         # generate 42 random polymers per scaffold. We do that in the case we want 
         # to explore different scaffolds that are not in the initial dataset.
-        scaffolds_not_present = list(set(designs.keys()).difference(groups.keys()))
+        scaffolds_not_present = list(set(self._designs.keys()).difference(groups.keys()))
 
         if scaffolds_not_present:
-            tmp_scaffolds_designs = {key: designs[key] for key in scaffolds_not_present}
+            tmp_scaffolds_designs = {key: self._designs[key] for key in scaffolds_not_present}
             # We generate them
             n_polymers = [42] * len(tmp_scaffolds_designs)
             new_polymers = generate_random_polymers_from_designs(n_polymers, tmp_scaffolds_designs)
@@ -558,7 +548,8 @@ class SequenceGA():
             # Recluster all of them again (easier than updating the groups)
             groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
 
-        seq_gao = SerialSequenceGA(**self._parameters)
+        # Initialize the GA optimization object
+        seq_gao = SerialSequenceGA(designs=self._designs, filters=self._filters, **self._parameters)
 
         if len(group_indices) == 1:
             results = seq_gao.run(polymers, scores, acquisition_functions)
