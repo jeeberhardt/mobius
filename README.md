@@ -119,7 +119,7 @@ Once acquisition functions are defined and the parameters set in the YAML config
 the multi-objective problem we are optimising for and the planner method.
 ```python
 optimizer = SequenceGA(algorithm='NSGA2', period=5)
-planner = Planner([acq_one, acq_two], optimizer, design_protocol='design_protocol.yaml')
+planner = Planner([acq_one, acq_two], optimizer, design_protocol_filename='design_protocol.yaml')
 ```
 
 Now it is time to run the optimization!!

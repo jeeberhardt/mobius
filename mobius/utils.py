@@ -704,16 +704,19 @@ def get_scaffold_from_helm_string(polymer):
     return scaffold
 
 
-def write_design_protocol_yaml_file_from_polymers(polymers, filename='design.yaml'):
+def generate_design_protocol_from_polymers(polymers):
     """
-    Write the bare minimum design protocol yaml file from a list of polymers in HELM format.
+    Generate the bare minimum design protocol yaml config from a list of polymers in HELM format.
 
     Parameters
     ----------
     polymers : List of str
         List of polymers in HELM format.
-    filename : str, default : 'design.yaml'
-        Name of the design protocol yaml file to write.
+
+    Returns
+    -------
+    dict
+        The design protocol yaml config.
 
     """
     design_protocol = {
@@ -728,6 +731,23 @@ def write_design_protocol_yaml_file_from_polymers(polymers, filename='design.yam
     # Get the scaffold of each polymer
     groups = group_polymers_by_scaffold(polymers)
     design_protocol['design']['scaffolds'] = list(groups.keys())
+
+    return design_protocol
+
+
+def write_design_protocol_from_polymers(polymers, filename='design.yaml'):
+    """
+    Write the bare minimum design protocol yaml file from a list of polymers in HELM format.
+
+    Parameters
+    ----------
+    polymers : List of str
+        List of polymers in HELM format.
+    filename : str, default : 'design.yaml'
+        Name of the design protocol yaml file to write.
+
+    """
+    design_protocol = generate_design_protocol_from_polymers(polymers)
 
     with open(filename, 'w') as f:
         yaml.dump(design_protocol, f)

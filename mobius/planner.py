@@ -12,6 +12,7 @@ import numpy as np
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
 
 from .utils import parse_helm, get_scaffold_from_helm_string
+from .utils import generate_design_protocol_from_polymers
 
 
 class _Planner(ABC):
@@ -29,14 +30,14 @@ class _Planner(ABC):
         raise NotImplementedError()
 
 
-def _load_design_from_config(config_filename):
+def _load_design_from_config(config):
     """
     Function to load the design protocol from the YAML config file.
 
     Parameters
     ----------
-    config_filename : YAML config filename
-        YAML config file containing the design protocol.
+    config : YAML config filename or dict
+        YAML config file or dictionnary containing the design protocol.
 
     Returns
     -------
@@ -49,8 +50,11 @@ def _load_design_from_config(config_filename):
     default_monomers = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
                         'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
 
-    with open(config_filename, 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
+    if isinstance(config, dict):
+        design = config
+    else:
+        with open(config, 'r') as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
 
     try:
         design = config['design']
@@ -118,14 +122,14 @@ def _load_design_from_config(config_filename):
     return designs
 
 
-def _load_methods_from_config(config_filename, yaml_key):
+def _load_methods_from_config(config, yaml_key):
     """
     Function to load the method from the YAML config file.
 
     Parameters
     ----------
-    config_filename : YAML config filename
-        YAML config file containing the methods to load.
+    config : YAML config filename or dict
+        YAML config file or dictionnary containing the methods to load.
     yaml_key : str
         Key of the YAML config file containing the methods to load.
 
@@ -137,8 +141,11 @@ def _load_methods_from_config(config_filename, yaml_key):
     """
     methods = []
 
-    with open(config_filename, 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
+    if isinstance(config, dict):
+        method_configs = config
+    else:
+        with open(config, 'r') as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
 
     try:
         method_configs = config[yaml_key]
@@ -270,7 +277,7 @@ class Planner(_Planner):
 
     """
 
-    def __init__(self, acquisition_functions, optimizer, design_protocol):
+    def __init__(self, acquisition_functions, optimizer, design_protocol_filename=None):
         """
         Initialize the polymer planner.
 
@@ -282,15 +289,17 @@ class Planner(_Planner):
             a list of acquisition functions is required.
         optimizer : `_GeneticAlgorithm`
             The optimizer that will be used to optimize the polymers.
-        design_protocol : str
+        design_protocol_filename : str, default: None
             Path of the YAML config file containing the design protocol 
-            (scaffolds + filters) used during polymers optimization.
+            (scaffolds + filters) used during polymers optimization. If not
+            provided, the design protocol will be generated automatically
+            based on the polymers provided during the optimization.
 
         Examples
         --------
 
         >>> from mobius import Planner
-        >>> ps = Planner(acq_funs, optimizer, design_protocol='config.yaml')
+        >>> ps = Planner(acq_funs, optimizer, design_protocol_filename='config.yaml')
 
         Example of `config.yaml` defining the scaffold design protocol and the 
         different filters can also be defined to filter out polymers 
@@ -327,8 +336,13 @@ class Planner(_Planner):
             acquisition_functions = [acquisition_functions]
         self._acq_funs = acquisition_functions
         self._optimizer = optimizer
-        self._designs = _load_design_from_config(design_protocol)
-        self._filters = _load_filters_from_config(design_protocol)
+
+        if design_protocol_filename is None:
+            self._designs = None
+            self._filters = None
+        else:
+            self._designs = _load_design_from_config(design_protocol_filename)
+            self._filters = _load_filters_from_config(design_protocol_filename)
 
     def ask(self, batch_size=None):
         """
@@ -390,6 +404,14 @@ class Planner(_Planner):
         msg = f'Number of acquisition functions ({len(self._acq_funs)}) '
         msg += f'and objective values ({self._values.shape[1]}) do not match.'
         assert len(self._acq_funs) == self._values.shape[1], msg
+
+        # If we didn't provide a design protocol at the initialization, we generate a 
+        # default design protocol based on the input polymers
+        if self._designs is None and self._filters is None:
+            design_protocol = generate_design_protocol_from_polymers(self._polymers)
+
+            self._designs = _load_design_from_config(design_protocol)
+            self._filters = _load_filters_from_config(design_protocol)
 
         # We fit the surrogate model associated with each acquisition function
         for i in range(len(self._acq_funs)):
