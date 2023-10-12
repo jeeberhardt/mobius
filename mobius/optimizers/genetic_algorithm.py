@@ -296,13 +296,6 @@ class SerialSequenceGA():
         self.results = None
         self.polymers = None
         self.scores = None
-        # Design protocol
-        if design_protocol_filename is None:
-            self._designs = None
-            self._filters = None
-        else:
-            self._designs = _load_design_from_config(design_protocol_filename)
-            self._filters = _load_filters_from_config(design_protocol_filename)
         # GA Parameters
         self._optimization_type = 'single' if algorithm in self._single else 'multi'
         self._parameters = {'algorithm': algorithm, 
@@ -337,12 +330,16 @@ class SerialSequenceGA():
         """
         # If we didn't provide a design protocol at the initialization, we generate a 
         # default design protocol based on the input polymers
-        if self._designs is None and self._filters is None:
+        if self._parameters['design_protocol_filename'] is None:
             design_protocol = generate_design_protocol_from_polymers(polymers)
-            self._designs = _load_design_from_config(design_protocol)
+            designs = _load_design_from_config(design_protocol)
+            filters = None
+        else:
+            designs = _load_design_from_config(self._parameters['design_protocol_filename'])
+            filters = _load_filters_from_config(self._parameters['design_protocol_filename'])
         
         # Starts by automatically adjusting the input polymers to the scaffold designs
-        polymers, _ = adjust_polymers_to_designs(polymers, self._designs)
+        polymers, _ = adjust_polymers_to_designs(polymers, designs)
 
         # Initialize the problem
         problem = Problem(polymers, scores, acquisition_functions)
@@ -358,7 +355,7 @@ class SerialSequenceGA():
         problem.eval()
 
         # Initialize genetic operators
-        self._mutation = Mutation(self._designs, self._parameters['pm'], 
+        self._mutation = Mutation(designs, self._parameters['pm'], 
                                   self._parameters['minimum_mutations'], 
                                   self._parameters['maximum_mutations'])
         self._crossover = Crossover(self._parameters['cx_points'])
@@ -467,13 +464,11 @@ class SequenceGA():
         self.results = None
         self.polymers = None
         self.scores = None
-        # Design protocol
-        if design_protocol_filename is None:
-            self._designs = None
-            self._filters = None
-        else:
-            self._designs = _load_design_from_config(design_protocol_filename)
+        # Design protocol, this should be in the SerialSequenceGA
+        if design_protocol_filename is not None:
             self._filters = _load_filters_from_config(design_protocol_filename)
+        else:
+            self._filters = None
         # Parameters
         self._optimization_type = 'single' if algorithm in self._single else 'multi'
         self._n_process = n_process
@@ -519,17 +514,20 @@ class SequenceGA():
             msg_error += 'You need at least two scores per polymer for multi-objective optimization.'
             assert scores.shape[1] >= 2, msg_error
 
-        # If we didn't provide a design protocol at the initialization, we generate a 
-        # default design protocol based on the input polymers
-        if self._designs is None and self._filters is None:
-            design_protocol = generate_design_protocol_from_polymers(polymers)
-            self._designs = _load_design_from_config(design_protocol)
-
-        # Group/cluster them by scaffold
-        groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
-
         # Check that all the scaffold designs are defined for all the polymers
-        scaffolds_not_present = list(set(groups.keys()).difference(self._designs.keys()))
+        # First, look at the design protocol. If a design protocol was not provided 
+        # at the initialization, we generate a default design protocol based on 
+        # the input polymers.
+        if self._parameters['design_protocol_filename'] is None:
+            design_protocol = generate_design_protocol_from_polymers(polymers)
+            designs = _load_design_from_config(design_protocol)
+        else:
+            designs = _load_design_from_config(self._parameters['design_protocol_filename'])
+
+        # Second, check that all the scaffold designs are defined for each polymers 
+        # by clustering them based on their scaffold.
+        groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
+        scaffolds_not_present = list(set(groups.keys()).difference(designs.keys()))
 
         if scaffolds_not_present:
             msg_error = 'The following scaffolds are not defined: \n'
@@ -538,16 +536,15 @@ class SequenceGA():
 
             raise RuntimeError(msg_error)
 
-        # Do the contrary now: check that at least one polymer is defined 
-        # per scaffold. We need to generate at least one polymer per 
-        # scaffold to be able to start the GA optimization. Here we 
-        # generate 42 random polymers per scaffold. We do that in the
-        # case we want to explore different scaffolds that are not in
-        # the initial dataset.
-        scaffolds_not_present = list(set(self._designs.keys()).difference(groups.keys()))
+        # Lastly, do the contrary and check that at least one polymer is defined 
+        # per scaffold present in the design protocol. We need to generate at least 
+        # one polymer per scaffold to be able to start the GA optimization. Here we 
+        # generate 42 random polymers per scaffold. We do that in the case we want 
+        # to explore different scaffolds that are not in the initial dataset.
+        scaffolds_not_present = list(set(designs.keys()).difference(groups.keys()))
 
         if scaffolds_not_present:
-            tmp_scaffolds_designs = {key: self._designs[key] for key in scaffolds_not_present}
+            tmp_scaffolds_designs = {key: designs[key] for key in scaffolds_not_present}
             # We generate them
             n_polymers = [42] * len(tmp_scaffolds_designs)
             new_polymers = generate_random_polymers_from_designs(n_polymers, tmp_scaffolds_designs)
