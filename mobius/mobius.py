@@ -52,7 +52,7 @@ class Mobius:
         all_exp_values = np.asarray(values).copy()
 
         # number of values per polymers
-        n = all_suggested_polymers.shape[1]
+        n = all_exp_values.shape[1]
 
         if not isinstance(emulators, (list, tuple)):
             emulators = [emulators]
@@ -127,11 +127,14 @@ class Mobius:
 
         assert isinstance(planners, dict), 'Samplers must be defined as a dictionary ({\'sampler1_name\': sampler})'
 
+        all_suggested_polymers = np.asarray(polymers).copy()
+        all_exp_values = np.asarray(values).copy()
+
         if not isinstance(emulators, (list, tuple)):
             emulators = [emulators]
 
         # number of values per polymers
-        n = all_suggested_polymers.shape[1]
+        n = all_exp_values.shape[1]
 
         columns = ['planner', 'run', 'iter', 'polymer']
         if n > 1:
@@ -142,7 +145,7 @@ class Mobius:
 
         for planner_name, sampler in planners.items():
             for i in range(num_independent_run):
-                df = self.run(polymers, values, emulator, sampler, num_iter, batch_size)
+                df = self.run(polymers, all_exp_values, emulator, sampler, num_iter, batch_size)
 
                 df['run'] = i + 1
                 df['planner'] = planner_name
