@@ -145,7 +145,7 @@ class Mobius:
 
         for planner_name, sampler in planners.items():
             for i in range(num_independent_run):
-                df = self.run(polymers, all_exp_values, emulator, sampler, num_iter, batch_size)
+                df = self.run(polymers, all_exp_values, emulators, sampler, num_iter, batch_size)
 
                 df['run'] = i + 1
                 df['planner'] = planner_name
