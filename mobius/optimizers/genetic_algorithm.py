@@ -222,7 +222,8 @@ class SerialSequenceGA():
 
     def __init__(self, algorithm='NSGA2', designs=None, filters=None,
                  n_gen=1000, n_pop=250, period=50, cx_points=2, pm=0.1, 
-                 minimum_mutations=1, maximum_mutations=None, **kwargs):
+                 minimum_mutations=1, maximum_mutations=None,
+                 save_history=False, **kwargs):
         """
         Initialize the Single/Multi-Objectives SequenceGA optimization. The 
         SerialSequenceGA is not meant to be used directly. It is used by the
@@ -254,6 +255,9 @@ class SerialSequenceGA():
             Minimal number of mutations introduced in the new child.
         maximum_mutations: int, default : None
             Maximal number of mutations introduced in the new child.
+        save_history : bool, default : False
+            Save the history of the optimization. This can be useful to debug the
+            optimization, but it can take a lot of memory.
 
         Examples
         --------
@@ -312,6 +316,7 @@ class SerialSequenceGA():
         self._pm = pm
         self._minimum_mutations = minimum_mutations
         self._maximum_mutations = maximum_mutations
+        self._save_history = save_history
 
     def run(self, polymers, scores, acquisition_functions):
         """
@@ -364,9 +369,10 @@ class SerialSequenceGA():
         termination = TerminateIfAny(max_gen_termination, no_change_termination)
 
         # ... and run!
-        self.results = minimize(problem, algorithm, 
+        self.results = minimize(problem, algorithm,
                                 termination=termination,
-                                verbose=True, save_history=True)
+                                verbose=True,
+                                save_history=self._save_history)
 
         return self.results
 
@@ -379,7 +385,8 @@ class SequenceGA():
 
     def __init__(self, algorithm='NSGA2', design_protocol_filename=None,
                  n_gen=1000, n_pop=250, period=50, cx_points=2, pm=0.1, 
-                 minimum_mutations=1, maximum_mutations=None, n_process=-1, **kwargs):
+                 minimum_mutations=1, maximum_mutations=None, 
+                 n_process=-1, save_history=False, **kwargs):
         """
         Initialize the Single/Multi-Objectives SequenceGA optimization.
 
@@ -410,6 +417,9 @@ class SequenceGA():
             Maximal number of mutations introduced in the new child.
         n_process : int, default : -1
             Number of process to run in parallel. Per default, use all the available core.
+        save_history : bool, default : False
+            Save the history of the optimization. This can be useful to debug the
+            optimization, but it can take a lot of memory.
 
         Examples
         --------
@@ -469,7 +479,8 @@ class SequenceGA():
                             'cx_points': cx_points, 
                             'pm': pm,
                             'minimum_mutations': minimum_mutations, 
-                            'maximum_mutations': maximum_mutations}
+                            'maximum_mutations': maximum_mutations,
+                            'save_history': save_history}
         self._parameters.update(kwargs)
 
     def run(self, polymers, scores, acquisition_functions):
