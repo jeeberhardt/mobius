@@ -53,42 +53,27 @@ class Problem(Problem):
 
         """
         polymers = x.ravel()
+        scores = np.zeros((len(polymers), len(self._acq_funs)))
 
-        # Keep only unseen polymers. We don't want to reevaluate known polymers...
-        to_not_evaluate_idx = np.nonzero(np.in1d(polymers, self._polymers_cache.keys()))[0]
-        to_evaluate_idx = np.nonzero(~np.in1d(polymers, self._polymers_cache.keys()))[0]
-
-        # If there is no new polymers, we skip the evaluation
-        if to_evaluate_idx.size == 0:
-            # But we still need to retrieve the scores of all the known polymers
-            scores = np.array([self._polymers_cache[p] for p in polymers])
-            scores = scores.reshape(scores.shape[0], -1)
-        else:
-            # For the first GA generation, we use the experimental scores
-            # then we will use the acquisition scores from the surrogate models.
-            # In the pre-evaluation mode, the data are not added to the cache.
+        for i, acq_fun in enumerate(self._acq_funs):
             if self._pre_evaluation:
+                # For the first GA generation, we use the experimental scores
+                # then we will use the acquisition scores from the surrogate models.
                 try:
-                    scores = np.array([self._prior_data[p] for p in polymers])
+                    # We shift all the experimental scores in the opposite direction
+                    # by a large number to ensure that the polymers generated during the
+                    # optimization will be better acquisition scores.
+                    acq_values = np.array([self._prior_data[p][i] for p in polymers]) + (-acq_fun.scaling_factor * 999.)
                 except KeyError:
                     msg = f'Some polymers not found in the input experimental data. '
                     msg += 'Did you forget to turn on the eval mode?'
                     raise RuntimeError(msg)
             else:
-                scores = np.zeros((len(polymers), len(self._acq_funs)))
-
                 # Evaluate unseen polymer with acquisition scores from surrogate models
-                for i, acq_fun in enumerate(self._acq_funs):
-                    predictions = acq_fun.forward(polymers[to_evaluate_idx])
-                    scores[to_evaluate_idx, i] = acq_fun.scaling_factor * predictions.acq
+                predictions = acq_fun.forward(polymers)
+                acq_values = acq_fun.scaling_factor * predictions.acq
 
-                # Complete with scores of already seen polymers
-                seen_scores = np.array([self._polymers_cache[p] for p in polymers[to_not_evaluate_idx]])
-                if seen_scores.size > 0:
-                    scores[to_not_evaluate_idx, :] = seen_scores
-
-                # Record acquisition score for found polymer in cache
-                self._polymers_cache.update(dict(zip(polymers[to_evaluate_idx], scores[to_evaluate_idx])))
+            scores[:, i] = acq_values
 
         out["F"] = scores
 
