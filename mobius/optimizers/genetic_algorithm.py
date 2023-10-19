@@ -221,7 +221,7 @@ class SerialSequenceGA():
     """
 
     def __init__(self, algorithm='NSGA2', designs=None, filters=None,
-                 n_gen=1000, n_pop=250, period=50, cx_points=2, pm=0.1, 
+                 n_gen=1000, n_pop=500, period=50, cx_points=2, pm=0.1, 
                  minimum_mutations=1, maximum_mutations=None,
                  save_history=False, **kwargs):
         """
@@ -242,7 +242,7 @@ class SerialSequenceGA():
             List of filter methods to use during the polymer optimization.
         n_gen : int, default : 1000
             Number of GA generation to run.
-        n_population : int, default : 250
+        n_population : int, default : 500
             Size of the population generated at each generation.
         period : int, default : 50
             Stopping criteria. Number of attempt before stopping the search. If no
@@ -258,39 +258,6 @@ class SerialSequenceGA():
         save_history : bool, default : False
             Save the history of the optimization. This can be useful to debug the
             optimization, but it can take a lot of memory.
-
-        Examples
-        --------
-
-        >>> from mobius import SequenceGA
-        >>> ps = SequenceGA(algorithm='AGEMOEA2', design_protocol_filename='design_protocol.yaml')
-
-        Example of `config.yaml` defining the scaffold design protocol and the 
-        different filters can also be defined to filter out polymers 
-        that do not satisfy certain criteria.
-
-        .. code:: yaml
-
-            design:
-                monomers: 
-                    default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
-                    APOLAR: [A, F, G, I, L, P, V, W]
-                    POLAR: [C, D, E, H, K, N, Q, R, K, S, T, M]
-                    AROMATIC: [F, H, W, Y]
-                    POS_CHARGED: [K, R]
-                    NEG_CHARGED: [D, E]
-                scaffolds:
-                    - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
-                        PEPTIDE1:
-                            1: [AROMATIC, NEG_CHARGED]
-                            4: POLAR
-                            8: [C, G, T, S, V, L, M]
-            filters:
-              - class_path: mobius.PeptideSelfAggregationFilter
-              - class_path: mobius.PeptideSolubilityFilter
-                init_args:
-                  hydrophobe_ratio: 0.5
-                  charged_per_amino_acids: 5
 
         """
         self._single = {'GA': GA}
@@ -384,7 +351,7 @@ class SequenceGA():
     """
 
     def __init__(self, algorithm='NSGA2', design_protocol_filename=None,
-                 n_gen=1000, n_pop=250, period=50, cx_points=2, pm=0.1, 
+                 n_gen=1000, n_pop=500, period=50, cx_points=2, pm=0.1, 
                  minimum_mutations=1, maximum_mutations=None, 
                  n_process=-1, save_history=False, **kwargs):
         """
@@ -402,7 +369,7 @@ class SequenceGA():
             based on the polymers provided during the optimization, with no filters.
         n_gen : int, default : 1000
             Number of GA generation to run.
-        n_population : int, default : 250
+        n_population : int, default : 500
             Size of the population generated at each generation.
         period : int, default : 50
             Stopping criteria. Number of attempt before stopping the search. If no
