@@ -7,6 +7,7 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
+import pymoo
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
 
 
@@ -31,8 +32,8 @@ def batch_selection(results, filters=None, batch_size=96):
 
     Parameters
     ----------
-    results : `pymoo.model.result.Result` or list of `pymoo.model.result.Result`
-        Object or list of object containing the results of the optimization.
+    results : `tuple` of (ndarray of shape (n_polymers,), ndarray of shape (n_polymers, n_scores)) or list of `tuple`
+        Contains the results from the optimization.
     filters : list of `_Filter`, default: None
         List of filters to apply on the polymers. If not provided, no filter will be applied.
     batch_size : int, default: 96
@@ -40,9 +41,9 @@ def batch_selection(results, filters=None, batch_size=96):
 
     Returns
     -------
-    suggested_polymers : numpy.ndarray
+    suggested_polymers : ndarray of shape (batch_size,)
         Array containing the suggested polymers.
-    predicted_values : numpy.ndarray
+    predicted_values : ndarray of shape (batch_size, n_scores)
         Array containing the predicted values of the suggested polymers.
 
     """
@@ -54,8 +55,8 @@ def batch_selection(results, filters=None, batch_size=96):
 
     # Get the polymers and predicted values from the pymoo results
     for result in results:
-        suggested_polymers.append(result.pop.get('X'))
-        predicted_values.append(result.pop.get('F'))
+        suggested_polymers.append(result[0])
+        predicted_values.append(result[1])
 
     suggested_polymers = np.concatenate(suggested_polymers).flatten()
     predicted_values = np.concatenate(predicted_values)
@@ -132,10 +133,10 @@ class Planner(_Planner):
 
         Returns
         -------
-        polymers : ndarray
+        polymers : ndarray of shape (batch_size,)
             Suggested polymers/peptides. The returned number of polymers 
             will be equal to `batch_size`.
-        values : ndarray
+        values : ndarray of shape (batch_size, n_scores)
             Predicted values for each suggested polymers/peptides. The 
             returned number will be equal to `batch_size`.
 
@@ -200,10 +201,10 @@ class Planner(_Planner):
 
         Returns
         -------
-        polymers : ndarray
+        polymers : ndarray of shape (batch_size,)
             Suggested polymers/peptides. The returned number of 
             polymers/peptides will be equal to `batch_size`.
-        values : ndarray
+        values : ndarray of shape (batch_size, n_scores)
             Predicted values for each suggested polymers/peptides. The 
             returned number will be equal to `batch_size`.
 
