@@ -267,9 +267,6 @@ class SerialSequenceGA():
         msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
         assert algorithm in self._available_algorithms, msg_error
 
-        self.results = None
-        self.polymers = None
-        self.scores = None
         # Design protocol
         self._designs = designs
         self._filters = filters
@@ -300,8 +297,10 @@ class SerialSequenceGA():
 
         Returns
         -------
-        results : `pymoo.model.result.Result`
-            Object containing the results of the optimization.
+        polymers : ndarray of shape (n_polymers,)
+            Polymers found during the GA search.
+        scores : ndarray of shape (n_polymers, n_scores)
+            Score for each polymer found.
 
         """
         # Starts by automatically adjusting the input polymers to the design
@@ -336,12 +335,14 @@ class SerialSequenceGA():
         termination = TerminateIfAny(max_gen_termination, no_change_termination)
 
         # ... and run!
-        self.results = minimize(problem, algorithm,
-                                termination=termination,
-                                verbose=True,
-                                save_history=self._save_history)
+        results = minimize(problem, algorithm,
+                           termination=termination,
+                           verbose=True, save_history=self._save_history)
+        
+        polymers = results.pop.get('X')
+        scores = results.pop.get('F')
 
-        return self.results
+        return polymers, scores
 
 
 class SequenceGA():
@@ -429,9 +430,6 @@ class SequenceGA():
         msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
         assert algorithm in self._available_algorithms, msg_error
 
-        self.results = None
-        self.polymers = None
-        self.scores = None
         # Design protocol
         self._designs = None
         self._filters = None
@@ -465,8 +463,8 @@ class SequenceGA():
 
         Returns
         -------
-        results : `pymoo.model.result.Result` or list of `pymoo.model.result.Result`
-            Object or list of object containing the results of the optimization.
+        results : `tuple` of (ndarray of shape (n_polymers,), ndarray of shape (n_polymers, n_scores)) or list of `tuple`
+            Contains the results from the optimization.
 
         """
         # Make sure that inputs are numpy arrays
@@ -551,7 +549,7 @@ class SequenceGA():
             ray.shutdown()
 
         return results
-        
+
 
 class RandomGA():
     """
@@ -559,25 +557,29 @@ class RandomGA():
 
     """
 
-    def __init__(self, n_gen=1000, n_children=500, **kwargs):
+    def __init__(self, design_protocol_filename=None, n_gen=1000, n_children=500, **kwargs):
         """
         Initialize the RandomGA "optimization".
 
         Parameters
         ----------
+        design_protocol_filename : str, default: None
+            Path of the YAML config file containing the design protocol 
+            (scaffolds + filters) used during polymers optimization. If not
+            provided, a default design protocol will be generated automatically
+            based on the polymers provided during the optimization, with no filters.
         n_gen : int, default : 1000
             Number of GA generation to run.
         n_children : int, default : 500
             Number of children generated at each generation.
 
         """
-        self.polymers = None
-        self.scores = None
         # Parameters
+        self._design_protocol_filename = design_protocol_filename
         self._n_gen = n_gen
         self._n_children = n_children
 
-    def run(self, polymers, scores, acquisition_function, scaffold_designs):
+    def run(self, polymers, scores, acquisition_function):
         """
         Run the RandomGA "optimization".
 
@@ -587,36 +589,41 @@ class RandomGA():
             Polymers in HELM format.
         scores : array-like of float or int
             Score associated to each polymer.
-        acquisition_function : AcquisitionFunction (RandomImprovement)
+        acquisition_function : `AcquisitionFunction` (RandomImprovement)
             The acquisition function that will be used to score the polymer.
-        scaffold_designs : dictionary
-            Dictionary with scaffold polymers and defined set of monomers 
-            to use for each position.
 
         Returns
         -------
-        polymers : ndarray
+        polymers : ndarray of shape (n_polymers,)
             Polymers found during the GA search.
-        scores : ndarray
+        scores : ndarray of shape (n_polymers, n_scores)
             Score for each polymer found.
 
         """
+        polymers = np.asarray(polymers)
+        scores = np.asarray(scores)
+
+        if scores.ndim == 1:
+            raise ValueError(
+                "Expected 2D array, got 1D array instead:\narray={}.\n"
+                "Reshape your data either using array.reshape(-1, 1) if "
+                "your data has a single feature or array.reshape(1, -1) "
+                "if it contains a single sample.".format(scores)
+            )
+
+        if self._design_protocol_filename is None:
+            design_protocol = generate_design_protocol_from_polymers(polymers)
+            self._designs = _load_design_from_config(design_protocol)
+        else:
+            self._designs = _load_design_from_config(self._design_protocol_filename)
+            self._filters = _load_filters_from_config(self._design_protocol_filename)
+
         # Generate (n_children * n_gen) polymers and random score them!
-        all_polymers = generate_random_polymers_from_designs(self._n_children * self._n_gen, scaffold_designs)
-        all_scores = acquisition_function.forward(all_polymers)
-
+        all_polymers = generate_random_polymers_from_designs(self._n_children * self._n_gen, self._designs)
         all_polymers = np.asarray(all_polymers)
-        all_scores = np.asarray(all_scores)
 
-        # Sort polymers by scores in the decreasing order (best to worst)
-        # The scores are scaled to be sure that the best has the lowest score
-        # This scaling factor is based on the acquisition function nature
-        sorted_indices = np.argsort(acquisition_function.scaling_factor * scores)
+        all_scores = np.zeros(shape=(len(all_polymers), scores.shape[1]))
+        for i in range(scores.shape[1]):
+            all_scores[:, i] = acquisition_function.forward(all_polymers)
 
-        self.polymers = all_polymers[sorted_indices]
-        self.scores = all_scores[sorted_indices]
-
-        print(f'End RandomGA - Best score: {self.scores[0]:5.3f}'
-              f' - {self.polymers[0]} ({self.polymers[0].count(".")})')
-
-        return self.polymers, self.scores
+        return all_polymers, all_scores
