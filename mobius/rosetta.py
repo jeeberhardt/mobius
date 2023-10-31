@@ -58,7 +58,9 @@ class ProteinPeptideComplex:
         if not _has_pyrosetta:
             raise ImportError('PyRosetta is not installed.')
 
-        options = '-no_optH false -ex1 -ex2 -mute all -beta -ignore_unrecognized_res true -load_PDB_components false -ignore_waters false'
+        options = '-no_optH false -ex1 -ex2 -mute all -beta_nov16 -corrections::beta_nov16 '
+        options += '-ignore_unrecognized_res true -load_PDB_components false -ignore_waters false '
+        options += '-use_terminal_residues true'
         pyrosetta.init(extra_options=options)
         
         self.pose = pyrosetta.Pose()
@@ -113,7 +115,7 @@ class ProteinPeptideComplex:
 
         return v
 
-    def relax_peptide(self, distance=9., cycles=5, scorefxn="beta_design"):
+    def relax_peptide(self, distance=9., cycles=5, scorefxn="beta_relax"):
         """
         Relaxes the peptide chain.
 
@@ -125,6 +127,7 @@ class ProteinPeptideComplex:
             The number of relax cycles.
         scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_design"
             The name of the score function. List of suggested scoring functions:
+            - beta: beta_nov16
             - beta_cart: beta_nov16_cart
             - beta_soft: beta_nov16_soft
             - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
@@ -136,6 +139,11 @@ class ProteinPeptideComplex:
                 - hbond_bb_sc: 5.0
                 - hbond_sc: 3.0
                 - buried_unsatisfied_penalty: 0.5
+            - beta_relax: beta_nov16 with the following weights:
+                - arg_cation_pi: 3.0
+                - approximate_buried_unsat_penalty: 5
+                - approximate_buried_unsat_penalty_burial_atomic_depth: 3.5
+                - approximate_buried_unsat_penalty_hbond_energy_threshold: -0.5
 
         """
         if not isinstance(scorefxn, pyrosetta.rosetta.core.scoring.ScoreFunction):
@@ -148,6 +156,13 @@ class ProteinPeptideComplex:
                 scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_bb_sc, 5.0)
                 scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.hbond_sc, 3.0)
                 scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.buried_unsatisfied_penalty, 0.5)
+            elif scorefxn == 'beta_relax':
+                scorefxn = pyrosetta.create_score_function('beta')
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.arg_cation_pi, 3.0)
+                scorefxn.set_weight(pyrosetta.rosetta.core.scoring.ScoreType.approximate_buried_unsat_penalty, 5.0)
+                emo = scorefxn.energy_method_options()
+                emo.approximate_buried_unsat_penalty_burial_atomic_depth(3.5)
+                emo.approximate_buried_unsat_penalty_hbond_energy_threshold(-0.5)
             else:
                 scorefxn = pyrosetta.create_score_function(scorefxn)
 
