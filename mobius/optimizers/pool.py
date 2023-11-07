@@ -28,8 +28,10 @@ class Pool:
         
         """
         self._candidates = set(candidates)
+        self._designs = None
+        self._filters = None
     
-    def run(self, polymers, scores, acquisition_function, **kwargs):
+    def run(self, polymers, scores, acquisition_functions, **kwargs):
         """
         Run the Pool optimization.
         
@@ -37,33 +39,38 @@ class Pool:
         ----------
         polymers : array-like of str
             Polymers in HELM format.
-        scores : array-like of float or int
-            Score associated to each polymer.
-        acquisition_function : AcquisitionFunction
-            The acquisition function that will be used to score the polymer.
+        scores : array-like of shape (n_samples, n_objectives)
+            Values associated to each polymer/peptide.
+        acquisition_functions : `_AcquisitionFunction` or list of `_AcquisitionFunction`
+            The acquisition functions that will be used to score the polymers. For single-objective
+            optimisation, only one acquisition function is required. For multi-objective optimisation,
+            a list of acquisition functions is required.
 
         Returns
         -------
         polymers : ndarray
             All the polymers evaluated.
-        scores : ndarray
+        predicted_scores : ndarray
             Utility score for each polymer.
 
         """
-        scaling_factor = acquisition_function.scaling_factor
-
         # Remove candidates in common with the input polymers
         # Bacause we are not going to evaluate them again, they are supposed
         # to be already evaluated (aka experimentally tested)
         candidates = np.asarray(list(self._candidates.difference(polymers)))
 
-        # Evaluate the acquisition function for the candidates
-        results = acquisition_function.forward(candidates)
-        scores = results.acq
+        predicted_scores = np.zeros((len(candidates), len(acquisition_functions)))
 
-        # Sort the candidates by the acquisition function
-        sorted_indices = np.argsort(scaling_factor * scores)
-        candidates = np.asarray(candidates[sorted_indices])
-        scores = np.asarray(scores[sorted_indices])
+        for i, acq_fun in enumerate(acquisition_functions):
+            # Evaluate the acquisition function for the candidates
+            results = acq_fun.forward(candidates)
+            predicted_scores[:, i] = results.acq
 
-        return candidates, scores
+        if len(acquisition_functions) == 1:
+            predicted_scores = predicted_scores.flatten()
+            # Sort the candidates by the acquisition function
+            sorted_indices = np.argsort(acquisition_functions[0].scaling_factor * predicted_scores)
+            candidates = candidates[sorted_indices]
+            predicted_scores = predicted_scores[sorted_indices].reshape(-1, 1)
+
+        return candidates, predicted_scores
