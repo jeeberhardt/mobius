@@ -5,7 +5,6 @@
 #
 
 from abc import ABC, abstractmethod
-from collections import namedtuple
 
 import numpy as np
 import ray
@@ -33,7 +32,16 @@ class _AcquisitionFunction(ABC):
 
     @property
     @abstractmethod
-    def scaling_factor(self):
+    def scaling_factors(self):
+        pass
+
+    @property
+    @abstractmethod
+    def number_of_objectives(self):
+        pass
+
+    @abstractmethod
+    def fit(self):
         pass
 
     @abstractmethod
@@ -49,35 +57,50 @@ class RandomImprovement(_AcquisitionFunction):
 
     Attributes
     ----------
-    surrogate_model : `_SurrogateModel`
-        Surrogate model used by the acquisition function (`DummyModel`).
-    maximize : bool
-        Tell if the goal to maximize (True) or minimize (False) the acquisition function.
-    scaling_factor : int
-        Scaling factor used by the Bolzmann weigthing function in the GA
+    surrogate_model : list of `_SurrogateModel` (`DummyModel`)
+        The surrogate models used by the acquisition function.
+    scaling_factors : ndarray of shape (surrogate_models,)
+        Scaling factor used by Genetic Algorithm, so it's always a minimization.
+    maximize : ndarray of bool of shape (surrogate_models,)
+        Tell if the goal(s) is to maximize (True) or minimize (False) the acquisition function.
+    number_of_objectives : int
+        Number of objectives to optimize.
 
     """
 
-    def __init__(self, low=0, high=1, maximize=True):
+    def __init__(self, low=0, high=1, maximize=False):
         """
         Random acquisition function.
 
         Parameters
         ----------
-        low : int, default : 0
+        low : int or array-like of shape (n_objectives, ), default : 0
             Lower boundary of the output interval. All values generated 
             will be greater than or equal to low.
-        high : int, default : 1
+        high : int or array-like of shape (n_objectives, ), default : 1
             Upper boundary of the output interval. All values generated 
             will be less than or equal to high.
-        maximize : bool, default : True
-            Indicates whether the function is to be maximised.
+        maximize : bool or array-like of bool of shape (n_objectives, ), default : False
+            Indicates whether the goal(s) is(are) to be maximised or minimized.
 
         """
+        if not isinstance(low, (list, tuple, np.ndarray)):
+            low = [low]
+        if not isinstance(high, (list, tuple, np.ndarray)):
+            high = [high]
+        if not isinstance(maximize, (list, tuple, np.ndarray)):
+            maximize = [maximize]
+
+        msg_error = "The number of lower and upper bounds must be the same."
+        assert len(low) == len(high), msg_error
+        msg_error = "The number of maximize flags must be the same as the "
+        msg_error += "number of low/high bounds."
+        assert len(maximize) == len(low), msg_error
+
         self._surrogate_model = DummyModel()
-        self._low = low
-        self._high = high
-        self._maximize = maximize
+        self._low = np.asarray(low)
+        self._high = np.asarray(high)
+        self._maximize = np.asarray(maximize)
 
     @property
     def surrogate_model(self):
@@ -88,11 +111,26 @@ class RandomImprovement(_AcquisitionFunction):
         return self._maximize
 
     @property
-    def scaling_factory(self):
-        if self.maximize:
-            return -1
-        else:
-            return 1
+    def scaling_factors(self):
+        return -1 * np.ones(len(self._maximize))
+    
+    @property
+    def number_of_objectives(self):
+        return len(self._maximize)
+    
+    def fit(self, X_train, y_train):
+        """
+        Fit the surrogate models using existing data.
+
+        Parameters
+        ----------
+        X_train : array-like of shape (n_polymers, n_features) or (n_polymers)
+            Feature vectors or polymers in HELM format.
+        y_train : array-like of shape (n_polymers, n_objectives)
+            Values associated to each polymer.
+
+        """
+        pass
 
     def forward(self, X_test):
         """
@@ -100,23 +138,22 @@ class RandomImprovement(_AcquisitionFunction):
 
         Parameters
         ----------
-        X_test : array-like of shape (n_samples, n_features)
-            The input samples.
+        X_test : array-like of shape (n_polymers, n_features) or (n_polymers)
+            Feature vectors or polymers in HELM format.
 
         Returns
         -------
-        results : namedtuple
-            The results of the acquisition function returned as a namedtuple
-            with the following important attributes: `acq` random values
-            as an ndarray of shape (n_samples, ), `mu` and `sigma` are defined
-            as None.
+        ndarray of shape (n_polymers, n_objectives)
+            The expected improvement values.
 
         """
         X_test = np.asarray(X_test)
-        ri = np.random.uniform(low=self._low, high=self._high, size=X_test.shape[0])
+        size = (X_test.shape[0], len(self._low))
+        ri = np.random.uniform(low=self._low, high=self._high, size=size)
 
-        results = namedtuple('results', ['acq', 'mu', 'sigma'])
-        return results(ri, np.empty((ri.shape[0],)).fill(np.nan), np.empty((ri.shape[0],)).fill(np.nan))
+        print(ri.shape)
+
+        return ri
 
 
 class Greedy(_AcquisitionFunction):
@@ -125,45 +162,80 @@ class Greedy(_AcquisitionFunction):
 
     Attributes
     ----------
-    surrogate_model : `_SurrogateModel`
-        The surrogate model used by the acquisition function.
-    maximize : bool
-        Tell if the goal to maximize (True) or minimize (False) 
-        the acquisition function.
-    scaling_factor : int
-        Scaling factor used by the Bolzmann weigthing function in the GA.
+    surrogate_model : list of `_SurrogateModel`
+        The surrogate models used by the acquisition function.
+    maximize : ndarray of bool of shape (surrogate_models,)
+        Tell if the goal(s) is to maximize (True) or minimize (False) the acquisition function.
+    scaling_factors : ndarray of shape (surrogate_models,)
+        Scaling factor used by Genetic Algorithm, so it's always a minimization.
 
     """
 
-    def __init__(self, surrogate_model, maximize=False):
+    def __init__(self, surrogate_models, maximize=False):
         """
         Greedy acquisition function.
 
         Parameters
         ----------
-        surrogate_model: `_SurrogateModel`
-            The surrogate model to be used by the acquisition function.
-        maximize : bool, default : False
-            Indicates whether the function is to be maximised.
+        surrogate_models: `_SurrogateModel` or list of `_SurrogateModel`
+            The surrogate model(s) to be used by the acquisition function.
+        maximize : bool or list of bool, default : False
+            Indicates whether the goal(s) is(are) to be maximised or minimized.
 
         """
-        self._surrogate_model = surrogate_model
-        self._maximize = maximize
+        if not isinstance(surrogate_models, (list, tuple, np.ndarray)):
+            surrogate_models = [surrogate_models]
+        if not isinstance(maximize, (list, tuple, np.ndarray)):
+            maximize = [maximize]
+        
+        msg_error = "The number of surrogate models and maximize flags must be the same."
+        assert len(surrogate_models) == len(maximize), msg_error
+
+        self._surrogate_models = surrogate_models
+        self._maximize = np.asarray(maximize)
 
     @property
     def surrogate_model(self):
-        return self._surrogate_model
+        return self._surrogate_models
 
     @property
     def maximize(self):
         return self._maximize
 
     @property
-    def scaling_factor(self):
-        if self._maximize:
-            return -1
-        else:
-            return 1
+    def scaling_factors(self):
+        return (-1) ** (self._maximize)
+    
+    @property
+    def number_of_objectives(self):
+        return len(self._surrogate_models)
+    
+    def fit(self, X_train, y_train):
+        """
+        Fit the surrogate models using existing data.
+
+        Parameters
+        ----------
+        X_train : array-like of shape (n_polymers, n_features) or (n_polymers)
+            Feature vectors or polymers in HELM format.
+        y_train : array-like of shape (n_polymers, n_objectives)
+            Values associated to each polymer.
+
+        """
+        X_train = np.asarray(X_train)
+        y_train = np.asarray(y_train)
+
+        if y_train.ndim == 1:
+            raise ValueError(
+                "Expected 2D array, got 1D array instead:\narray={}.\n"
+                "Reshape your data either using array.reshape(-1, 1) if "
+                "your data has a single feature or array.reshape(1, -1) "
+                "if it contains a single sample.".format(y_train)
+            )
+
+        # We fit the surrogate model associated with each acquisition function
+        for i, surrogate_model in enumerate(self._surrogate_models):
+            surrogate_model.fit(X_train, y_train[:, i])
 
     def forward(self, X_test):
         """
@@ -171,22 +243,23 @@ class Greedy(_AcquisitionFunction):
 
         Parameters
         ----------
-        X_test : array-like of shape (n_samples, n_features)
-            The input samples.
+        X_test : array-like of shape (n_polymers, n_features) or (n_polymers)
+            Feature vectors or polymers in HELM format.
 
         Returns
         -------
-        results : namedtuple
-            The results of the acquisition function returned as a namedtuple
-            with the following important attributes: `acq` and `mu` the 
-            predicted mean values as an ndarray of shape (n_samples, ), `sigma`
-            is defined as None.
+        ndarray of shape (n_polymers, n_objectives)
+            The expected improvement values.
 
         """
-        mu, _ = self._surrogate_model.predict(X_test)
+        X_test = np.asarray(X_test)
+        scores = np.zeros((X_test.shape[0], len(self._surrogate_models)))
 
-        results = namedtuple('results', ['acq', 'mu', 'sigma'])
-        return results(mu, mu, np.empty((mu.shape[0],)).fill(np.nan))
+        for i, surrogate_model in enumerate(self._surrogate_models):
+            mu, _ = surrogate_model.predict(X_test)
+            scores[:, i] = mu
+
+        return scores
 
 
 class ExpectedImprovement(_AcquisitionFunction):
@@ -195,25 +268,27 @@ class ExpectedImprovement(_AcquisitionFunction):
 
     Attributes
     ----------
-    surrogate_model : `_SurrogateModel`
-        The surrogate model used by the acquisition function.
-    maximize : bool
-        Tell if the goal to maximize (True) or minimize (False) the acquisition function.
-    scaling_factor : int
-        Scaling factor used by the Bolzmann weigthing function in the GA.
+    surrogate_model : list of `_SurrogateModel`
+        The surrogate models used by the acquisition function.
+    scaling_factors : ndarray of shape (surrogate_models,)
+        Scaling factor used by Genetic Algorithm, so it's always a minimization.
+    maximize : ndarray of bool of shape (surrogate_models,)
+        Tell if the goal(s) is to maximize (True) or minimize (False) the acquisition function.
+    number_of_objectives : int
+        Number of objectives to optimize.
 
     """
 
-    def __init__(self, surrogate_model, maximize=False, xi=0.00, eps=1e-9):
+    def __init__(self, surrogate_models, maximize=False, xi=0.00, eps=1e-9):
         """
         Expected improvement acquisition function.
 
         Parameters
         ----------
-        surrogate_model: `_SurrogateModel`
-            The surrogate model to be used by the acquisition function.
-        maximize : bool, default : False
-            Indicates whether the function is to be maximised.
+        surrogate_models: `_SurrogateModel` or list of `_SurrogateModel`
+            The surrogate model(s) to be used by the acquisition function.
+        maximize : bool or list of bool, default : False
+            Indicates whether the goal(s) is(are) to be maximised or minimized.
         xi : float, default : 0.
             Exploitation-exploration trade-off parameter.
         eps : float, default : 1e-9
@@ -224,60 +299,102 @@ class ExpectedImprovement(_AcquisitionFunction):
         https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
 
         """
-        self._surrogate_model = surrogate_model
-        self._xi = xi
+        if not isinstance(surrogate_models, (list, tuple, np.ndarray)):
+            surrogate_models = [surrogate_models]
+        if not isinstance(maximize, (list, tuple, np.ndarray)):
+            maximize = [maximize]
+        
+        msg_error = "The number of surrogate models and maximize flags must be the same."
+        assert len(surrogate_models) == len(maximize), msg_error
+
+        self._surrogate_models = surrogate_models
+        self._maximize = np.asarray(maximize)
         self._eps = eps
-        self._maximize = maximize
+        self._xi = xi
 
     @property
     def surrogate_model(self):
-        return self._surrogate_model
+        return self._surrogate_models
 
     @property
     def maximize(self):
         return self._maximize
 
     @property
-    def scaling_factor(self):
-        return -1
+    def scaling_factors(self):
+        return -1 * np.ones(len(self._maximize))
+    
+    @property
+    def number_of_objectives(self):
+        return len(self._surrogate_models)
 
-    def forward(self, X_test):
+    def fit(self, X_train, y_train):
         """
-        Predict the Expected Improvement values for input sample `X_test`.
+        Fit the surrogate models using existing data.
 
         Parameters
         ----------
-        X_test : array-like of shape (n_samples, n_features)
-            The input samples.
+        X_train : array-like of shape (n_polymers, n_features) or (n_polymers)
+            Feature vectors or polymers in HELM format.
+        y_train : array-like of shape (n_polymers, n_objectives)
+            Values associated to each polymer.
+
+        """
+        X_train = np.asarray(X_train)
+        y_train = np.asarray(y_train)
+
+        if y_train.ndim == 1:
+            raise ValueError(
+                "Expected 2D array, got 1D array instead:\narray={}.\n"
+                "Reshape your data either using array.reshape(-1, 1) if "
+                "your data has a single feature or array.reshape(1, -1) "
+                "if it contains a single sample.".format(y_train)
+            )
+
+        # We fit the surrogate model associated with each acquisition function
+        for i, surrogate_model in enumerate(self._surrogate_models):
+            surrogate_model.fit(X_train, y_train[:, i])
+
+    def forward(self, X_test):
+        """
+        Predict the Expected Improvement values for input polymers.
+
+        Parameters
+        ----------
+        X_test : array-like of shape (n_polymers, n_features) or (n_polymers)
+            Feature vectors or polymers in HELM format.
 
         Returns
         -------
-        results : namedtuple
-            The results of the acquisition function returned as a namedtuple
-            with the following important attributes: `acq` the expected
-            improvement values as an ndarray of shape (n_samples, ), `mu` the
-            predicted mean values as an ndarray of shape (n_samples, ), `sigma`
-            the predicted sigma values as an ndarray of shape (n_samples, ).
+        ndarray of shape (n_polymers, n_objectives)
+            The expected improvement values.
 
         """
-        if self._maximize:
-            best_f = np.max(self._surrogate_model.y_train)
-        else:
-            best_f = np.min(self._surrogate_model.y_train)
+        X_test = np.asarray(X_test)
+        scores = np.zeros((X_test.shape[0], len(self._surrogate_models)))
 
-        # calculate mean and stdev via surrogate function*
-        mu, sigma = self._surrogate_model.predict(X_test)
+        for i, surrogate_model in enumerate(self._surrogate_models):
+            if self._maximize[i]:
+                best_f = np.max(surrogate_model.y_train)
+            else:
+                best_f = np.min(surrogate_model.y_train)
 
-        u = (mu - best_f - self._xi) / (sigma + self._eps)
-        if not self.maximize:
-            u = -u
-        ucdf = norm.cdf(u)
-        updf = norm.pdf(u)
-        ei = sigma * (updf + u * ucdf)
-        ei[sigma == 0.0] == 0.0
+            # calculate mean and stdev via surrogate function*
+            mu, sigma = surrogate_model.predict(X_test)
 
-        results = namedtuple('results', ['acq', 'mu', 'sigma'])
-        return results(ei, mu, sigma)
+            u = (mu - best_f - self._xi) / (sigma + self._eps)
+
+            if not self._maximize[i]:
+                u = -u
+
+            ucdf = norm.cdf(u)
+            updf = norm.pdf(u)
+            ei = sigma * (updf + u * ucdf)
+            ei[sigma == 0.0] == 0.0
+
+            scores[:, i] = ei
+
+        return scores
 
 
 class ProbabilityOfImprovement(_AcquisitionFunction):
@@ -286,45 +403,85 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
 
     Attributes
     ----------
-    surrogate_model : `_SurrogateModel`
-        The surrogate model used by the acquisition function.
-    maximize : bool
-        Tell if the goal to maximize (True) or minimize (False) 
-        the acquisition function.
-    scaling_factor : int
-        Scaling factor used by the Bolzmann weigthing function in the GA.
+    surrogate_model : list of `_SurrogateModel`
+        The surrogate models used by the acquisition function.
+    scaling_factors : ndarray of shape (surrogate_models,)
+        Scaling factor used by Genetic Algorithm, so it's always a minimization.
+    maximize : ndarray of bool of shape (surrogate_models,)
+        Tell if the goal(s) is to maximize (True) or minimize (False) the acquisition function.
+    number_of_objectives : int
+        Number of objectives to optimize.
 
     """
 
-    def __init__(self, surrogate_model, maximize=False, eps=1e-9):
+    def __init__(self, surrogate_models, maximize=False, eps=1e-9):
         """
         Probability of Improvement acquisition function.
 
         Parameters
         ----------
-        surrogate_model: `_SurrogateModel`
-            The surrogate model to be used by the acquisition function.
-        maximize : bool, default : False
-            Indicates whether the function is to be maximised.
+        surrogate_models: `_SurrogateModel` or list of `_SurrogateModel`
+            The surrogate model(s) to be used by the acquisition function.
+        maximize : bool or list of bool, default : False
+            Indicates whether the goal(s) is(are) to be maximised or minimized.
         eps : float, default : 1e-9
             Small number to avoid numerical instability.
 
         """
-        self._surrogate_model = surrogate_model
-        self._maximize = maximize
+        if not isinstance(surrogate_models, (list, tuple, np.ndarray)):
+            surrogate_models = [surrogate_models]
+        if not isinstance(maximize, (list, tuple, np.ndarray)):
+            maximize = [maximize]
+        
+        msg_error = "The number of surrogate models and maximize flags must be the same."
+        assert len(surrogate_models) == len(maximize), msg_error
+
+        self._surrogate_models = surrogate_models
+        self._maximize = np.asarray(maximize)
         self._eps = eps
 
     @property
     def surrogate_model(self):
-        return self._surrogate_model
+        return self._surrogate_models
 
     @property
     def maximize(self):
         return self._maximize
 
     @property
-    def scaling_factor(self):
-        return -1
+    def scaling_factors(self):
+        return -1 * np.ones(len(self._maximize))
+    
+    @property
+    def number_of_objectives(self):
+        return len(self._surrogate_models)
+    
+    def fit(self, X_train, y_train):
+        """
+        Fit the surrogate models using existing data.
+
+        Parameters
+        ----------
+        X_train : array-like of shape (n_polymers, n_features) or (n_polymers)
+            Feature vectors or polymers in HELM format.
+        y_train : array-like of shape (n_polymers, n_objectives)
+            Values associated to each polymer.
+
+        """
+        X_train = np.asarray(X_train)
+        y_train = np.asarray(y_train)
+
+        if y_train.ndim == 1:
+            raise ValueError(
+                "Expected 2D array, got 1D array instead:\narray={}.\n"
+                "Reshape your data either using array.reshape(-1, 1) if "
+                "your data has a single feature or array.reshape(1, -1) "
+                "if it contains a single sample.".format(y_train)
+            )
+
+        # We fit the surrogate model associated with each acquisition function
+        for i, surrogate_model in enumerate(self._surrogate_models):
+            surrogate_model.fit(X_train, y_train[:, i])
 
     def forward(self, X_test):
         """
@@ -332,70 +489,82 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
 
         Parameters
         ----------
-        X_test : array-like of shape (n_samples, n_features)
-            The input samples.
+        X_test : array-like of shape (n_polymers, n_features) or (n_polymers)
+            Feature vectors or polymers in HELM format.
 
         Returns
         -------
-        results : namedtuple
-            The results of the acquisition function returned as a namedtuple
-            with the following important attributes: `acq` the probability of 
-            improvement values as an ndarray of shape (n_samples, ), `mu` the
-            predicted mean values as an ndarray of shape (n_samples, ), `sigma`
-            the predicted sigma values as an ndarray of shape (n_samples, ).
+        ndarray of shape (n_polymers, n_objectives)
+            The expected improvement values.
 
         """
-        if self._maximize:
-            best_f = np.max(self._surrogate_model.y_train)
-        else:
-            best_f = np.min(self._surrogate_model.y_train)
+        X_test = np.asarray(X_test)
+        scores = np.zeros((X_test.shape[0], len(self._surrogate_models)))
 
-        # calculate mean and stdev via surrogate function
-        mu, sigma = self._surrogate_model.predict(X_test)
+        for i, surrogate_model in enumerate(self._surrogate_models):
+            if self._maximize[i]:
+                best_f = np.max(surrogate_model.y_train)
+            else:
+                best_f = np.min(surrogate_model.y_train)
 
-        # calculate the probability of improvement
-        u = (mu - best_f) / (sigma + self._eps)
-        if not self.maximize:
-            u = -u
-        pi = norm.cdf(u)
-        pi[sigma == 0.0] == 0.0
+            # calculate mean and stdev via surrogate function
+            mu, sigma = surrogate_model.predict(X_test)
 
-        results = namedtuple('results', ['acq', 'mu', 'sigma'])
-        return results(pi, mu, sigma)
+            # calculate the probability of improvement
+            u = (mu - best_f) / (sigma + self._eps)
+
+            if not self._maximize[i]:
+                u = -u
+
+            pi = norm.cdf(u)
+            pi[sigma == 0.0] == 0.0
+            
+            scores[:, i] = pi
+
+        return scores
 
 
 class UpperConfidenceBound(_AcquisitionFunction):
     """
-    Class for the Probability of Improvement acquisition function.
+    Class for the Upper Confidence Bound acquisition function.
 
     Attributes
     ----------
-    surrogate_model : `_SurrogateModel`
-        The surrogate model used by the acquisition function.
-    maximize : bool
-        Tell if the goal to maximize (True) or minimize (False) 
-        the acquisition function.
-    scaling_factor : int
-        Scaling factor used by the Bolzmann weigthing function in the GA.
+    surrogate_model : list of `_SurrogateModel`
+        The surrogate models used by the acquisition function.
+    scaling_factors : ndarray of shape (surrogate_models,)
+        Scaling factor used by Genetic Algorithm, so it's always a minimization.
+    maximize : ndarray of bool of shape (surrogate_models,)
+        Tell if the goal(s) is to maximize (True) or minimize (False) the acquisition function.
+    number_of_objectives : int
+        Number of objectives to optimize.
 
     """
 
-    def __init__(self, surrogate_model, maximize=False, beta=0.25):
+    def __init__(self, surrogate_models, maximize=False, beta=0.25):
         """
         Upper Confidence Bound acquisition function.
 
         Parameters
         ----------
-        surrogate_model: `_SurrogateModel`
-            The surrogate model to be used by the acquisition function.
-        maximize : bool, default : False
-            Indicates whether the function is to be maximised.
+        surrogate_models: `_SurrogateModel` or list of `_SurrogateModel`
+            The surrogate model(s) to be used by the acquisition function.
+        maximize : bool or list of bool, default : False
+            Indicates whether the goal(s) is(are) to be maximised or minimized.
         beta : float, default : 0.25
             Exploitation-exploration trade-off parameter.
 
         """
-        self._surrogate_model = surrogate_model
-        self._maximize = maximize
+        if not isinstance(surrogate_models, (list, tuple, np.ndarray)):
+            surrogate_models = [surrogate_models]
+        if not isinstance(maximize, (list, tuple, np.ndarray)):
+            maximize = [maximize]
+        
+        msg_error = "The number of surrogate models and maximize flags must be the same."
+        assert len(surrogate_models) == len(maximize), msg_error
+
+        self._surrogate_models = surrogate_models
+        self._maximize = np.asarray(maximize)
         self._delta = 1. - beta
         self._beta = beta
 
@@ -408,11 +577,39 @@ class UpperConfidenceBound(_AcquisitionFunction):
         return self._maximize
     
     @property
-    def scaling_factor(self):
-        if self._maximize:
-            return -1
-        else:
-            return 1
+    def scaling_factors(self):
+        return -1 * np.ones(len(self._maximize))
+    
+    @property
+    def number_of_objectives(self):
+        return len(self._surrogate_models)
+    
+    def fit(self, X_train, y_train):
+        """
+        Fit the surrogate models using existing data.
+
+        Parameters
+        ----------
+        X_train : array-like of shape (n_polymers, n_features) or (n_polymers)
+            Feature vectors or polymers in HELM format.
+        y_train : array-like of shape (n_polymers, n_objectives)
+            Values associated to each polymer.
+
+        """
+        X_train = np.asarray(X_train)
+        y_train = np.asarray(y_train)
+
+        if y_train.ndim == 1:
+            raise ValueError(
+                "Expected 2D array, got 1D array instead:\narray={}.\n"
+                "Reshape your data either using array.reshape(-1, 1) if "
+                "your data has a single feature or array.reshape(1, -1) "
+                "if it contains a single sample.".format(y_train)
+            )
+
+        # We fit the surrogate model associated with each acquisition function
+        for i, surrogate_model in enumerate(self._surrogate_models):
+            surrogate_model.fit(X_train, y_train[:, i])
     
     def forward(self, X_test):
         """
@@ -420,24 +617,25 @@ class UpperConfidenceBound(_AcquisitionFunction):
 
         Parameters
         ----------
-        X_test : array-like of shape (n_samples, n_features)
-            The input samples.
+        X_test : array-like of shape (n_polymers, n_features) or (n_polymers)
+            Feature vectors or polymers in HELM format.
 
         Returns
         -------
-        results : namedtuple
-            The results of the acquisition function returned as a namedtuple
-            with the following important attributes: `acq` the upper confidence
-            bound values as an ndarray of shape (n_samples, ), `mu` the
-            predicted mean values as an ndarray of shape (n_samples, ), `sigma`
-            the predicted sigma values as an ndarray of shape (n_samples, ).
+        ndarray of shape (n_polymers, n_objectives)
+            The expected improvement values.
 
         """
-        # calculate mean and stdev via surrogate function
-        mu, sigma = self._surrogate_model.predict(X_test)
+        X_test = np.asarray(X_test)
+        scores = np.zeros((X_test.shape[0], len(self._surrogate_models)))
 
-        # calculate the upper confidence bound
-        ucb = (self._delta * mu) + (self._beta * sigma)
+        for i, surrogate_model in enumerate(self._surrogate_models):
+            # calculate mean and stdev via surrogate function
+            mu, sigma = surrogate_model.predict(X_test)
 
-        results = namedtuple('results', ['acq', 'mu', 'sigma'])
-        return results(ucb, mu, sigma)
+            # calculate the upper confidence bound
+            ucb = (self._delta * mu) + (self._beta * sigma)
+            
+            scores[:, i] = ucb
+
+        return scores

@@ -96,13 +96,13 @@ class Planner(_Planner):
 
     """
 
-    def __init__(self, acquisition_functions, optimizer):
+    def __init__(self, acquisition_function, optimizer):
         """
         Initialize the polymer planner.
 
         Parameters
         ----------
-        acquisition_function : `_AcquisitionFunction` or list of `_AcquisitionFunction`
+        acquisition_function : `_AcquisitionFunction`
             The acquisition functions that will be used to score the polymers. For single-objective
             optimisation, only one acquisition function is required. For multi-objective optimisation,
             a list of acquisition functions is required.
@@ -113,9 +113,7 @@ class Planner(_Planner):
         self._results = None
         self._polymers = None
         self._values = None
-        if not isinstance(acquisition_functions, list):
-            acquisition_functions = [acquisition_functions]
-        self._acq_funs = acquisition_functions
+        self._acq_fun = acquisition_function
         self._optimizer = optimizer
         # This is bad, the filters should be part of the optimizer and
         # and used as constraints during the optimization. Only temporary...
@@ -146,7 +144,7 @@ class Planner(_Planner):
         predicted_values = self._values.copy()
 
         # Run the optimizer to suggest new polymers
-        self._results = self._optimizer.run(suggested_polymers, predicted_values, self._acq_funs)
+        self._results = self._optimizer.run(suggested_polymers, predicted_values, self._acq_fun)
 
         # Select batch polyners to be synthesized
         suggested_polymers, predicted_values = batch_selection(self._results, self._filters, batch_size)
@@ -177,13 +175,8 @@ class Planner(_Planner):
                 "if it contains a single sample.".format(self._values)
             )
 
-        msg = f'Number of acquisition functions ({len(self._acq_funs)}) '
-        msg += f'and objective values ({self._values.shape[1]}) do not match.'
-        assert len(self._acq_funs) == self._values.shape[1], msg
-
-        # We fit the surrogate model associated with each acquisition function
-        for i in range(len(self._acq_funs)):
-            self._acq_funs[i].surrogate_model.fit(self._polymers, self._values[:,i])
+        # We fit all the surrogate models
+        self._acq_fun.fit(self._polymers, self._values)
 
     def recommand(self, polymers, values, batch_size=None):
         """

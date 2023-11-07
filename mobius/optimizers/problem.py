@@ -13,14 +13,14 @@ class Problem(Problem):
     Class to define Single/Multi/Many-Objectives SequenceGA problem.
     """
 
-    def __init__(self, polymers, scores, acq_funs, n_inequality_constr=0, n_equality_constr=0, **kwargs):
+    def __init__(self, polymers, scores, acq_fun, n_inequality_constr=0, n_equality_constr=0, **kwargs):
         """
         Initialize the Single/Multi/Many-Objectives SequenceGA problem.
 
         Parameters
         ----------
-        acq_funs : `AcquisitionFunction` or list of `AcquisitionFunction` objects
-            Acquisition functions to be evaluated for each new polymer generated.
+        acq_fun : `AcquisitionFunction`
+            Acquisition function to be evaluated for each new polymer generated.
         n_inequality_constr : int, default : 0
             Number of inequality constraints.
         n_equality_constr : int, default : 0
@@ -29,15 +29,13 @@ class Problem(Problem):
             Additional keyword arguments.
 
         """
-        super().__init__(n_var=1, n_obj=len(acq_funs),
+        super().__init__(n_var=1, n_obj=acq_fun.number_of_objectives,
                          n_ieq_constr=n_inequality_constr,
                          n_eq_constr=n_equality_constr)
 
         self._prior_data = {p: s for p, s in zip(polymers, scores)}
         self._polymers_cache = {}
-        if not isinstance(acq_funs, list):
-            acq_funs = [acq_funs]
-        self._acq_funs = acq_funs
+        self._acq_fun = acq_fun
         self._pre_evaluation = True
 
     def _evaluate(self, x, out, *args, **kwargs):
@@ -53,29 +51,26 @@ class Problem(Problem):
 
         """
         polymers = x.ravel()
-        scores = np.zeros((len(polymers), len(self._acq_funs)))
+        pre_evaluation_penalty = 999.
 
-        for i, acq_fun in enumerate(self._acq_funs):
-            if self._pre_evaluation:
-                # For the first GA generation, we use the experimental scores
-                # then we will use the acquisition scores from the surrogate models.
-                try:
-                    # We shift all the experimental scores in the opposite direction
-                    # by a large number to ensure that the polymers generated during the
-                    # optimization will be better acquisition scores.
-                    acq_values = np.array([self._prior_data[p][i] for p in polymers]) + (-acq_fun.scaling_factor * 999.)
-                except KeyError:
-                    msg = f'Some polymers not found in the input experimental data. '
-                    msg += 'Did you forget to turn on the eval mode?'
-                    raise RuntimeError(msg)
-            else:
-                # Evaluate unseen polymer with acquisition scores from surrogate models
-                predictions = acq_fun.forward(polymers)
-                acq_values = acq_fun.scaling_factor * predictions.acq
+        if self._pre_evaluation:
+            # For the first GA generation, we use the experimental scores
+            # then we will use the acquisition scores from the surrogate models.
+            try:
+                # We shift all the experimental scores in the opposite direction
+                # by a large number to ensure that the polymers generated during the
+                # optimization will be better acquisition scores.
+                acq_values = np.array([self._prior_data[p] for p in polymers])
+                acq_values += (-1. * self._acq_fun.scaling_factors) * pre_evaluation_penalty
+            except KeyError:
+                msg = f'Some polymers not found in the input experimental data. '
+                msg += 'Did you forget to turn on the eval mode?'
+                raise RuntimeError(msg)
+        else:
+            # Evaluate unseen polymer with acquisition scores from surrogate models
+            acq_values = self._acq_fun.forward(polymers) * self._acq_fun.scaling_factors
 
-            scores[:, i] = acq_values
-
-        out["F"] = scores
+        out["F"] = acq_values
 
     def pre_eval(self):
         """

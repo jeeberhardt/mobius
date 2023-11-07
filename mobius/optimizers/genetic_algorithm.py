@@ -13,6 +13,7 @@ import numpy as np
 import ray
 from pymoo.core.problem import Problem
 from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.algorithms.moo.sms import SMSEMOA
 from pymoo.algorithms.soo.nonconvex.ga import GA
 from pymoo.optimize import minimize
 from pymoo.core.population import Population
@@ -220,7 +221,7 @@ class SerialSequenceGA():
 
     """
 
-    def __init__(self, algorithm='NSGA2', designs=None, filters=None,
+    def __init__(self, algorithm='SMSEMOA', designs=None, filters=None,
                  n_gen=1000, n_pop=500, period=50, cx_points=2, pm=0.1, 
                  minimum_mutations=1, maximum_mutations=None,
                  save_history=False, **kwargs):
@@ -231,9 +232,9 @@ class SerialSequenceGA():
 
         Parameters
         ----------
-        algorithm : str, default : 'NSGA2'
+        algorithm : str, default : 'SMSEMOA'
             Algorithm to use for the optimization. Can be 'GA' for single-objective 
-            optimization, or 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
+            optimization, or 'SMSEMOA', 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
         designs : list of designs, default: None
             List of designs to use during the polymer optimization. If not provided,
             a default design protocol will be generated automatically based on the
@@ -261,7 +262,7 @@ class SerialSequenceGA():
 
         """
         self._single = {'GA': GA}
-        self._multi = {'NSGA2' : NSGA2, 'AGEMOEA2': AGEMOEA2}
+        self._multi = {'NSGA2' : NSGA2, 'AGEMOEA2': AGEMOEA2, 'SMSEMOA': SMSEMOA}
         self._available_algorithms = self._single | self._multi
 
         msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
@@ -292,8 +293,8 @@ class SerialSequenceGA():
             Polymers in HELM format.
         scores : array-like of float or int
             Score associated to each polymer.
-        acquisition_function : `AcquisitionFunction` or list of `AcquisitionFunction` objects
-            The acquisition function(s) that will be used to score the polymer.
+        acquisition_function : `AcquisitionFunction`
+            The acquisition function that will be used to score the polymer.
 
         Returns
         -------
@@ -351,7 +352,7 @@ class SequenceGA():
 
     """
 
-    def __init__(self, algorithm='NSGA2', design_protocol_filename=None,
+    def __init__(self, algorithm='SMSEMOA', design_protocol_filename=None,
                  n_gen=1000, n_pop=500, period=50, cx_points=2, pm=0.1, 
                  minimum_mutations=1, maximum_mutations=None, 
                  n_process=-1, save_history=False, **kwargs):
@@ -360,9 +361,9 @@ class SequenceGA():
 
         Parameters
         ----------
-        algorithm : str, default : 'NSGA2'
+        algorithm : str, default : 'SMSEMOA'
             Algorithm to use for the optimization. Can be 'GA' for single-objective 
-            optimization, or 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
+            optimization, or 'SMSEMOA', 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
         design_protocol_filename : str, default: None
             Path of the YAML config file containing the design protocol 
             (scaffolds + filters) used during polymers optimization. If not
@@ -424,7 +425,7 @@ class SequenceGA():
 
         """
         self._single = {'GA': GA}
-        self._multi = {'NSGA2' : NSGA2, 'AGEMOEA2': AGEMOEA2}
+        self._multi = {'NSGA2' : NSGA2, 'AGEMOEA2': AGEMOEA2, 'SMSEMOA': SMSEMOA}
         self._available_algorithms = self._single | self._multi
 
         msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
@@ -448,7 +449,7 @@ class SequenceGA():
                             'save_history': save_history}
         self._parameters.update(kwargs)
 
-    def run(self, polymers, scores, acquisition_functions):
+    def run(self, polymers, scores, acquisition_function):
         """
         Run the Single/Multi-Objectives SequenceGA optimization.
 
@@ -458,13 +459,14 @@ class SequenceGA():
             Polymers in HELM format.
         scores : array-like of float or int
             Score associated to each polymer.
-        acquisition_function : `AcquisitionFunction` or list of `AcquisitionFunction` objects
-            The acquisition function(s) that will be used to score the polymers.
+        acquisition_function : `AcquisitionFunction`
+            The acquisition function that will be used to score the polymers.
 
         Returns
         -------
-        results : `tuple` of (ndarray of shape (n_polymers,), ndarray of shape (n_polymers, n_scores)) or list of `tuple`
-            Contains the results from the optimization.
+        results : `tuple` of (ndarray of shape (n_polymers,), ndarray of shape 
+            (n_polymers, n_scores)) or list of `tuple`. Contains the results 
+            from the optimization.
 
         """
         # Make sure that inputs are numpy arrays
@@ -515,9 +517,7 @@ class SequenceGA():
             n_polymers = [42] * len(tmp_scaffolds_designs)
             new_polymers = generate_random_polymers_from_designs(n_polymers, tmp_scaffolds_designs)
             # We score them
-            new_scores = np.zeros(shape=(len(new_polymers), len(acquisition_functions)))
-            for i, acq_fun in enumerate(acquisition_functions):
-                new_scores[:, i] = acq_fun.forward(new_polymers).acq
+            new_scores = acquisition_function.forward(new_polymers)
             # Add them to the rest
             polymers = np.concatenate([polymers, new_polymers])
             scores = np.concatenate([scores, new_scores])
@@ -528,7 +528,7 @@ class SequenceGA():
         seq_gao = SerialSequenceGA(designs=self._designs, filters=self._filters, **self._parameters)
 
         if len(group_indices) == 1:
-            results = seq_gao.run(polymers, scores, acquisition_functions)
+            results = seq_gao.run(polymers, scores, acquisition_function)
         else:
             # Take the minimal amount of CPUs needed or available
             if self._n_process == -1:
@@ -537,7 +537,7 @@ class SequenceGA():
             # Dispatch all the scaffold accross different independent Sequence GA opt.
             ray.init(num_cpus=self._n_process, ignore_reinit_error=True)
 
-            refs = [parallel_ga.remote(seq_gao, polymers[seq_ids], scores[seq_ids], acquisition_functions) 
+            refs = [parallel_ga.remote(seq_gao, polymers[seq_ids], scores[seq_ids], acquisition_function) 
                     for _, seq_ids in group_indices.items()]
 
             try:
