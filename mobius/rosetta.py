@@ -58,8 +58,8 @@ class ProteinPeptideComplex:
         if not _has_pyrosetta:
             raise ImportError('PyRosetta is not installed.')
 
-        options = '-no_optH false -ex1 -ex2 -mute all -beta_nov16 -corrections::beta_nov16 '
-        options += '-ignore_unrecognized_res true -load_PDB_components false -ignore_waters false '
+        options = '-no_optH false -ex1 -ex2 -mute all -beta -ignore_waters false '
+        options += '-ignore_unrecognized_res true -load_PDB_components false '
         options += '-use_terminal_residues true'
         pyrosetta.init(extra_options=options)
         
