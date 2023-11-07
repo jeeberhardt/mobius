@@ -336,8 +336,7 @@ class SerialSequenceGA():
         termination = TerminateIfAny(max_gen_termination, no_change_termination)
 
         # ... and run!
-        results = minimize(problem, algorithm,
-                           termination=termination,
+        results = minimize(problem, algorithm, termination=termination,
                            verbose=True, save_history=self._save_history)
         
         polymers = results.pop.get('X')

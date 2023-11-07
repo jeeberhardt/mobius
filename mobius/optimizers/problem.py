@@ -61,7 +61,7 @@ class Problem(Problem):
                 # by a large number to ensure that the polymers generated during the
                 # optimization will be better acquisition scores.
                 acq_values = np.array([self._prior_data[p] for p in polymers])
-                acq_values += (-1. * self._acq_fun.scaling_factors) * pre_evaluation_penalty
+                acq_values += -1. * self._acq_fun.scaling_factors * pre_evaluation_penalty
             except KeyError:
                 msg = f'Some polymers not found in the input experimental data. '
                 msg += 'Did you forget to turn on the eval mode?'

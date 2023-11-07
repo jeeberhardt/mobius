@@ -7,7 +7,6 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
-import pymoo
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
 
 
