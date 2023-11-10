@@ -31,7 +31,7 @@ class Pool:
         self._designs = None
         self._filters = None
     
-    def run(self, polymers, scores, acquisition_functions, **kwargs):
+    def run(self, polymers, scores, acquisition_function, **kwargs):
         """
         Run the Pool optimization.
         
@@ -41,10 +41,8 @@ class Pool:
             Polymers in HELM format.
         scores : array-like of shape (n_samples, n_objectives)
             Values associated to each polymer/peptide.
-        acquisition_functions : `_AcquisitionFunction` or list of `_AcquisitionFunction`
-            The acquisition functions that will be used to score the polymers. For single-objective
-            optimisation, only one acquisition function is required. For multi-objective optimisation,
-            a list of acquisition functions is required.
+        acquisition_functions : `_AcquisitionFunction`
+            The acquisition function that will be used to score the polymers.
 
         Returns
         -------
@@ -59,17 +57,12 @@ class Pool:
         # to be already evaluated (aka experimentally tested)
         candidates = np.asarray(list(self._candidates.difference(polymers)))
 
-        predicted_scores = np.zeros((len(candidates), len(acquisition_functions)))
+        predicted_scores = acquisition_function.forward(candidates)
 
-        for i, acq_fun in enumerate(acquisition_functions):
-            # Evaluate the acquisition function for the candidates
-            results = acq_fun.forward(candidates)
-            predicted_scores[:, i] = results.acq
-
-        if len(acquisition_functions) == 1:
+        if acquisition_function.number_of_objectives == 1:
             predicted_scores = predicted_scores.flatten()
             # Sort the candidates by the acquisition function
-            sorted_indices = np.argsort(acquisition_functions[0].scaling_factor * predicted_scores)
+            sorted_indices = np.argsort(acquisition_function.scaling_factor * predicted_scores)
             candidates = candidates[sorted_indices]
             predicted_scores = predicted_scores[sorted_indices].reshape(-1, 1)
 

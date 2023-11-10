@@ -74,15 +74,14 @@ pic50_scores = np.column_stack((pic50_one_seed_library, pic50_two_seed_library))
 
 Once we have the results from our first lab experiment we can now start the Bayesian Optimization (BO). First, 
 we define the molecular fingerprint we want to use as well as the surrogate models for each objective (Gaussian Processes) 
-and the acquisition functions (Expected Improvement).
+and the acquisition function (Expected Improvement).
 ```python
 map4 = Map4Fingerprint(input_type='helm', dimensions=4096, radius=1)
 
 gpmodel_one = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
 gpmodel_two = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
 
-acq_one = ExpectedImprovement(gpmodel_one, maximize=False)
-acq_two = ExpectedImprovement(gpmodel_two, maximize=False)
+acq_fun = ExpectedImprovement([gpmodel_one, gpmodel_two], maximize=[False, False])
 ```
 
 ... and now let's define the search protocol in a YAML configuration file (`design_protocol.yaml`) that will be used 
@@ -115,11 +114,11 @@ filters:
 
 ```
 
-Once acquisition functions are defined and the parameters set in the YAML configuration file, we can initiate 
+Once the acquisition function is defined and the parameters set in the YAML configuration file, we can initiate 
 the multi-objective problem we are optimising for and the planner method.
 ```python
-optimizer = SequenceGA(algorithm='NSGA2', design_protocol_filename='design_protocol.yaml', period=5)
-planner = Planner([acq_one, acq_two], optimizer)
+optimizer = SequenceGA(algorithm='SMSEMOA', period=15, design_protocol_filename='design_protocol.yaml')
+planner = Planner(acq_fun, optimizer)
 ```
 
 Now it is time to run the optimization!!
