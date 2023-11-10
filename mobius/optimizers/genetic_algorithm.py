@@ -7,6 +7,7 @@
 import importlib
 import os
 import sys
+import warnings
 import yaml
 
 import numpy as np
@@ -17,7 +18,9 @@ from pymoo.algorithms.moo.sms import SMSEMOA
 from pymoo.algorithms.soo.nonconvex.ga import GA
 from pymoo.optimize import minimize
 from pymoo.core.population import Population
-from pymoo.algorithms.moo.age2 import AGEMOEA2
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore")
+    from pymoo.algorithms.moo.age2 import AGEMOEA2
 from pymoo.core.evaluator import Evaluator
 from pymoo.core.termination import TerminateIfAny 
 from pymoo.termination.max_gen import MaximumGenerationTermination
