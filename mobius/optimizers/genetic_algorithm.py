@@ -494,23 +494,12 @@ class SequenceGA():
             self._designs = _load_design_from_config(self._parameters['design_protocol_filename'])
             self._filters = _load_filters_from_config(self._parameters['design_protocol_filename'])
 
-        # Second, check that all the scaffold designs are defined for each polymers 
-        # by clustering them based on their scaffold.
-        groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
-        scaffolds_not_present = list(set(groups.keys()).difference(self._designs.keys()))
-
-        if scaffolds_not_present:
-            msg_error = 'The following scaffolds are not defined: \n'
-            for scaffold_not_present in scaffolds_not_present:
-                msg_error += f'- {scaffold_not_present}\n'
-
-            raise RuntimeError(msg_error)
-
-        # Lastly, do the contrary and check that at least one polymer is defined 
-        # per scaffold present in the design protocol. We need to generate at least 
-        # one polymer per scaffold to be able to start the GA optimization. Here we 
+        # And in the case we provided a design protocol, check that at least one polymer 
+        # is defined per scaffold present in the design protocol. We need to generate at 
+        # least one polymer per scaffold to be able to start the GA optimization. Here we 
         # generate 42 random polymers per scaffold. We do that in the case we want 
         # to explore different scaffolds that are not in the initial dataset.
+        groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
         scaffolds_not_present = list(set(self._designs.keys()).difference(groups.keys()))
 
         if scaffolds_not_present:
