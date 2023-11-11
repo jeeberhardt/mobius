@@ -514,12 +514,18 @@ class SequenceGA():
             scores = np.concatenate([scores, new_scores])
             # Recluster all of them again (easier than updating the groups)
             groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
+        
+        # Get only the polymers that are defined in the design protocol
+        # Which is fine, because the surrogate model was trained on all the data already
+        groups = {key: groups[key] for key in self._designs.keys()}
+        group_indices = {key: group_indices[key] for key in self._designs.keys()}
 
         # Initialize the GA optimization object
         seq_gao = SerialSequenceGA(designs=self._designs, filters=self._filters, **self._parameters)
 
         if len(group_indices) == 1:
-            results = seq_gao.run(polymers, scores, acquisition_function)
+            indices = list(group_indices.values())[0]
+            results = seq_gao.run(polymers[indices], scores[indices], acquisition_function)
         else:
             # Take the minimal amount of CPUs needed or available
             if self._n_process == -1:
