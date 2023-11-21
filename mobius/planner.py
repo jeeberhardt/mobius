@@ -8,6 +8,74 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
+from scipy.spatial.distance import pdist, squareform
+
+
+def calc_mnn_fast(F, **kwargs):
+    # Source: pymoo.operators.survival.rank_and_crowding.metrics.py
+    # Could not import it directly because of some import issues
+    return _calc_mnn_fast(F, F.shape[1], **kwargs)
+
+
+def _calc_mnn_fast(F, n_neighbors, **kwargs):
+    # Source: pymoo.operators.survival.rank_and_crowding.metrics.py
+    # Could not import it directly because of some import issues
+
+    # calculate the norm for each objective - set to NaN if all values are equal
+    norm = np.max(F, axis=0) - np.min(F, axis=0)
+    norm[norm == 0] = 1.0
+
+    # F normalized
+    F = (F - F.min(axis=0)) / norm
+
+    # Distances pairwise (Inefficient)
+    D = squareform(pdist(F, metric="sqeuclidean"))
+
+    # M neighbors
+    M = F.shape[1]
+    _D = np.partition(D, range(1, M+1), axis=1)[:, 1:M+1]
+
+    # Metric d
+    d = np.prod(_D, axis=1)
+
+    # Set top performers as np.inf
+    _extremes = np.concatenate((np.argmin(F, axis=0), np.argmax(F, axis=0)))
+    d[_extremes] = np.inf
+
+    return d
+
+
+def calc_crowding_distance(F, **kwargs):
+    # Source: pymoo.operators.survival.rank_and_crowding.metrics.py
+    # Could not import it directly because of some import issues
+    n_points, n_obj = F.shape
+
+    # sort each column and get index
+    I = np.argsort(F, axis=0, kind='mergesort')
+
+    # sort the objective space values for the whole matrix
+    F = F[I, np.arange(n_obj)]
+
+    # calculate the distance from each point to the last and next
+    dist = np.row_stack([F, np.full(n_obj, np.inf)]) - np.row_stack([np.full(n_obj, -np.inf), F])
+
+    # calculate the norm for each objective - set to NaN if all values are equal
+    norm = np.max(F, axis=0) - np.min(F, axis=0)
+    norm[norm == 0] = np.nan
+
+    # prepare the distance to last and next vectors
+    dist_to_last, dist_to_next = dist, np.copy(dist)
+    dist_to_last, dist_to_next = dist_to_last[:-1] / norm, dist_to_next[1:] / norm
+
+    # if we divide by zero because all values in one columns are equal replace by none
+    dist_to_last[np.isnan(dist_to_last)] = 0.0
+    dist_to_next[np.isnan(dist_to_next)] = 0.0
+
+    # sum up the distance to next and last and norm by objectives - also reorder from sorted list
+    J = np.argsort(I, axis=0)
+    cd = np.sum(dist_to_last[J, np.arange(n_obj)] + dist_to_next[J, np.arange(n_obj)], axis=1) / n_obj
+
+    return cd
 
 
 class _Planner(ABC):
@@ -60,6 +128,11 @@ def batch_selection(results, filters=None, batch_size=96):
     suggested_polymers = np.concatenate(suggested_polymers).flatten()
     predicted_values = np.concatenate(predicted_values)
 
+    if predicted_values.shape[1] <= 2:
+        crowding_function = calc_crowding_distance
+    else:
+        crowding_function = calc_mnn_fast
+
     # Apply filters on the suggested polymers
     if filters:
         passed = np.ones(len(suggested_polymers), dtype=bool)
@@ -77,14 +150,39 @@ def batch_selection(results, filters=None, batch_size=96):
     # Do the selection based on the predicted values
     if predicted_values.shape[1] == 1:
         # Top-k naive batch selection for single-objective optimization
-        sorted_indices = np.argsort(predicted_values.flatten())
+        selected_indices = np.argsort(predicted_values.flatten())[:batch_size]
     else:
-        # Non-dominated sorting rank batch selection for multi-objective optimization
-        _, rank = NonDominatedSorting().do(predicted_values, return_rank=True)
-        sorted_indices = np.argsort(rank)
+        current_rank = 0
+        selected_indices = []
 
-    suggested_polymers = suggested_polymers[sorted_indices[:batch_size]]
-    predicted_values = predicted_values[sorted_indices[:batch_size]]
+        # Non-dominated sorting rank batch selection for multi-objective optimization
+        _, ranks = NonDominatedSorting().do(predicted_values, return_rank=True)
+
+        for current_rank in range(0, np.max(ranks)):
+            # Get the indices of the polymers in the current rank
+            current_indices = np.where(ranks == current_rank)[0]
+
+            if len(selected_indices) + len(current_indices) <= batch_size:
+                # Select all the polymers in the current rank
+                selected_indices.extend(current_indices)
+            else:
+                # Get the crowding distances for the polymers in the current rank
+                # while taking into account the already selected polymers
+                cd = crowding_function(predicted_values[np.concatenate((selected_indices, current_indices))])
+                cd = cd[len(selected_indices):]
+
+                # Remove all infinite crowding distances
+                current_indices = current_indices[np.isfinite(cd)]
+                cd = cd[np.isfinite(cd)]
+
+                # Select the polymers with the highest crowding distance
+                selected_indices.extend(current_indices[np.argsort(cd)[::-1][:batch_size - len(selected_indices)]])
+
+            if len(selected_indices) >= batch_size:
+                break
+
+    suggested_polymers = suggested_polymers[selected_indices]
+    predicted_values = predicted_values[selected_indices]
 
     return suggested_polymers, predicted_values
 
