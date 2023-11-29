@@ -168,7 +168,7 @@ def batch_selection(results, filters=None, batch_size=96):
             else:
                 # Get the crowding distances for the polymers in the current rank
                 # while taking into account the already selected polymers
-                cd = crowding_function(predicted_values[np.concatenate((selected_indices, current_indices))])
+                cd = crowding_function(predicted_values[np.concatenate((selected_indices, current_indices)).astype(int)])
                 cd = cd[len(selected_indices):]
 
                 # Remove all infinite crowding distances
