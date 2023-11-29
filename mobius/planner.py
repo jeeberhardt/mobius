@@ -101,8 +101,6 @@ def batch_selection(results, filters=None, batch_size=96):
     ----------
     results : `tuple` of (ndarray of shape (n_polymers,), ndarray of shape (n_polymers, n_scores)) or list of `tuple`
         Contains the results from the optimization.
-    filters : list of `_Filter`, default: None
-        List of filters to apply on the polymers. If not provided, no filter will be applied.
     batch_size : int, default: 96
         Number of polymers to select.
 
@@ -132,16 +130,6 @@ def batch_selection(results, filters=None, batch_size=96):
         crowding_function = calc_crowding_distance
     else:
         crowding_function = calc_mnn_fast
-
-    # Apply filters on the suggested polymers
-    if filters:
-        passed = np.ones(len(suggested_polymers), dtype=bool)
-
-        for filter in filters:
-            passed = np.logical_and(passed, filter.apply(suggested_polymers))
-
-        suggested_polymers = suggested_polymers[passed]
-        predicted_values = predicted_values[passed]
 
     # Return all the polymers if batch_size is not provided
     if batch_size is None:
@@ -212,9 +200,6 @@ class Planner(_Planner):
         self._values = None
         self._acq_fun = acquisition_function
         self._optimizer = optimizer
-        # This is bad, the filters should be part of the optimizer and
-        # and used as constraints during the optimization. Only temporary...
-        self._filters = optimizer._filters
 
     def ask(self, batch_size=None):
         """
@@ -244,7 +229,7 @@ class Planner(_Planner):
         self._results = self._optimizer.run(suggested_polymers, predicted_values, self._acq_fun)
 
         # Select batch polyners to be synthesized
-        suggested_polymers, predicted_values = batch_selection(self._results, self._filters, batch_size)
+        suggested_polymers, predicted_values = batch_selection(self._results, batch_size)
 
         return suggested_polymers, predicted_values
 

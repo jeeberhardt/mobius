@@ -61,12 +61,12 @@ class PeptideSelfAggregationFilter():
             if connections:
                 msg_error = 'Self-aggregration filter only works for linear peptides.'
                 raise RuntimeError(msg_error)
-            
+
             for _, simple_polymer in simple_polymers.items():
                 if not set(simple_polymer).issubset(NATAA):
                     msg_error = 'Self-aggregration filter only works polymers containing the 20 natural amino acids.'
                     raise RuntimeError(msg_error)
-        
+
                 if p.search(''.join(simple_polymer)):
                     passed[i] = False
                     break
@@ -130,16 +130,16 @@ class PeptideSolubilityFilter():
             if connections:
                 msg_error = 'Self-aggregration filter only works for linear peptides.'
                 raise RuntimeError(msg_error)
-            
+
             for _, simple_polymer in simple_polymers.items():
                 if not set(simple_polymer).issubset(NATAA):
                     msg_error = 'Self-aggregration filter only works polymers containing the 20 natural amino acids.'
                     raise RuntimeError(msg_error)
-            
+
                 length = len(simple_polymer)
 
                 apolar_monomers = set(simple_polymer).intersection(APOLAR)
-                
+
                 if len(apolar_monomers) / length >= self._hydrophobe_ratio:
                     passed[i] = False
                     break
@@ -152,7 +152,7 @@ class PeptideSolubilityFilter():
                 elif length / len(charged_monomers) >= self._charged_per_amino_acids:
                     passed[i] = False
                     break
-    
+
         return passed
 
 
