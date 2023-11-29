@@ -88,8 +88,8 @@ an IC50 of 1 nM, a pIC50 of 1 corresponds to an IC50 of 10 nM, etc.
     pic50_seed_library = lpe.score(seed_library)
 
 Now that we have results from the initial lab experiment, we can start the Bayesian 
-Optimization. Define the molecular fingerprint, the surrogate model (Gaussian Process), 
-the acquisition function (Expected Improvement) and the optimization method (SequenceGA):
+Optimization. Define the molecular fingerprint, the surrogate model (Gaussian Process) and 
+the acquisition function (Expected Improvement):
 
 .. note::
     Other molecular fingerprints, surrogate models and acquisitions functions are available. 
@@ -98,10 +98,9 @@ the acquisition function (Expected Improvement) and the optimization method (Seq
 
 .. code-block:: python
 
-    map4 = Map4Fingerprint(input_type='helm_rdkit', dimensions=4096, radius=1)
+    map4 = Map4Fingerprint(input_type='helm', dimensions=4096, radius=1)
     gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
     acq = ExpectedImprovement(gpmodel, maximize=False)
-    optimizer = SequenceGA(total_attempts=5)
 
 Define the search protocol in a YAML configuration file (`design_protocol.yaml`) that 
 will be used to optimize peptide sequences using the acquisition function. See the 
@@ -134,12 +133,13 @@ using the acquisition function / surrogate model initialized earlier.
           hydrophobe_ratio: 0.5
           charged_per_amino_acids: 5
 
-And instantiate the Planner object using the YAML configuration file, the acquisition 
-function and the optimization method:
+Once the acquisition function is defined and the parameters set in the YAML configuration file, 
+we can initiate the GA sampling method and the Planner object:  
 
 .. code-block:: python
 
-    ps = Planner(acq, optimizer, design_protocol='design_protocol.yaml')
+    optimizer = SequenceGA(algorithm='GA', period=15, design_protocol_filename='design_protocol.yaml')
+    ps = Planner(acq, optimizer)
 
 Run three Design-Make-Test cycles, iterating through the following steps:
 
@@ -154,7 +154,7 @@ Run three Design-Make-Test cycles, iterating through the following steps:
     pic50_scores = list(pic50_seed_library)[:]
 
     for i in range(3):
-        suggested_peptides, _ = ps.recommand(peptides, pic50_scores, batch_size=96)
+        suggested_peptides, _ = ps.recommand(peptides, pic50_scores.reshape(-1, 1), batch_size=96)
 
         # Here you can add whatever methods you want to further filter out peptides
 
@@ -164,7 +164,7 @@ Run three Design-Make-Test cycles, iterating through the following steps:
         pic50_suggested_peptides = lpe.score(suggested_peptides)
         
         peptides.extend(list(suggested_peptides))
-        pic50_scores.extend(list(pic50_suggested_peptides))
+        pic50_scores = np.concatenate((pic50_scores, pic50_suggested_peptides), axis=0)
         
         best_seq = peptides[np.argmin(pic50_scores)]
         best_pic50 = np.min(pic50_scores)

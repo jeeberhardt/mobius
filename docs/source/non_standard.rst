@@ -3,18 +3,20 @@
 Macrocycles and non-standard monomers
 =====================================
 
+Optimization of a macrocyclic peptide with non-standard monomers
+----------------------------------------------------------------
+
 Are you weary of those flashy, `Selling Sunset` methods that promise the world 
 but fall short, functioning solely on linear peptides with the same old 20 
 standard-amino acids? I feel you. That's exactly why `mobius` was created.
-It natively handles complex peptide scaffolds, embracing non-natural amino acids. 
-With `mobius`, the peptide optimization world is your oyster, ready to be explored 
-beyond the limitations of standard amino acids.
+It natively handles complex peptide scaffolds, embracing the world of non-natural 
+amino acids. 
 
-Ready to dive in? Excellent! To show you some of `mobius` capabilities we're 
-going to kick things off with a simple (albeit not entirely realistic) example. 
-For this exercice, we are going to take a random macrocycle peptides containing 
-non-natural amino acids from the `CycPeptMPDB <http://cycpeptmpdb.com/>`_, and 
-try to find it back starting from a peptide containing only standard amino acids.
+To show you some of `mobius` capabilities we're going to kick things off with a 
+simple (albeit not realistic) example. For this exercice, we are going to 
+take a random `macrocyclic peptide (ID: 7170) <http://cycpeptmpdb.com/peptides/id_7170/>`_ 
+containing non-natural amino acids from the `CycPeptMPDB <http://cycpeptmpdb.com/>`_, 
+and try to find it back starting from a peptide containing only standard amino acids.
 
 .. code-block:: python
 
@@ -30,7 +32,7 @@ try to find it back starting from a peptide containing only standard amino acids
     target = 'PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0'
 
 In our quest to rediscover the target sequence from just standard amino acids, we'll 
-have to keep in mind that while mobius is able to do a lot of things, it doesn't possess 
+have to keep in mind that while mobius is able to do a lot of things, but it doesn't possess 
 magical abilities (at least not yet!). So, we're proceeding with a couple of assumptions:
 
 #. We're already informed about the peptide scaffold (10-mer, link between monomers 4 and 10).
@@ -41,11 +43,10 @@ magical abilities (at least not yet!). So, we're proceeding with a couple of ass
     While `mobius` does not do scaffold hopping on its own, you could define multiple 
     scaffolds to be explored during the optimization (see :ref:`design_protocol`).
 
-To simulate a closed-loop Design-Make-Test optimization cycle, we're going to harness 
-the power of the FindMe emulator. This clever tool works by setting up a target 
-sequence—in this case, the sequence we defined earlier—and a kernel function, 
-specifically the Tanimoto kernel, to evaluate our distance from the target. The end 
-goal? To unearth the target sequence.
+To simulate a closed-loop Design-Make-Test optimization cycle, we're going to use the 
+FindMe emulator. This clever tool works by setting up a target sequence—in this case, 
+the sequence we defined earlier—and a kernel function, specifically the Tanimoto kernel, 
+to evaluate our distance from the target. The end goal? To unearth the target sequence.
 
 Since we're employing the Tanimoto metric, scores will range from 0 (indicating a 
 completely different sequence) to 1 (indicating an identical sequence).
@@ -60,8 +61,8 @@ completely different sequence) to 1 (indicating an identical sequence).
     fm = FindMe(target, input_type='helm', kernel=kernel, input_transformer=mhfp)
 
 With the emulator now in place, our next step is to define our lead sequence, which 
-only consists of standard amino acids. The Tanimoto score standing between the target 
-and the lead sequence is approximately 0.394. Using this as our starting point, 
+only consists of standard amino acids. The Tanimoto score between the target 
+and the lead sequence is about 0.394. Using this as our starting point, 
 we'll generate a seed library comprising 96 sequences. These sequences are obtained 
 by applying the alanine and homolog scanning methods.
 
@@ -93,7 +94,6 @@ the Tanimoto score.
 
     gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=mhfp)
     acq = ExpectedImprovement(gpmodel, maximize=True)
-    optimizer = SequenceGA(total_attempts=5, temperature=0.1)
 
 When it comes to the design protocol, we define all the non-standard amino acids that 
 will be available during the optimization. We categorize them into two distinct monomer 
@@ -127,13 +127,14 @@ So, without further ado, let's get this optimization rolling!
 
 .. code-block:: python
 
-    ps = Planner(acq, optimizer, design_protocol='sampling_macrocycle.yaml')
+    optimizer = SequenceGA(algorithm='GA', period=15, design_protocol_filename='sampling_macrocycle.yaml')
+    ps = Planner(acq, optimizer)
 
     peptides = list(seed_library)[:]
     scores = list(scores_seed_library)[:]
 
     for i in range(5):
-        suggested_peptides, _ = ps.recommand(peptides, scores, batch_size=96)
+        suggested_peptides, _ = ps.recommand(peptides, scores.reshape(-1, 1), batch_size=96)
 
         # Here you can add whatever methods you want to further filter out peptides
 
@@ -143,14 +144,14 @@ So, without further ado, let's get this optimization rolling!
         scores_suggested_peptides = fm.score(suggested_peptides)
 
         peptides.extend(list(suggested_peptides))
-        scores.extend(list(scores_suggested_peptides))
+        scores = np.concatenate((scores, scores_suggested_peptides), axis=0)
 
         best_seq = peptides[np.argmax(scores)]
         best_scores = np.max(scores)
         print('Best peptide found so far: %s / %.3f' % (best_seq, best_scores))
         print('')
 
-Typically, you'd see output similar to the following (excluding all the warnings, of course):
+Typically, you'd see output similar to the following:
 
 .. code-block:: none
 
@@ -207,7 +208,7 @@ Typically, you'd see output similar to the following (excluding all the warnings
 
 As you can see, while we didn't completely nail it, we got extremely close! The closest 
 sequence discovered bears a Tanimoto score of 0.922 when compared with the target sequence.
-This result is encouraging as it illustrates that the method is effective. However, 
+This result is encouraging as it illustrates that the method is working. However, 
 it also highlights that there's still room for significant improvements. Let's consider 
 this a successful starting point and a call to further optimize our approach!
 
@@ -218,3 +219,132 @@ this a successful starting point and a call to further optimize our approach!
     contain uncertainties, and more challenging still, you might not obtain a clear outcome for 
     every peptide tested. However, don't let this discourage you! These challenges make the 
     field of peptide optimization a dynamic and fascinating area to explore. 
+
+
+Adding non-standard monomers
+----------------------------
+
+In the previous example, we used a pre-defined set of non-standard amino acids. But what if
+you want to add your own? No problem! `mobius` allows you to add non-standard amino acids
+on the fly. Let's see how this works.
+
+For this example, we again take a random `macrocyclic peptide (ID: 48)  <http://cycpeptmpdb.com/peptides/id_48/>`_ 
+from the `CycPeptMPDB <http://cycpeptmpdb.com/>`_ database. This peptide, with the following 
+HELM string `PEPTIDE1{A.A.L.[meV].L.F.F.P.I.T.G.D.[-pip]}$PEPTIDE1,PEPTIDE1,1:R1-12:R3$$$V2.0`,
+contains two non-standard amino acids not defined in `mobius`, namely the 
+`C-terminal piperidine <http://cycpeptmpdb.com/monomers/-pip/>`_ (`-pip`) and the 
+`N-methyl-L-valine <http://cycpeptmpdb.com/monomers/meV/>`_ (`meV`). To integrate these non-standard 
+amino acids into our optimization, you will need the following information for each monomer:
+
+* `MonomerID`: The monomer ID, as used in the HELM string.
+* `MonomerSmiles`: A Chemaxon eXtended SMILES (CXSMILES), which is an extended version of SMILES that allows extra special features. In this case, we use a CXSMILES to define the attachment points on the monomer (`R1`, `R2`, etc, ..). For more information, see the `Chemaxon documentation <https://docs.chemaxon.com/display/docs/chemaxon-extended-smiles-and-smarts-cxsmiles-and-cxsmarts.md>`_
+* `MonomerType`: The monomer type, which can be either `Backbone` or `Terminal`.
+* `NaturalAnalog`: The natural analog of the monomer, althought this is not mandatory to provide.
+* `MonomerName`: The full name of the monomer, also not mandatory.
+* `Attachments`:
+
+    * `AttachmentID`: The attachment ID.
+    * `AttachmentLabel`: The attachment label, as defined in the CXSMILES.
+    * `CapGroupName`: The cap group name.
+    * `CapGroupSmiles`: The cap group as a CXSMILES string.
+
+All these information need to de defined in a YAML file (`extra_non_standard.yaml`) as follows:
+
+.. code-block:: yaml
+
+    [
+        {
+            "MonomerID": "meV",
+            "MonomerSmiles": "CC(C)[C@H](N(C)[*])C([*])=O |$;;;;;;_R1;;_R2;$|",
+            "MonomerType": "Backbone",
+            "PolymerType": "PEPTIDE",
+            "NaturalAnalog": "V",
+            "MonomerName": "N-methyl-L-valine",
+            "Attachments": [{
+                    "AttachmentID": "R1-H",
+                    "AttachmentLabel": "R1",
+                    "CapGroupName": "H",
+                    "CapGroupSmiles": "[*][H] |$_R1;$|"
+                },
+                {
+                    "AttachmentID": "R2-OH",
+                    "AttachmentLabel": "R2",
+                    "CapGroupName": "OH",
+                    "CapGroupSmiles": "O[*] |$;_R2$|"
+                }
+            ]
+        },
+        {
+            "MonomerID": "-pip",
+            "MonomerSmiles": "[*]N1CCCCC1 |$_R1;;;;;;$|",
+            "MonomerType": "Terminal",
+            "PolymerType": "PEPTIDE",
+            "NaturalAnalog": "X",
+            "MonomerName": "C-Terminal piperidine",
+            "Attachments": [{
+                    "AttachmentID": "R1-H",
+                    "AttachmentLabel": "R1",
+                    "CapGroupName": "H",
+                    "CapGroupSmiles": "[*][H] |$_R1;$|"
+                }
+            ]
+        }
+    ]
+
+Once you have defined your YAML file, using it is as simple as that:
+
+.. code-block:: python
+
+    from mobius.utils import MolFromHELM
+    from mobius import Map4Fingerprint
+
+    # This is the peptide sequence containing non-standard amino acids
+    # that are not yet defined in the library shipped with mobius.
+    peptide = 'PEPTIDE1{A.A.L.[meV].L.F.F.P.I.T.G.D.[-pip]}$PEPTIDE1,PEPTIDE1,1:R1-12:R3$$$V2.0'
+
+    # We can either directly get a RDKit molecule from the HELM string.
+    mol = MolFromHELM(peptide, HELM_extra_library_filename='extra_non_standard.yaml')
+
+    # .. or we can use the Map4Fingerprint method to get the fingerprint
+    # of the peptide. This method will automatically load the extra
+    # monomers from the YAML file. The map4 object can then be used during 
+    # the optimization process as shown in the previous example.
+    map4 = Map4Fingerprint(input_type='helm', HELM_extra_library_filename='extra_monomers.json')
+
+    # The rest of the code stays the same as in the previous example.
+
+.. note::
+
+    The YAML file can also be used to redefine any standard or non-standard amino acids. For example, if 
+    you want to add an extra attachment point to the tyrosine, you can do it by adding the following lines 
+    to the YAML file:
+
+    .. code-block:: yaml
+
+        {
+            "MonomerID": "Y",
+            "MonomerSmiles": "[*]Oc1ccc([C@@H][C@@H](N[*])C([*])=O)cc1 |$_R3;;;;;;;;;_R1;;_R2;;;$|",
+            "MonomerType": "Backbone",
+            "PolymerType": "PEPTIDE",
+            "NaturalAnalog": "Y",
+            "MonomerName": "Tyrosine",
+            "Attachments": [{
+                    "AttachmentID": "R1-H",
+                    "AttachmentLabel": "R1",
+                    "CapGroupName": "H",
+                    "CapGroupSmiles": "[*][H] |$_R1;$|"
+                },
+                {
+                    "AttachmentID": "R2-OH",
+                    "AttachmentLabel": "R2",
+                    "CapGroupName": "OH",
+                    "CapGroupSmiles": "O[*] |$;_R2$|"
+                },
+                {
+                    "AttachmentID": "R3-H",
+                    "AttachmentLabel": "R3",
+                    "CapGroupName": "H",
+                    "CapGroupSmiles": "[*][H] |$_R3;$|"
+                }
+            ]
+        }
