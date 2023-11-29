@@ -20,6 +20,7 @@ Python package for optimizing peptide sequences using Bayesian optimization (BO)
    design_protocol
    custom_features
    non_standard
+   moo
 
 .. toctree::
    :maxdepth: 2
