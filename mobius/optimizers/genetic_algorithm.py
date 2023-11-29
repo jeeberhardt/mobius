@@ -56,6 +56,7 @@ def _load_design_from_config(config):
         List of designs to use during the polymer optimization.
 
     """
+    scaffold_designs = []
     designs = {}
     monomers_collections = {}
     default_monomers = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
@@ -86,7 +87,12 @@ def _load_design_from_config(config):
     except:
         pass
 
-    for scaffold_design in design['scaffolds']:
+    if 'scaffolds' in design:
+        scaffold_designs = design['scaffolds']
+    elif 'polymers' in design:
+        scaffold_designs = design['polymers']
+
+    for scaffold_design in scaffold_designs:
         try:
             scaffold_complex_polymer = list(scaffold_design.keys())[0]
             scaffold_instructions = scaffold_design[scaffold_complex_polymer]
@@ -311,7 +317,7 @@ class SerialSequenceGA():
         polymers, _ = adjust_polymers_to_designs(polymers, self._designs)
 
         # Initialize the problem
-        problem = Problem(polymers, scores, acquisition_functions)
+        problem = Problem(polymers, scores, acquisition_functions, self._filters)
 
         # ... and pre-initialize the population with the experimental data.
         # This is only for the first GA generation.
