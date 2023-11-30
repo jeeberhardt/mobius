@@ -13,7 +13,7 @@ class Problem(Problem):
     Class to define Single/Multi/Many-Objectives SequenceGA problem.
     """
 
-    def __init__(self, polymers, scores, acq_fun, filters, **kwargs):
+    def __init__(self, polymers, scores, acq_fun, filters=None, **kwargs):
         """
         Initialize the Single/Multi/Many-Objectives SequenceGA problem.
 
@@ -25,20 +25,25 @@ class Problem(Problem):
             Score associated to each polymer.
         acq_fun : `AcquisitionFunction`
             Acquisition function to be evaluated for each new polymer generated.
-        filters : array-like of `Filter`
+        filters : array-like of `Filter`, default=None
             Filters to be applied to each new polymer generated.
         **kwargs : dict
             Additional keyword arguments.
 
         """
+        if filters is None:
+            n_ieq_constr = 0
+        else:
+            n_ieq_constr = len(filters)
+
         super().__init__(n_var=1, n_obj=acq_fun.number_of_objectives,
-                         n_ieq_constr=len(filters))
+                         n_ieq_constr=n_ieq_constr)
 
         self._prior_data = {p: s for p, s in zip(polymers, scores)}
         self._polymers_cache = {}
         self._acq_fun = acq_fun
-        self._pre_evaluation = True
         self._filters = filters
+        self._pre_evaluation = True
 
     def _evaluate(self, x, out, *args, **kwargs):
         """
@@ -64,8 +69,9 @@ class Problem(Problem):
                 # optimization will be better acquisition scores.
                 acq_values = np.array([self._prior_data[p] for p in polymers])
                 acq_values += -1. * self._acq_fun.scaling_factors * pre_evaluation_penalty
-                # We convert booleans to int, and flip the values, so 0 means feasible, and 1 means infeasible.
-                feasibility = 1 - np.column_stack([f.apply(polymers) for f in self._filters]).astype(int)
+                if self._filters is not None:
+                    # We convert booleans to int, and flip the values, so 0 means feasible, and 1 means infeasible.
+                    feasibility = 1 - np.column_stack([f.apply(polymers) for f in self._filters]).astype(int)
             except KeyError:
                 msg = f'Some polymers not found in the input experimental data. '
                 msg += 'Did you forget to turn on the eval mode?'
@@ -73,11 +79,13 @@ class Problem(Problem):
         else:
             # Evaluate unseen polymer with acquisition scores from surrogate models
             acq_values = self._acq_fun.forward(polymers) * self._acq_fun.scaling_factors
-            # We convert booleans to int, and flip the values, so 0 means feasible, and 1 means infeasible.
-            feasibility = 1 - np.column_stack([f.apply(polymers) for f in self._filters]).astype(int)
+            if self._filters is not None:
+                # We convert booleans to int, and flip the values, so 0 means feasible, and 1 means infeasible.
+                feasibility = 1 - np.column_stack([f.apply(polymers) for f in self._filters]).astype(int)
 
         out["F"] = acq_values
-        out["G"] = feasibility
+        if self._filters is not None:
+            out["G"] = feasibility
 
     def pre_eval(self):
         """
