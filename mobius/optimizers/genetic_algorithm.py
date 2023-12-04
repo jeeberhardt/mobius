@@ -27,7 +27,7 @@ from pymoo.termination.max_gen import MaximumGenerationTermination
 from pymoo.termination.robust import RobustTermination
 
 from .terminations import NoChange
-from .genetic_operators import Mutation, Crossover, DuplicateElimination
+from .genetic_operators import PolymerMutation, PolymerCrossover, DuplicateElimination
 from .problem import Problem
 from ..utils import generate_random_polymers_from_designs
 from ..utils import adjust_polymers_to_designs
@@ -41,9 +41,9 @@ def parallel_ga(gao, polymers, scores, acquisition_function):
     return gao.run(polymers, scores, acquisition_function)
 
 
-def _load_design_from_config(config):
+def _load_polymer_design_from_config(config):
     """
-    Function to load the design protocol from the YAML config file.
+    Function to load the design protocol for polymers from the YAML config file.
 
     Parameters
     ----------
@@ -56,7 +56,6 @@ def _load_design_from_config(config):
         List of designs to use during the polymer optimization.
 
     """
-    scaffold_designs = []
     designs = {}
     monomers_collections = {}
     default_monomers = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
@@ -87,12 +86,7 @@ def _load_design_from_config(config):
     except:
         pass
 
-    if 'scaffolds' in design:
-        scaffold_designs = design['scaffolds']
-    elif 'polymers' in design:
-        scaffold_designs = design['polymers']
-
-    for scaffold_design in scaffold_designs:
+    for scaffold_design in design['polymers']:
         try:
             scaffold_complex_polymer = list(scaffold_design.keys())[0]
             scaffold_instructions = scaffold_design[scaffold_complex_polymer]
@@ -135,6 +129,108 @@ def _load_design_from_config(config):
 
         scaffold = get_scaffold_from_helm_string(scaffold_complex_polymer)
         designs[scaffold] = scaffold_instructions
+
+    return designs
+
+
+def _load_biopolymer_design_from_config(config):
+    """
+    Function to load the design protocol for biopolymers from the YAML config file.
+
+    Parameters
+    ----------
+    config : YAML config filename or dict
+        YAML config file or dictionnary containing the design protocol.
+
+    Returns
+    -------
+    designs : list of designs
+        List of designs to use during the biopolymer optimization.
+
+    """
+    designs = {}
+    monomers_collections = {}
+    default_monomers = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
+                        'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+
+    if isinstance(config, dict):
+        design = config
+    else:
+        with open(config, 'r') as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+
+    try:
+        design = config['design']
+    except:
+        # No design protocol defined
+        return designs
+
+    try:
+        monomers_collections = design['monomers']
+    except:
+        pass
+
+    try:
+        # Get the default monomers collection if redefined by the user
+        # otherwise we use the default monomers collection defined above
+        # composed of the 20 natural amino acids.
+        default_monomers = design['monomers']['default']
+    except:
+        pass
+
+    for biopolymer in design['biopolymers']:
+        design = {}
+
+        biopolymer_name = biopolymer['name']
+        positions = biopolymer['positions']
+
+        try:
+            starting_residue = biopolymer['starting_residue']
+        except:
+            starting_residue = 1
+
+        for position in positions:
+            user_defined_monomers = positions[position]
+
+            if user_defined_monomers is None:
+                # Use natural amino acids set for positions that are not defined.
+                user_defined_monomers = default_monomers
+
+            if not isinstance(user_defined_monomers, list):
+                user_defined_monomers = [user_defined_monomers]
+
+            # if one the monomer is monomers collection, replace it by the monomers collection
+            # The monomers collection must be defined in the YAML config file, otherwise it will be
+            # considered as a monomer. 
+            if set(user_defined_monomers).issubset(monomers_collections.keys()):
+                for j, m in enumerate(user_defined_monomers):
+                     if m in monomers_collections:
+                        user_defined_monomers[j:j + 1] = monomers_collections[m]
+
+            if isinstance(position, int):
+                start = end = position - starting_residue
+            elif '-' in position:
+                try:
+                    start, end = position.split('-')
+                    start = int(start) - starting_residue
+                    end = int(end) - starting_residue
+                except:
+                    msg_error = f'Position {position} not recognized. It must be a number (XX) or a range (XX-XX).'
+                    raise ValueError(msg_error)
+            else:
+                msg_error = f'Position {position} not recognized. It must be a number (XX) or a range (XX-XX).'
+                raise ValueError(msg_error)
+            
+            # Check that the position is greater or equal to the starting residue
+            if any(np.array([start, end]) < 0):
+                msg_error = f'Position {position} is not valid.'
+                msg_error += f' Position must be greater or equal to the starting residue ({starting_residue}).'
+                raise ValueError(msg_error)
+
+            for i in range(int(start), int(end) + 1):
+                design[i] = user_defined_monomers
+
+        designs[biopolymer_name] = design
 
     return designs
 
@@ -330,14 +426,14 @@ class SerialSequenceGA():
         problem.eval()
 
         # Initialize genetic operators
-        self._mutation = Mutation(self._designs, self._pm, self._minimum_mutations, self._maximum_mutations)
-        self._crossover = Crossover(self._cx_points)
-        self._duplicates = DuplicateElimination()
+        mutation = PolymerMutation(self._designs, self._pm, self._minimum_mutations, self._maximum_mutations)
+        crossover = PolymerCrossover(self._cx_points)
+        duplicates = DuplicateElimination()
 
         # Initialize the GA method
         algorithm = self._method(pop_size=self._n_pop, sampling=pop, 
-                                 crossover=self._crossover, mutation=self._mutation,
-                                 eliminate_duplicates=self._duplicates)
+                                 crossover=crossover, mutation=mutation,
+                                 eliminate_duplicates=duplicates)
 
         # Define termination criteria and make them robust to noise
         no_change_termination = RobustTermination(NoChange(), period=self._period)
@@ -402,11 +498,11 @@ class SequenceGA():
         --------
 
         >>> from mobius import SequenceGA
-        >>> ps = SequenceGA(algorithm='AGEMOEA2', design_protocol_filename='design_protocol.yaml')
+        >>> optimizer = SequenceGA(algorithm='SMSEMOA', design_protocol_filename='design_protocol.yaml')
 
-        Example of `config.yaml` defining the scaffold design protocol and the 
-        different filters can also be defined to filter out polymers 
-        that do not satisfy certain criteria.
+        Example of `config.yaml` files defining the design protocol for polymers or 
+        biopolymers. Different filters can also be defined to filter out polymers/biopolymers 
+        that do not satisfy certain criteria during the optimization.
 
         .. code:: yaml
 
@@ -418,7 +514,7 @@ class SequenceGA():
                     AROMATIC: [F, H, W, Y]
                     POS_CHARGED: [K, R]
                     NEG_CHARGED: [D, E]
-                scaffolds:
+                polymers:
                     - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
                         PEPTIDE1:
                             1: [AROMATIC, NEG_CHARGED]
@@ -430,6 +526,24 @@ class SequenceGA():
                 init_args:
                   hydrophobe_ratio: 0.5
                   charged_per_amino_acids: 5
+        
+        .. code:: yaml
+
+            design:
+                monomers: 
+                    default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
+                    APOLAR: [A, F, G, I, L, P, V, W]
+                    POLAR: [C, D, E, H, K, N, Q, R, K, S, T, M]
+                    AROMATIC: [F, H, W, Y]
+                    POS_CHARGED: [K, R]
+                    NEG_CHARGED: [D, E]
+                biopolymers:
+                    - name: PROTEIN1
+                        starting_residue: 1
+                        positions:
+                            1: [AROMATIC, NEG_CHARGED]
+                            4: POLAR
+                            9-12: [A, V, I, L, M, T]
 
         """
         self._single = {'GA': GA}
@@ -495,9 +609,10 @@ class SequenceGA():
         # the input polymers.
         if self._parameters['design_protocol_filename'] is None:
             design_protocol = generate_design_protocol_from_polymers(polymers)
-            self._designs = _load_design_from_config(design_protocol)
+            polymer_designs = _load_polymer_design_from_config(design_protocol)
         else:
-            self._designs = _load_design_from_config(self._parameters['design_protocol_filename'])
+            polymer_designs = _load_polymer_design_from_config(self._parameters['design_protocol_filename'])
+            biopolymer_designs = _load_biopolymer_design_from_config(self._parameters['design_protocol_filename'])
             self._filters = _load_filters_from_config(self._parameters['design_protocol_filename'])
 
         # And in the case we provided a design protocol, check that at least one polymer 
@@ -616,9 +731,9 @@ class RandomGA():
 
         if self._design_protocol_filename is None:
             design_protocol = generate_design_protocol_from_polymers(polymers)
-            self._designs = _load_design_from_config(design_protocol)
+            self._designs = _load_polymer_design_from_config(design_protocol)
         else:
-            self._designs = _load_design_from_config(self._design_protocol_filename)
+            self._designs = _load_polymer_design_from_config(self._design_protocol_filename)
             self._filters = _load_filters_from_config(self._design_protocol_filename)
 
         # Generate (n_children * n_gen) polymers and random score them!
