@@ -51,6 +51,14 @@ class Mobius:
         all_suggested_polymers = np.asarray(polymers).copy()
         all_exp_values = np.asarray(values).copy()
 
+        if all_exp_values.ndim == 1:
+            raise ValueError(
+                "Expected 2D array, got 1D array instead:\narray={}.\n"
+                "Reshape your data either using array.reshape(-1, 1) if "
+                "your data has a single feature or array.reshape(1, -1) "
+                "if it contains a single sample.".format(self._values)
+            )
+
         # number of values per polymers
         n = all_exp_values.shape[1]
 
@@ -145,7 +153,7 @@ class Mobius:
 
         for planner_name, sampler in planners.items():
             for i in range(num_independent_run):
-                df = self.run(polymers, all_exp_values, emulators, sampler, num_iter, batch_size)
+                df = self.run(all_suggested_polymers, all_exp_values, emulators, sampler, num_iter, batch_size)
 
                 df['run'] = i + 1
                 df['planner'] = planner_name

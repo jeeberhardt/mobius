@@ -12,25 +12,17 @@ import yaml
 
 import numpy as np
 import ray
-from pymoo.core.problem import Problem
-from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.algorithms.moo.sms import SMSEMOA
-from pymoo.algorithms.soo.nonconvex.ga import GA
-from pymoo.optimize import minimize
-from pymoo.core.population import Population
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore")
     from pymoo.algorithms.moo.age2 import AGEMOEA2
-from pymoo.core.evaluator import Evaluator
-from pymoo.core.termination import TerminateIfAny 
-from pymoo.termination.max_gen import MaximumGenerationTermination
-from pymoo.termination.robust import RobustTermination
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.algorithms.moo.sms import SMSEMOA
+from pymoo.algorithms.soo.nonconvex.ga import GA
 
-from .terminations import NoChange
-from .genetic_operators import PolymerMutation, PolymerCrossover, DuplicateElimination
-from .problem import Problem
+from .ga_biopolymer import SerialBioPolymerGA
+from .ga_polymer import SerialPolymerGA
+from ..utils import guess_input_formats
 from ..utils import generate_random_polymers_from_designs
-from ..utils import adjust_polymers_to_designs
 from ..utils import group_polymers_by_scaffold
 from ..utils import parse_helm, get_scaffold_from_helm_string
 from ..utils import generate_design_protocol_from_polymers
@@ -86,12 +78,18 @@ def _load_polymer_design_from_config(config):
     except:
         pass
 
-    for scaffold_design in design['polymers']:
+    try:
+        polymer_designs = design['polymers']
+    except:
+        # No polymer design protocol defined
+        return designs
+
+    for polymer_design in polymer_designs:
         try:
-            scaffold_complex_polymer = list(scaffold_design.keys())[0]
-            scaffold_instructions = scaffold_design[scaffold_complex_polymer]
+            scaffold_complex_polymer = list(polymer_design.keys())[0]
+            scaffold_instructions = polymer_design[scaffold_complex_polymer]
         except:
-            scaffold_complex_polymer = scaffold_design
+            scaffold_complex_polymer = polymer_design
             scaffold_instructions = {}
 
         complex_polymer, _, _, _ = parse_helm(scaffold_complex_polymer)
@@ -178,14 +176,22 @@ def _load_biopolymer_design_from_config(config):
     except:
         pass
 
-    for biopolymer in design['biopolymers']:
+    try:
+        biopolymer_designs = design['biopolymers']
+    except:
+        # No biopolymer design protocol defined
+        return designs
+
+    assert len(biopolymer_designs) == 1, 'Only one biopolymer per design protocol is allowed (for now).'
+
+    for biopolymer_design in biopolymer_designs:
         design = {}
 
-        biopolymer_name = biopolymer['name']
-        positions = biopolymer['positions']
+        biopolymer_name = biopolymer_design['name']
+        positions = biopolymer_design['positions']
 
         try:
-            starting_residue = biopolymer['starting_residue']
+            starting_residue = biopolymer_design['starting_residue']
         except:
             starting_residue = 1
 
@@ -208,12 +214,12 @@ def _load_biopolymer_design_from_config(config):
                         user_defined_monomers[j:j + 1] = monomers_collections[m]
 
             if isinstance(position, int):
-                start = end = position - starting_residue
+                start = end = position - starting_residue + 1
             elif '-' in position:
                 try:
                     start, end = position.split('-')
-                    start = int(start) - starting_residue
-                    end = int(end) - starting_residue
+                    start = int(start) - starting_residue + 1
+                    end = int(end) - starting_residue + 1
                 except:
                     msg_error = f'Position {position} not recognized. It must be a number (XX) or a range (XX-XX).'
                     raise ValueError(msg_error)
@@ -314,140 +320,10 @@ def _load_filters_from_config(config_filename):
     Returns
     -------
     filters : list of filter methods
-        List of filter methods to use at the end of the polymer optimization.
+        List of filter methods to use during the GA optimization.
 
     """
     return _load_methods_from_config(config_filename, yaml_key='filters')
-
-
-class SerialSequenceGA():
-    """
-    Class for the Single/Multi-Objectives SequenceGA optimization.
-
-    """
-
-    def __init__(self, algorithm='SMSEMOA', designs=None, filters=None,
-                 n_gen=1000, n_pop=500, period=50, cx_points=2, pm=0.1, 
-                 minimum_mutations=1, maximum_mutations=None,
-                 save_history=False, **kwargs):
-        """
-        Initialize the Single/Multi-Objectives SequenceGA optimization. The 
-        SerialSequenceGA is not meant to be used directly. It is used by the
-        SequenceGA class to run the optimization in parallel.
-
-        Parameters
-        ----------
-        algorithm : str, default : 'SMSEMOA'
-            Algorithm to use for the optimization. Can be 'GA' for single-objective 
-            optimization, or 'SMSEMOA', 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
-        designs : list of designs, default: None
-            List of designs to use during the polymer optimization. If not provided,
-            a default design protocol will be generated automatically based on the
-            polymers provided during the optimization, with no filters.
-        filters : list of filter methods, default: None
-            List of filter methods to use during the polymer optimization.
-        n_gen : int, default : 1000
-            Number of GA generation to run.
-        n_population : int, default : 500
-            Size of the population generated at each generation.
-        period : int, default : 50
-            Stopping criteria. Number of attempt before stopping the search. If no
-            improvement is observed after `period` generations, we stop.
-        cx_points : int, default : 2
-            Number of crossing over during the mating step.
-        pm : float, default : 0.1
-            Probability of mutation.
-        minimum_mutations : int, default : 1
-            Minimal number of mutations introduced in the new child.
-        maximum_mutations: int, default : None
-            Maximal number of mutations introduced in the new child.
-        save_history : bool, default : False
-            Save the history of the optimization. This can be useful to debug the
-            optimization, but it can take a lot of memory.
-
-        """
-        self._single = {'GA': GA}
-        self._multi = {'NSGA2' : NSGA2, 'AGEMOEA2': AGEMOEA2, 'SMSEMOA': SMSEMOA}
-        self._available_algorithms = self._single | self._multi
-
-        msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
-        assert algorithm in self._available_algorithms, msg_error
-
-        # Design protocol
-        self._designs = designs
-        self._filters = filters
-        # GA Parameters
-        self._optimization_type = 'single' if algorithm in self._single else 'multi'
-        self._method = self._available_algorithms[algorithm]
-        self._n_gen = n_gen
-        self._n_pop = n_pop
-        self._period = period
-        self._cx_points = cx_points
-        self._pm = pm
-        self._minimum_mutations = minimum_mutations
-        self._maximum_mutations = maximum_mutations
-        self._save_history = save_history
-
-    def run(self, polymers, scores, acquisition_functions):
-        """
-        Run the Single/Multi-Objectives SequenceGA optimization.
-
-        Parameters
-        ----------
-        polymers : array-like of str
-            Polymers in HELM format.
-        scores : array-like of float or int
-            Score associated to each polymer.
-        acquisition_function : `AcquisitionFunction`
-            The acquisition function that will be used to score the polymer.
-
-        Returns
-        -------
-        polymers : ndarray of shape (n_polymers,)
-            Polymers found during the GA search.
-        scores : ndarray of shape (n_polymers, n_scores)
-            Score for each polymer found.
-
-        """
-        # Starts by automatically adjusting the input polymers to the design
-        polymers, _ = adjust_polymers_to_designs(polymers, self._designs)
-
-        # Initialize the problem
-        problem = Problem(polymers, scores, acquisition_functions, self._filters)
-
-        # ... and pre-initialize the population with the experimental data.
-        # This is only for the first GA generation.
-        X = polymers.reshape(polymers.shape[0], -1)
-        pop = Population.new("X", X)
-        Evaluator().eval(problem, pop)
-
-        # Turn off the pre-evaluation mode
-        # Now it will use the acquisition scores from the surrogate models
-        problem.eval()
-
-        # Initialize genetic operators
-        mutation = PolymerMutation(self._designs, self._pm, self._minimum_mutations, self._maximum_mutations)
-        crossover = PolymerCrossover(self._cx_points)
-        duplicates = DuplicateElimination()
-
-        # Initialize the GA method
-        algorithm = self._method(pop_size=self._n_pop, sampling=pop, 
-                                 crossover=crossover, mutation=mutation,
-                                 eliminate_duplicates=duplicates)
-
-        # Define termination criteria and make them robust to noise
-        no_change_termination = RobustTermination(NoChange(), period=self._period)
-        max_gen_termination = MaximumGenerationTermination(self._n_gen)
-        termination = TerminateIfAny(max_gen_termination, no_change_termination)
-
-        # ... and run!
-        results = minimize(problem, algorithm, termination=termination,
-                           verbose=True, save_history=self._save_history)
-        
-        polymers = results.pop.get('X')
-        scores = results.pop.get('F')
-
-        return polymers, scores
 
 
 class SequenceGA():
@@ -456,7 +332,7 @@ class SequenceGA():
 
     """
 
-    def __init__(self, algorithm='SMSEMOA', design_protocol_filename=None,
+    def __init__(self, algorithm, design_protocol_filename=None,
                  n_gen=1000, n_pop=500, period=50, cx_points=2, pm=0.1, 
                  minimum_mutations=1, maximum_mutations=None, 
                  n_process=-1, save_history=False, **kwargs):
@@ -465,14 +341,15 @@ class SequenceGA():
 
         Parameters
         ----------
-        algorithm : str, default : 'SMSEMOA'
+        algorithm : str
             Algorithm to use for the optimization. Can be 'GA' for single-objective 
             optimization, or 'SMSEMOA', 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
         design_protocol_filename : str, default: None
             Path of the YAML config file containing the design protocol 
-            (scaffolds + filters) used during polymers optimization. If not
+            (polymers | biopolymers + filters) used during GA optimization. If not
             provided, a default design protocol will be generated automatically
-            based on the polymers provided during the optimization, with no filters.
+            based on the polymers provided during the optimization, with no filters. For
+            bipolymers, a design protocol must be provided.
         n_gen : int, default : 1000
             Number of GA generation to run.
         n_population : int, default : 500
@@ -500,7 +377,7 @@ class SequenceGA():
         >>> from mobius import SequenceGA
         >>> optimizer = SequenceGA(algorithm='SMSEMOA', design_protocol_filename='design_protocol.yaml')
 
-        Example of `config.yaml` files defining the design protocol for polymers or 
+        Example of `design_protocol.yaml` files defining the design protocol for polymers or 
         biopolymers. Different filters can also be defined to filter out polymers/biopolymers 
         that do not satisfy certain criteria during the optimization.
 
@@ -553,9 +430,6 @@ class SequenceGA():
         msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
         assert algorithm in self._available_algorithms, msg_error
 
-        # Design protocol
-        self._designs = None
-        self._filters = None
         # Parameters
         self._optimization_type = 'single' if algorithm in self._single else 'multi'
         self._n_process = n_process
@@ -571,82 +445,111 @@ class SequenceGA():
                             'save_history': save_history}
         self._parameters.update(kwargs)
 
-    def run(self, polymers, scores, acquisition_function):
+    def run(self, sequences, scores, acquisition_function):
         """
         Run the Single/Multi-Objectives SequenceGA optimization.
 
         Parameters
         ----------
-        polymers : array-like of str
-            Polymers in HELM format.
+        sequences : array-like of str
+            Sequences in HELM format (for polymers) or FASTA format (for bipolymers).
         scores : array-like of float or int
-            Score associated to each polymer.
+            Score associated to each sequence.
         acquisition_function : `AcquisitionFunction`
-            The acquisition function that will be used to score the polymers.
+            The acquisition function that will be used to score the sequences.
 
         Returns
         -------
-        results : `tuple` of (ndarray of shape (n_polymers,), ndarray of shape 
-            (n_polymers, n_scores)) or list of `tuple`. Contains the results 
+        results : `tuple` of (ndarray of shape (n_sequences,), ndarray of shape 
+            (n_sequences, n_scores)) or list of `tuple`. Contains the results 
             from the optimization.
 
         """
         # Make sure that inputs are numpy arrays
-        polymers = np.asarray(polymers)
+        sequences = np.asarray(sequences)
         scores = np.asarray(scores)
 
+        # Check that the number of scores is consistent with the optimization type
         if self._optimization_type == 'single':
-            msg_error = 'Only one score per polymer is allowed for single-objective optimization.'
+            msg_error = 'Only one score per sequence is allowed for single-objective optimization.'
             assert scores.shape[1] == 1, msg_error
         else:
-            msg_error = 'Only one score per polymer provided. '
-            msg_error += 'You need at least two scores per polymer for multi-objective optimization.'
+            msg_error = 'Only one score per sequence provided. '
+            msg_error += 'You need at least two scores per sequence for multi-objective optimization.'
             assert scores.shape[1] >= 2, msg_error
 
-        # Check that all the scaffold designs are defined for all the polymers
-        # First, look at the design protocol. If a design protocol was not provided 
-        # at the initialization, we generate a default design protocol based on 
-        # the input polymers.
-        if self._parameters['design_protocol_filename'] is None:
-            design_protocol = generate_design_protocol_from_polymers(polymers)
-            polymer_designs = _load_polymer_design_from_config(design_protocol)
+        # Check input if they are polymers in HELM format or biopolymers in FASTA format
+        sequence_formats = guess_input_formats(sequences)
+        unique_sequence_formats = np.unique(sequence_formats)
+
+        msg_error = f'The input contains sequences in an unknown format (only HELM or FASTA allowed): \n'
+        for s in sequence_formats[sequence_formats == 'unknown']:
+            msg_error += f'  -  {s}\n'
+        assert 'unknown' not in unique_sequence_formats, msg_error
+
+        msg_error = f'The input contains sequences in a multiple formats: {unique_sequence_formats}'
+        assert len(unique_sequence_formats) == 1, msg_error
+
+        if unique_sequence_formats[0] == 'HELM':
+            # Use the SerialPolymerGA class for polymers
+            serial_seq_ga = SerialPolymerGA
+
+            # Check that all the polymer designs are defined for all the polymers
+            # First, look at the design protocol. If a design protocol was not provided 
+            # at the initialization, we generate a default design protocol based on 
+            # the input polymers.
+            if self._parameters['design_protocol_filename'] is None:
+                design_protocol = generate_design_protocol_from_polymers(sequences)
+                designs = _load_polymer_design_from_config(design_protocol)
+                filters = {}
+            else:
+                designs = _load_polymer_design_from_config(self._parameters['design_protocol_filename'])
+                filters = _load_filters_from_config(self._parameters['design_protocol_filename'])
+
+            # And in the case we provided a design protocol, check that at least one polymer 
+            # is defined per scaffold present in the design protocol. We need to generate at 
+            # least one polymer per scaffold to be able to start the GA optimization. Here we 
+            # generate 42 random polymers per scaffold. We do that in the case we want 
+            # to explore different scaffolds that are not in the initial dataset.
+            groups, group_indices = group_polymers_by_scaffold(sequences, return_index=True)
+            scaffolds_not_present = list(set(designs.keys()).difference(groups.keys()))
+
+            if scaffolds_not_present:
+                tmp_scaffolds_designs = {key: designs[key] for key in scaffolds_not_present}
+                # We generate them
+                n_sequences = [42] * len(tmp_scaffolds_designs)
+                new_sequences = generate_random_polymers_from_designs(n_sequences, tmp_scaffolds_designs)
+                # We score them
+                new_scores = acquisition_function.forward(new_sequences)
+                # Add them to the rest
+                sequences = np.concatenate([sequences, new_sequences])
+                scores = np.concatenate([scores, new_scores])
+                # Recluster all of them again (easier than updating the groups)
+                groups, group_indices = group_polymers_by_scaffold(sequences, return_index=True)
+            
+            # Get only the polymers that are defined in the design protocol
+            # Which is fine, because the surrogate model was trained on all the data already
+            groups = {key: groups[key] for key in designs.keys()}
+            group_indices = {key: group_indices[key] for key in designs.keys()}
         else:
-            polymer_designs = _load_polymer_design_from_config(self._parameters['design_protocol_filename'])
-            biopolymer_designs = _load_biopolymer_design_from_config(self._parameters['design_protocol_filename'])
-            self._filters = _load_filters_from_config(self._parameters['design_protocol_filename'])
+            # Use the SerialBioPolymerGA class for biopolymers
+            serial_seq_ga = SerialBioPolymerGA
 
-        # And in the case we provided a design protocol, check that at least one polymer 
-        # is defined per scaffold present in the design protocol. We need to generate at 
-        # least one polymer per scaffold to be able to start the GA optimization. Here we 
-        # generate 42 random polymers per scaffold. We do that in the case we want 
-        # to explore different scaffolds that are not in the initial dataset.
-        groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
-        scaffolds_not_present = list(set(self._designs.keys()).difference(groups.keys()))
+            if self._parameters['design_protocol_filename'] is not None:
+                designs = _load_biopolymer_design_from_config(self._parameters['design_protocol_filename'])
+                filters = _load_filters_from_config(self._parameters['design_protocol_filename'])
+            else:
+                raise ValueError('A design protocol must be provided for biopolymers optimization.')
 
-        if scaffolds_not_present:
-            tmp_scaffolds_designs = {key: self._designs[key] for key in scaffolds_not_present}
-            # We generate them
-            n_polymers = [42] * len(tmp_scaffolds_designs)
-            new_polymers = generate_random_polymers_from_designs(n_polymers, tmp_scaffolds_designs)
-            # We score them
-            new_scores = acquisition_function.forward(new_polymers)
-            # Add them to the rest
-            polymers = np.concatenate([polymers, new_polymers])
-            scores = np.concatenate([scores, new_scores])
-            # Recluster all of them again (easier than updating the groups)
-            groups, group_indices = group_polymers_by_scaffold(polymers, return_index=True)
-        
-        # Get only the polymers that are defined in the design protocol
-        # Which is fine, because the surrogate model was trained on all the data already
-        groups = {key: groups[key] for key in self._designs.keys()}
-        group_indices = {key: group_indices[key] for key in self._designs.keys()}
+            group_indices = {key: np.arange(len(sequences)) for key in designs.keys()}
 
         # Initialize the GA optimization object
-        seq_gao = SerialSequenceGA(designs=self._designs, filters=self._filters, **self._parameters)
+        seq_gao = serial_seq_ga(designs=designs, filters=filters, **self._parameters)
 
+        # Run the GA optimization
         if len(group_indices) == 1:
             indices = list(group_indices.values())[0]
-            results = seq_gao.run(polymers[indices], scores[indices], acquisition_function)
+            results = seq_gao.run(sequences[indices], scores[indices], acquisition_function)
         else:
             # Take the minimal amount of CPUs needed or available
             if self._n_process == -1:
@@ -655,7 +558,7 @@ class SequenceGA():
             # Dispatch all the scaffold accross different independent Sequence GA opt.
             ray.init(num_cpus=self._n_process, ignore_reinit_error=True)
 
-            refs = [parallel_ga.remote(seq_gao, polymers[seq_ids], scores[seq_ids], acquisition_function) 
+            refs = [parallel_ga.remote(seq_gao, sequences[seq_ids], scores[seq_ids], acquisition_function) 
                     for _, seq_ids in group_indices.items()]
 
             try:
@@ -671,7 +574,7 @@ class SequenceGA():
 
 class RandomGA():
     """
-    The RandomGA is for benchmark purpose only. It generates random polymers.
+    The RandomGA is for benchmark purpose only. It generates random polymers or biopolymers.
 
     """
 
@@ -683,9 +586,10 @@ class RandomGA():
         ----------
         design_protocol_filename : str, default: None
             Path of the YAML config file containing the design protocol 
-            (scaffolds + filters) used during polymers optimization. If not
+            (polymers | biopolymers + filters) used during GA optimization. If not
             provided, a default design protocol will be generated automatically
-            based on the polymers provided during the optimization, with no filters.
+            based on the polymers provided during the optimization, with no filters. For
+            bipolymers, a design protocol must be provided.
         n_gen : int, default : 1000
             Number of GA generation to run.
         n_children : int, default : 500
@@ -703,22 +607,22 @@ class RandomGA():
 
         Parameters
         ----------
-        polymers : array-like of str
-            Polymers in HELM format.
+        sequences : array-like of str
+            Sequences in HELM format (for polymers) or FASTA format (for bipolymers).
         scores : array-like of float or int
-            Score associated to each polymer.
+            Score associated to each sequence.
         acquisition_function : `AcquisitionFunction` (RandomImprovement)
-            The acquisition function that will be used to score the polymer.
+            The acquisition function that will be used to score the sequence.
 
         Returns
         -------
-        polymers : ndarray of shape (n_polymers,)
-            Polymers found during the GA search.
-        scores : ndarray of shape (n_polymers, n_scores)
-            Score for each polymer found.
+        sequences : ndarray of shape (n_sequences,)
+            Sequences found during the GA search.
+        scores : ndarray of shape (n_sequences, n_scores)
+            Score for each sequence found.
 
         """
-        polymers = np.asarray(polymers)
+        sequences = np.asarray(sequences)
         scores = np.asarray(scores)
 
         if scores.ndim == 1:
@@ -729,17 +633,42 @@ class RandomGA():
                 "if it contains a single sample.".format(scores)
             )
 
-        if self._design_protocol_filename is None:
-            design_protocol = generate_design_protocol_from_polymers(polymers)
-            self._designs = _load_polymer_design_from_config(design_protocol)
-        else:
-            self._designs = _load_polymer_design_from_config(self._design_protocol_filename)
-            self._filters = _load_filters_from_config(self._design_protocol_filename)
+        # Check input if they are polymers in HELM format or biopolymers in FASTA format
+        sequence_formats = guess_input_formats(sequences)
+        unique_sequence_formats = np.unique(sequence_formats)
 
-        # Generate (n_children * n_gen) polymers and random score them!
-        all_polymers = generate_random_polymers_from_designs(self._n_children * self._n_gen, self._designs)
+        msg_error = f'The input contains sequences in an unknown format (only HELM or FASTA allowed): \n'
+        for s in sequence_formats[sequence_formats == 'unknown']:
+            msg_error += f'  -  {s}\n'
+        assert 'unknown' not in unique_sequence_formats, msg_error
+
+        msg_error = f'The input contains sequences in a multiple formats: {unique_sequence_formats}'
+        assert len(unique_sequence_formats) == 1, msg_error
+
+        if unique_sequence_formats[0] == 'HELM':
+            if self._design_protocol_filename is None:
+                design_protocol = generate_design_protocol_from_polymers(polymers)
+                designs = _load_polymer_design_from_config(design_protocol)
+                filters = {}
+            else:
+                designs = _load_polymer_design_from_config(self._design_protocol_filename)
+                filters = _load_filters_from_config(self._design_protocol_filename)
+
+            # Generate (n_children * n_gen) polymers
+            all_polymers = generate_random_polymers_from_designs(self._n_children * self._n_gen, designs, filters)
+        else:
+            if self._parameters['design_protocol_filename'] is not None:
+                designs = _load_biopolymer_design_from_config(self._parameters['design_protocol_filename'])
+                filters = _load_filters_from_config(self._parameters['design_protocol_filename'])
+            else:
+                raise ValueError('A design protocol must be provided for biopolymers optimization.')
+            
+            # Generate (n_children * n_gen) biopolymers
+            all_polymers = generate_random_polymers_from_designs(self._n_children * self._n_gen, designs, filters)
+
         all_polymers = np.asarray(all_polymers)
 
+        # ... and random score them!
         all_scores = np.zeros(shape=(len(all_polymers), scores.shape[1]))
         for i in range(scores.shape[1]):
             all_scores[:, i] = acquisition_function.forward(all_polymers)

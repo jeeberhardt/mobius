@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Emulator
+# Mobius - Emulator
 #
 
 from abc import ABC, abstractmethod
@@ -34,7 +34,7 @@ class FindMe(_Emulator):
     def __init__(self, target_polymer, input_type='helm', kernel=None, input_transformer=None):
         """
         Initialize the FindMe `Emulator`.
-        
+
         Parameters
         ----------
         target_polymer : str
@@ -48,7 +48,6 @@ class FindMe(_Emulator):
             Function that transforms the input into data for the `kernel`.
             If not defined, the MAP4 fingerprint method will be used.
 
-        
         Raises
         ------
         AssertionError: If output format is not 'fasta' or 'helm'.
@@ -133,7 +132,7 @@ class LinearPeptideEmulator(_Emulator):
 
     """
     
-    def __init__(self, pssm_files):
+    def __init__(self, pssm_files, input_type='helm'):
         """
         Initialize the LinearPeptideEmulator `Emulator`.
         
@@ -141,10 +140,16 @@ class LinearPeptideEmulator(_Emulator):
         ----------
         pssm_files : str
             Path of the PSSM file to read.
+        input_type : str, default : 'helm'
+            Format of the input peptides, either FASTA or HELM.
 
         """
+        msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
+        assert input_type.lower() in ['fasta', 'helm'], msg_error % input_type
+
         self._pssm = {}
         self._intercept = {}
+        self._input_type = input_type.lower()
 
         if not isinstance(pssm_files, (list, tuple)):
             pssm_files = [pssm_files]
@@ -155,7 +160,7 @@ class LinearPeptideEmulator(_Emulator):
             self._pssm[len(pssm.columns)] = pssm
             self._intercept[len(pssm.columns)] = intercept
 
-    def score(self, peptides, input_type='helm'):
+    def score(self, peptides):
         """
         Score the input peptides using the previously defined PSSM.
         
@@ -163,8 +168,6 @@ class LinearPeptideEmulator(_Emulator):
         ----------
         peptides : list of str
             Peptides to score.
-        input_type : str, default : 'helm'
-            Format of the input peptides, either FASTA or HELM.
 
         Returns
         -------
@@ -176,13 +179,10 @@ class LinearPeptideEmulator(_Emulator):
         AssertionError: If output format is not 'fasta' or 'helm'.
 
         """
-        msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
-        assert input_type.lower() in ['fasta', 'helm'], msg_error % input_type
-
         # Score peptides using those PSSM
         scores = []
 
-        if input_type == 'helm':
+        if self._input_type == 'helm':
             peptides = convert_HELM_to_FASTA(peptides)
 
         for peptide in peptides:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Mobius - polymer planner
+# Mobius - Planner
 #
 
 from abc import ABC, abstractmethod
@@ -233,7 +233,7 @@ class Planner(_Planner):
 
         return suggested_polymers, predicted_values
 
-    def tell(self, polymers, values):
+    def tell(self, polymers, values, fitting=True):
         """
         Function to fit the surrogate model using data from past experiments.
 
@@ -243,6 +243,8 @@ class Planner(_Planner):
             Polymers/peptides in HELM format.
         values : array-like of shape (n_samples, n_objectives)
             Values associated to each polymer/peptide.
+        fitting : bool, default: True
+            Whether to fit the surrogate model or not.
 
         """
         self._results = None
@@ -258,9 +260,10 @@ class Planner(_Planner):
             )
 
         # We fit all the surrogate models
-        self._acq_fun.fit(self._polymers, self._values)
+        if fitting:
+            self._acq_fun.fit(self._polymers, self._values)
 
-    def recommand(self, polymers, values, batch_size=None):
+    def recommand(self, polymers, values, batch_size=None, fitting=True):
         """
         Function to suggest new polymers/peptides based on existing/previous data.
 
@@ -273,6 +276,8 @@ class Planner(_Planner):
         batch_size : int, default: None
             Total number of new polymers/peptides that will be returned. If not 
             provided, it will return all the polymers found during the optimization.
+        fitting : bool, default: True
+            Whether to fit the surrogate model or not.
 
         Returns
         -------
@@ -284,8 +289,7 @@ class Planner(_Planner):
             returned number will be equal to `batch_size`.
 
         """
-        self.tell(polymers, values)
+        self.tell(polymers, values, fitting)
         suggested_polymers, predicted_values = self.ask(batch_size)
 
         return suggested_polymers, predicted_values
-

@@ -7,6 +7,7 @@
 import json
 import os
 import random
+import re
 import yaml
 from collections import defaultdict
 from importlib import util
@@ -16,7 +17,6 @@ import pandas as pd
 import torch
 from rdkit import Chem
 from rdkit import RDLogger
-from scipy.spatial.distance import cdist
 
 
 def constrained_sum_sample_pos(n, total):
@@ -254,8 +254,49 @@ def get_device():
         device = torch.device("mps")
     else:
         device = torch.device("cpu")
-    
+
     return device
+
+
+def guess_input_formats(sequences):
+    """
+    Guess the format for each input sequence. This function recognizes
+    either the FASTA or the HELM format. If the format is not recognized,
+    it will be labeled as 'unknown'.
+
+    The regex used to recognize each format are the following:
+    - FASTA: ^[^{}\[\].:,;=\$\-\(\)\+\*\n]+$
+    - HELM: ^[^>\n]*\{[^>\n]+\}[^>\n]*\$\$\$\$(V2\.0)?$
+
+    Parameters
+    ----------
+    sequences : str, List of str, or ndarray of str
+        Input data to be checked.
+
+    Returns
+    -------
+    List of str
+        The format of each input sequence. Can be 'FASTA', 'HELM' or 'unknown'.
+
+    Notes
+    -----
+    The regex were obtained using chatGPT-3.5 after some trials and many errors. You are warned.
+
+    """
+    if not isinstance(sequences, (list, tuple, np.ndarray)):
+        sequences = [sequences]
+
+    formats = []
+
+    for sequence in sequences:
+        if re.match('^[^>\n]*\{[^>\n]+\}[^>\n]*\$\$\$\$(V2\.0)?$', sequence):
+            formats.append('HELM')
+        elif re.match('^[^{}\[\].:,;=\$\-\(\)\+\*\n]+$', sequence):
+            formats.append('FASTA')
+        else:
+            formats.append('unknown')
+
+    return np.asarray(formats)
 
 
 def generate_random_linear_polymers(n_polymers, polymers_lengths, monomers=None, output_format='helm'):
@@ -724,13 +765,13 @@ def generate_design_protocol_from_polymers(polymers):
             'monomers': {
                 'default': ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
             },
-            'scaffolds': []
+            'polymers': []
         }
     }
 
     # Get the scaffold of each polymer
     groups = group_polymers_by_scaffold(polymers)
-    design_protocol['design']['scaffolds'] = list(groups.keys())
+    design_protocol['design']['polymers'] = list(groups.keys())
 
     return design_protocol
 
@@ -941,7 +982,7 @@ def MolFromHELM(polymers, HELM_extra_library_filename=None):
         rdkit_polymer = Chem.RemoveHs(rdkit_polymer, params)
 
         rdkit_polymers.append(rdkit_polymer)
-    
+
     RDLogger.EnableLog('rdApp.warning')
 
     return rdkit_polymers
