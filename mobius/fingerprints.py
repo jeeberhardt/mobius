@@ -243,6 +243,14 @@ class MHFingerprint:
             Internal monomers can be overriden by providing a monomer with
             the same MonomerID.
 
+        Notes
+        -----
+        When using HELM format as input, the fingerprint of a same molecule 
+        can differ depending on the HELM parser used. The fingerprint of a 
+        molecule in FASTA format is guaranteed to be the same if the same 
+        molecule in HELM format uses `rdkit` for the parsing, but won't be 
+        necessarily with the internal HELM parser.
+
         """
         msg_error = 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
         assert input_type.lower() in ['fasta', 'helm', 'smiles'], msg_error
@@ -326,6 +334,14 @@ class MorganFingerprint:
             Extra monomers will be added to the internal monomers library. 
             Internal monomers can be overriden by providing a monomer with
             the same MonomerID.
+
+        Notes
+        -----
+        When using HELM format as input, the fingerprint of a same molecule 
+        can differ depending on the HELM parser used. The fingerprint of a 
+        molecule in FASTA format is guaranteed to be the same if the same 
+        molecule in HELM format uses `rdkit` for the parsing, but won't be 
+        necessarily with the internal HELM parser.
 
         """
         msg_error = 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
