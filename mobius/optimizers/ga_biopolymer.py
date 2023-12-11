@@ -86,7 +86,7 @@ class BioPolymerCrossover(Crossover):
                 cx_positions = np.sort(cx_positions)
 
                 for cx_position in cx_positions:
-                    mutant_biopolymer1[cx_position:], mutant_biopolymer1[cx_position:] = mutant_biopolymer2[cx_position:], mutant_biopolymer1[cx_position:]
+                    mutant_biopolymer1[cx_position:], mutant_biopolymer2[cx_position:] = mutant_biopolymer2[cx_position:], mutant_biopolymer1[cx_position:]
 
             Y[0,k,0] = ''.join(mutant_biopolymer1)
             Y[1,k,0] = ''.join(mutant_biopolymer2)
