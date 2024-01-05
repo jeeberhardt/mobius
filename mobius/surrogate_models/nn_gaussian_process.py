@@ -184,6 +184,8 @@ class GPLModel(_SurrogateModel):
             If instance is not fitted yet.
 
         """
+        X_test = np.asarray(X_test)
+        
         if self._model is None:
             msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
             raise RuntimeError(msg)
