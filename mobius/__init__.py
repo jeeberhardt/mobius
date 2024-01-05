@@ -15,7 +15,8 @@ from .descriptors import SimplePolymerDescriptors
 from .fingerprints import MHFingerprint, Map4Fingerprint, MorganFingerprint
 from .optimizers import SequenceGA, RandomGA
 from .optimizers import Pool
-from .surrogate_models import GPModel, DummyModel, RFModel
+from .surrogate_models import GPModel, GPLModel, DummyModel, RFModel
+from .embeddings import ProteinEmbedding
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning
 from .kernels import TanimotoSimilarityKernel, CosineSimilarityKernel
 from .emulators import LinearPeptideEmulator, FindMe
@@ -34,7 +35,8 @@ __all__ = ['VirtualTarget', 'ForceField',
            'LinearPeptideEmulator', 'FindMe',
            'Mobius',
            'Planner',
-           'GPModel', 'DummyModel', 'RFModel',
+           'GPModel', 'GPLModel', 'DummyModel', 'RFModel',
+           'ProteinEmbedding',
            'TanimotoSimilarityKernel', 'CosineSimilarityKernel',
            'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement', 'UpperConfidenceBound',
            'MHFingerprint', 'Map4Fingerprint', 'MorganFingerprint', 'SimplePolymerDescriptors',

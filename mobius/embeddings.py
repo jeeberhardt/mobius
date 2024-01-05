@@ -1,0 +1,229 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Mobius - Protein Embeddings
+#
+
+import re
+
+import esm
+import numpy as np
+import torch
+from transformers import AutoModel, AutoTokenizer
+
+from . import utils
+
+
+def select_parameters(model, parameters_names):
+    """
+    Selects parameters from a model based on their names.
+    
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model.
+    parameter_names : str or List of str (default=None)
+        Names of the parameters to select.
+
+    Returns
+    -------
+    selected_parameters : List of torch.nn.Parameter
+        Selected parameters.
+
+    """
+    selected_parameters = []
+
+    if not isinstance(parameters_names, (list, tuple, np.ndarray)):
+        parameters_names = np.array([parameters_names])
+
+    for name, param in model.named_parameters():
+        if any(re.search(pattern, name) for pattern in parameters_names):
+            selected_parameters.append(param)
+
+    return selected_parameters
+
+
+class ProteinEmbedding:
+
+    def __init__(self, model_name='esm1b_t33_650M_UR50S', embedding_type='avg', device=None, parameters_to_finetune=None):
+        """
+        Initializes the ProteinEmbedding class.
+
+        Parameters
+        ----------
+        model_name : str
+            Name of the model to use for embedding.
+        embedding_type : str
+            Type of embedding to use. Currently only 'avg' is supported.
+        device : str
+            Device to use for embedding.
+        parameters_to_finetune : str or List of str (default=None)
+            Name the parameters to finetune. Per default, no parameters are finetuned.
+
+        """
+        assert embedding_type in ['avg'], 'Only average embedding is supported at the moment.'
+        assert 'esm' in model_name, 'Only ESM models are supported at the moment.'
+
+        self._model_name = model_name
+        self._embedding_type = embedding_type
+        self._standard_amino_acids = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
+                                      'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+        self._parameters_to_finetune = parameters_to_finetune
+
+        if 'esm' in model_name:
+            self._model_type = 'esm'
+            self._model, alphabet = esm.pretrained.load_model_and_alphabet(model_name)
+            self._tokenizer = alphabet.get_batch_converter()
+            self._vocabulary_mask  = np.array([True if token in self._standard_amino_acids else False for token in alphabet.all_toks])
+        else:
+            self._model_type = 'other'
+            self._model = AutoModel.from_pretrained(model_name)
+            self._tokenizer = AutoTokenizer.from_pretrained(model_name)
+            self._vocabulary_mask = None
+
+        if device is not None:
+            self._model.to(device)
+
+        self.eval()
+
+    @property
+    def model(self):
+        """Returns the model."""
+        return self._model
+
+    def eval(self):
+        """Sets the model to evaluation mode."""
+        self._model.eval()
+
+    def train(self):
+        """Sets the model to training mode."""
+        self._model.train()
+
+        if self._parameters_to_finetune is not None:
+            for param in self._model.parameters():
+                param.requires_grad = False
+
+            parameters_to_finetune = select_parameters(self._model, self._parameters_to_finetune)
+
+            for param in parameters_to_finetune:
+                param.requires_grad = True
+    
+    def tokenize(self, sequences):
+        """
+        Tokenizes protein sequences.
+
+        Parameters
+        ----------
+        sequences : list
+            List of protein sequences to tokenize.
+
+        Returns
+        -------
+        tokens : torch.Tensor of shape (n_sequences, n_tokens)
+            Tokenized sequences.
+
+        """
+        sequence_formats = np.unique(utils.guess_input_formats(sequences))
+
+        assert sequence_formats[0] == 'FASTA' and sequence_formats.size == 1, f'Only FASTA format is supported ({sequence_formats}).'
+        assert np.unique([len(s) for s in sequences]).size == 1, f'All sequences must have the same length.'
+
+        if self._model_type == 'esm':
+            tokens = []
+
+            for seq in sequences:
+                _, _, token = self._tokenizer([('sequence', seq)])
+                tokens.append(token)
+
+            tokens = torch.cat(tokens)
+        else:
+            tokens = self._tokenizer(sequences, return_tensors='pt', padding=True, truncation=True)['input_ids']
+
+        return tokens
+
+    def embed(self, tokenized_sequences, return_probabilities=False):
+        """
+        Computes embedding vectors for protein sequences.
+
+        Parameters
+        ----------
+        tokenized_sequences : torch.Tensor of shape (n_sequences, n_tokens)
+            List of tokenized protein sequences to embed.
+        return_probabilities : bool
+            Whether to return the probabilities of amino acids at each position per sequence.
+
+        Returns
+        -------
+        embeddings : torch.Tensor of shape (n_sequences, n_features)
+            Embedding vectors for each sequence.
+        probabilities : torch.Tensor of shape (n_sequences, n_tokens, n_amino_acids)
+            Probabilities of amino acids at each position per sequence. If return_probabilities is True.
+
+        """
+        if self._model_type == 'esm':
+            results = self._model(tokenized_sequences, repr_layers=[33])
+            embeddings = results['representations'][33]
+        else:
+            results = self._model(tokenized_sequences)
+            embeddings = results.last_hidden_state
+
+        features = torch.mean(embeddings, 1)
+
+        if return_probabilities and self._vocabulary_mask is not None:
+            try:
+                logits = results['logits'][:, 1:len(tokenized_sequences[0]) + 1, self._vocabulary_mask]
+            except KeyError:
+                msg_error = f'Cannot return logits with model {self._model_name}. Please set return_probabilities to False.'
+                raise ValueError(msg_error)
+
+            softmax = torch.nn.Softmax(dim=-1)
+            probabilities = torch.tensor([softmax(l) for l in logits])
+
+            return features, probabilities
+
+        return features
+
+    def transform(self, sequences, return_probabilities=False):
+        """
+        Computes embedding vectors for protein sequences.
+
+        Parameters
+        ----------
+        sequences : list
+            List of protein sequences to embed.
+        return_probabilities : bool
+            Whether to return the probabilities of amino acids at each position per sequence.
+
+        Returns
+        -------
+        embeddings : ndarray of shape (n_sequences, n_features)
+            Embedding vectors for each sequence.
+        probabilities : ndarray of shape (n_sequences, n_tokens, n_amino_acids)
+            Probabilities of amino acids at each position per sequence. If return_probabilities is True.
+
+        """
+        tokenized_sequences = self.tokenize(sequences)
+        results = self.embed(tokenized_sequences, return_probabilities)
+
+        return results
+
+    @staticmethod
+    def get_entropies_from_probabilities(probabilities):
+        """
+        Computes entropy from probabilities.
+
+        Parameters
+        ----------
+        probabilities : torch.Tensor of shape (n_sequences, n_tokens, n_amino_acids)
+            Probabilities of amino acids at each position per sequence.
+
+        Returns
+        -------
+        entropy : ndarray of shape (n_sequences, n_tokens)
+            Entropy at each position per sequence.
+
+        """
+        entropy = -torch.sum(probabilities * torch.log(probabilities), dim=-1)
+        entropy = entropy.detach().numpy()
+
+        return entropy
