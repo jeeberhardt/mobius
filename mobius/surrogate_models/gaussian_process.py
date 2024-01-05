@@ -136,17 +136,19 @@ class GPModel(_SurrogateModel):
         if self._transformer is not None:
             # No gradient computation needed, in case trasnformer is a neural network
             with torch.no_grad():
-                self._X_train = self._transformer.transform(self._X_train)
+                X_train = self._transformer.transform(self._X_train)
+        else:
+            X_train = self._X_train.copy()
 
         # Convert to torch tensors if necessary
-        if not torch.is_tensor(self._X_train):
-            self._X_train = torch.from_numpy(self._X_train).float()
-        if not torch.is_tensor(self._y_train):
-            self._y_train = torch.from_numpy(self._y_train).float()
+        if not torch.is_tensor(X_train):
+            X_train = torch.from_numpy(X_train).float()
+        if not torch.is_tensor(y_train):
+            y_train = torch.from_numpy(y_train).float()
 
         noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
         self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
-        self._model = _ExactGPModel(self._X_train, self._y_train, self._likelihood, self._kernel)
+        self._model = _ExactGPModel(X_train, y_train, self._likelihood, self._kernel)
 
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self._likelihood, self._model)
