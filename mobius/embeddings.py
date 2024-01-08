@@ -45,7 +45,7 @@ def select_parameters(model, parameters_names):
 
 class ProteinEmbedding:
 
-    def __init__(self, model_name='esm1b_t33_650M_UR50S', embedding_type='avg', device=None, parameters_to_finetune=None):
+    def __init__(self, model_name='esm1b_t33_650M_UR50S', embedding_type='avg', parameters_to_finetune=None, device=None):
         """
         Initializes the ProteinEmbedding class.
 
@@ -59,10 +59,16 @@ class ProteinEmbedding:
             Device to use for embedding.
         parameters_to_finetune : str or List of str (default=None)
             Name the parameters to finetune. Per default, no parameters are finetuned.
+        device : str or torch.device, default : None
+            Device on which to run the model. Per default, the device is set to 
+            'cuda' if available, otherwise to 'cpu'.
 
         """
         assert embedding_type in ['avg'], 'Only average embedding is supported at the moment.'
         assert 'esm' in model_name, 'Only ESM models are supported at the moment.'
+
+        if device is None:
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self._model_name = model_name
         self._embedding_type = embedding_type
@@ -81,8 +87,8 @@ class ProteinEmbedding:
             self._tokenizer = AutoTokenizer.from_pretrained(model_name)
             self._vocabulary_mask = None
 
-        if device is not None:
-            self._model.to(device)
+        # Move model to device
+        self._model.to(device)
 
         self.eval()
 
@@ -170,12 +176,13 @@ class ProteinEmbedding:
         features = torch.mean(embeddings, 1)
 
         if return_probabilities and self._vocabulary_mask is not None:
-            try:
-                logits = results['logits'][:, 1:len(tokenized_sequences[0]) + 1, self._vocabulary_mask]
-            except KeyError:
-                msg_error = f'Cannot return logits with model {self._model_name}. Please set return_probabilities to False.'
+            if 'logits' not in results:
+                msg_error = f'Cannot return probabilities with model {self._model_name}. Please set return_probabilities to False.'
                 raise ValueError(msg_error)
 
+            # We keep only the probabilities of the standard amino acids, not the special tokens
+            logits = results['logits'][:, 1:len(tokenized_sequences[0]) + 1, self._vocabulary_mask]
+            # We apply softmax to get probabilities from logits
             softmax = torch.nn.Softmax(dim=-1)
             probabilities = torch.tensor([softmax(l) for l in logits])
 

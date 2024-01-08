@@ -10,6 +10,7 @@ import numpy as np
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
+from sklearn.exceptions import NotFittedError
 
 
 class _SurrogateModel(ABC):
@@ -84,13 +85,13 @@ class RFModel(_SurrogateModel):
 
         Raises
         ------
-        RuntimeError
+        NotFittedError
             If the model is not fitted yet.
 
         """
         if self._X_train is None:
-            msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
-            raise RuntimeError(msg)
+            msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise NotFittedError(msg)
 
         return self._X_train
 
@@ -106,13 +107,13 @@ class RFModel(_SurrogateModel):
 
         Raises
         ------
-        RuntimeError
+        NotFittedError
             If the model is not fitted yet.
 
         """
         if self._y_train is None:
-            msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
-            raise RuntimeError(msg)
+            msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise NotFittedError(msg)
 
         return self._y_train
 
@@ -157,8 +158,8 @@ class RFModel(_SurrogateModel):
 
         Raises
         ------
-        RuntimeError
-            If the instance is not fitted yet.
+        NotFittedError
+            If the model instance is not fitted yet.
 
         Notes
         -----
@@ -168,8 +169,8 @@ class RFModel(_SurrogateModel):
 
         """
         if self._model is None:
-            msg = 'This RFModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
-            raise RuntimeError(msg)
+            msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise NotFittedError(msg)
 
         if self._input_transformer is not None:
             # Transform input data

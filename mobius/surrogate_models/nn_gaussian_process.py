@@ -12,6 +12,7 @@ import numpy as np
 import torch
 from botorch.fit import fit_gpytorch_model
 from sklearn.metrics import r2_score
+from sklearn.exceptions import NotFittedError
 
 
 class _SurrogateModel(ABC):
@@ -66,7 +67,7 @@ class GPLModel(_SurrogateModel):
 
     """
 
-    def __init__(self, kernel, transformer, finetune_transformer=False):
+    def __init__(self, kernel, transformer, finetune_transformer=False, device=None):
         """
         Initializes the Gaussian Process Regressor (GPR surrogate model with Language model.
 
@@ -78,11 +79,18 @@ class GPLModel(_SurrogateModel):
             Language Model that transforms the input into data exploitable by the GP model.
         fit_transformer : bool, default : False
             Whether to finetune the Language Model during GP fitting.
+        device : str or torch.device, default : None
+            Device on which to run the GP model. Per default, the device is set to 
+            'cuda' if available, otherwise to 'cpu'.
 
         """
+        if device is None:
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         self._kernel = kernel
         self._transformer = transformer
         self._finetune_transformer = finetune_transformer
+        self._device = device
         self._likelihood = None
         self._model = None
         self._X_train = None
@@ -95,13 +103,13 @@ class GPLModel(_SurrogateModel):
 
         Raises
         ------
-        RuntimeError
-            If the GPModel instance is not fitted yet.
+        NotFittedError
+            If the model instance is not fitted yet.
 
         """
         if self._X_train is None:
-            msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
-            raise RuntimeError(msg)
+            msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise NotFittedError(msg)
 
         return self._X_train
 
@@ -112,13 +120,13 @@ class GPLModel(_SurrogateModel):
 
         Raises
         ------
-        RuntimeError
-            If the GPModel instance is not fitted yet.
+        NotFittedError
+            If the model instance is not fitted yet.
 
         """
         if self._y_train is None:
-            msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
-            raise RuntimeError(msg)
+            msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise NotFittedError(msg)
 
         return self._y_train
 
@@ -147,9 +155,17 @@ class GPLModel(_SurrogateModel):
         if not torch.is_tensor(self._y_train):
             y_train = torch.from_numpy(self._y_train).float()
 
+        # Move tensors to device
+        X_train.to(self._device)
+        y_train.to(self._device)
+
         noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
         self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
         self._model = _ExactGPLModel(X_train, y_train, self._likelihood, self._kernel, self._transformer)
+
+        # Move model and likelihood to device
+        self._model.to(self._device)
+        self._likelihood.to(self._device)
 
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self._likelihood, self._model)
@@ -180,15 +196,15 @@ class GPLModel(_SurrogateModel):
 
         Raises
         ------
-        RuntimeError
-            If instance is not fitted yet.
+        NotFittedError
+            If the model instance is not fitted yet.
 
         """
         X_test = np.asarray(X_test)
         
         if self._model is None:
-            msg = 'This GPModel instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
-            raise RuntimeError(msg)
+            msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
+            raise NotFittedError(msg)
 
         # Set model in evaluation mode
         self._model.eval()
@@ -200,6 +216,9 @@ class GPLModel(_SurrogateModel):
 
         if not torch.is_tensor(X_test):
             X_test = torch.from_numpy(np.asarray(X_test)).float()
+
+        # Move tensors to device
+        X_test.to(self._device)
 
         # Make predictions by feeding model through likelihood
         # Set fast_pred_var state to False, otherwise cannot pickle GPModel
