@@ -26,7 +26,7 @@ Here is an example of a design protocol:
         AROMATIC: [F, H, W, Y]
         POS_CHARGED: [K, R]
         NEG_CHARGED: [D, E]
-      scaffolds:
+      polymers:
         - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
             PEPTIDE1:
               1: [AROMATIC, NEG_CHARGED]
@@ -87,7 +87,7 @@ be defined in the following way:
   design:
     monomers:
       default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
-    scaffolds:
+    polymers:
       - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0
 
 In the provided example, the second position is predetermined to be a methionine (`M`) throughout the 
@@ -100,7 +100,7 @@ you can define multiple scaffolds in the following manner:
   design:
     monomers:
       default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
-    scaffolds:
+    polymers:
       - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0
       - PEPTIDE1{X.M.X.X.X.X.X.X.X.X}$$$$V2.0
 
@@ -114,7 +114,7 @@ in the subsequent example:
     monomers:
       default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
       NEG_CHARGED: [D, E]
-    scaffolds:
+    polymers:
       - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
         PEPTIDE1:
           4: NEG_CHARGED
@@ -142,7 +142,7 @@ demonstrated in the initial example. Here is a corresponding illustration:
       default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
       NEG_CHARGED: [D, E]
       POS_CHARGED: [K, R]
-    scaffolds:
+    polymers:
       - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
         PEPTIDE1:
           4: [NEG_CHARGED, POS_CHARGED, H]
@@ -159,7 +159,7 @@ you can employ the `PeptideSolubilityFilter` as shown in the following example:
   design:
     monomers:
       default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
-    scaffolds:
+    polymers:
       - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0
   filters:
     - class_path: mobius.PeptideSolubilityFilter
@@ -180,7 +180,7 @@ If you want to use multiple filters, you can define them as shown in the followi
   design:
     monomers:
       default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
-    scaffolds:
+    polymers:
       - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0
   filters:
     - class_path: mobius.PeptideSolubilityFilter
@@ -234,7 +234,7 @@ example:
   design:
     monomers:
       default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
-    scaffolds:
+    polymers:
       - PEPTIDE1{X.X.X.X.X.X.X.X.X}$$$$V2.0
   filters:
     - class_path: myfiler.RemovePeptidesWithRRmotif

@@ -109,7 +109,7 @@ acid or one from the special collection.
         default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
         special: [Me_dL, d1-Nal, Nva, dL, Me_dA]
         nter : [ac]
-      scaffolds:
+      polymers:
         - PEPTIDE1{X.X.X.T.X.X.X.X.X.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0:
             PEPTIDE1:
               1: [default, nter]

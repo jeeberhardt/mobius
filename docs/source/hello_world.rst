@@ -120,7 +120,7 @@ using the acquisition function / surrogate model initialized earlier.
         AROMATIC: [F, H, W, Y]
         POS_CHARGED: [K, R]
         NEG_CHARGED: [D, E]
-      scaffolds:
+      polymers:
         - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
             PEPTIDE1:
               1: [AROMATIC, NEG_CHARGED]
@@ -150,8 +150,8 @@ Run three Design-Make-Test cycles, iterating through the following steps:
 
 .. code-block:: python
 
-    peptides = list(seed_library)[:]
-    pic50_scores = list(pic50_seed_library)[:]
+    peptides = seed_library.copy()
+    pic50_scores = pic50_seed_library.copy()
 
     for i in range(3):
         suggested_peptides, _ = ps.recommand(peptides, pic50_scores.reshape(-1, 1), batch_size=96)
@@ -163,7 +163,7 @@ Run three Design-Make-Test cycles, iterating through the following steps:
         # purposes only and should be replaced with actual lab experiments.
         pic50_suggested_peptides = lpe.score(suggested_peptides)
         
-        peptides.extend(list(suggested_peptides))
+        peptides = np.concatenate([peptides, suggested_peptides])
         pic50_scores = np.concatenate((pic50_scores, pic50_suggested_peptides), axis=0)
         
         best_seq = peptides[np.argmin(pic50_scores)]
