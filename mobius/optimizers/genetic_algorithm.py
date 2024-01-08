@@ -61,9 +61,9 @@ def _load_polymer_design_from_config(config):
 
     try:
         design = config['design']
-    except:
-        # No design protocol defined
-        return designs
+    except KeyError:
+        msg_error = 'The `design` root key is missing in the input design protocol.'
+        raise KeyError(msg_error)
 
     try:
         monomers_collections = design['monomers']
@@ -77,12 +77,12 @@ def _load_polymer_design_from_config(config):
         default_monomers = design['monomers']['default']
     except:
         pass
-
+    
     try:
         polymer_designs = design['polymers']
-    except:
-        # No polymer design protocol defined
-        return designs
+    except KeyError:
+        msg_error = 'The `polymers` key is missing in the input design protocol.'
+        raise KeyError(msg_error)
 
     for polymer_design in polymer_designs:
         try:
@@ -159,9 +159,9 @@ def _load_biopolymer_design_from_config(config):
 
     try:
         design = config['design']
-    except:
-        # No design protocol defined
-        return designs
+    except KeyError:
+        msg_error = 'The `design` root key is missing in the input design protocol.'
+        raise KeyError(msg_error)
 
     try:
         monomers_collections = design['monomers']
@@ -178,9 +178,9 @@ def _load_biopolymer_design_from_config(config):
 
     try:
         biopolymer_designs = design['biopolymers']
-    except:
-        # No biopolymer design protocol defined
-        return designs
+    except KeyError:
+        msg_error = 'The `biopolymers` key is missing in the input design protocol.'
+        raise KeyError(msg_error)
 
     assert len(biopolymer_designs) == 1, 'Only one biopolymer per design protocol is allowed (for now).'
 
