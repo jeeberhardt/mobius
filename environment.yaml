@@ -5,6 +5,7 @@ channels:
 dependencies:
   - python <=3.10
   - botorch
+  - fair-esm
   - gpytorch
   - matplotlib
   - numba 
@@ -18,6 +19,7 @@ dependencies:
   - scipy
   - sphinx == 6.2.1
   - sphinx_rtd_theme
+  - transformers
   - pytorch
   - pip:
     - mhfp
