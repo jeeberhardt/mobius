@@ -1,25 +1,24 @@
 # Mobius
 
-A python package for optimizing peptide sequences using Bayesian optimization (BO) for multiple objectives.
+A python package for optimizing peptide sequences using Bayesian optimization (BO) for single/multiple objectives.
 
 ## Installation
 
-I highly recommand you to install Mamba (https://github.com/conda-forge/miniforge#mambaforge) if you want a clean python environnment. To install everything properly with `mamba`, you just have to do this:
-
+First, you need to download the python package:
 ```bash
+git clone https://git.scicore.unibas.ch/schwede/mobius.git@v0.5
+```
+
+Now you can set up the environment using `mamba`. For more instructions on how to install `mamba`, see: https://github.com/conda-forge/miniforge#miniforge3 
+```bash
+cd mobius
 mamba env create -f environment.yaml -n mobius
 mamba activate mobius
 ```
 
-We can now install the `mobius` package from the PyPI index:
+Once you created the environment, you can install the package using the following command:
 ```bash
-# This is not a mistake, the package is called moebius on PyPI
-pip install moebius
-```
-
-You can also get it directly from the source code:
-```bash
-pip install git+https://git.scicore.unibas.ch/schwede/mobius.git@v0.4
+pip install -e .
 ```
 
 ## Quick tutorial
