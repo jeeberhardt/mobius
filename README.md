@@ -98,7 +98,7 @@ design:
     AROMATIC: [F, H, W, Y]
     POS_CHARGED: [K, R]
     NEG_CHARGED: [D, E]
-  scaffolds:
+  polymers:
     - PEPTIDE1{X.M.X.X.X.X.X.X.X}$$$$V2.0:
         PEPTIDE1:
           1: [AROMATIC, NEG_CHARGED]
@@ -122,8 +122,8 @@ planner = Planner(acq_fun, optimizer)
 
 Now it is time to run the optimization!!
 ```python
-peptides = list(seed_library)[:]
-pic50_scores = list(pic50_seed_library)[:]
+peptides = seed_library.copy()
+pic50_scores = pic50_seed_library.copy()
 
 # Here we are going to do 3 DMT cycles
 for i in range(3):
@@ -140,7 +140,7 @@ for i in range(3):
     pic50_suggested_peptides = np.column_stack((pic50_1_suggested_peptides, pic50_2_suggested_peptides))
     
     # Add all the new data
-    peptides.extend(list(suggested_peptides))
+    peptides = np.concatenate([peptides, suggested_peptides])
     pic50_scores = np.concatenate((pic50_scores, pic50_suggested_peptides), axis=0)
 ```
 
