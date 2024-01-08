@@ -83,6 +83,8 @@ def _load_polymer_design_from_config(config):
     except KeyError:
         msg_error = 'The `polymers` key is missing in the input design protocol.'
         raise KeyError(msg_error)
+    
+    assert len(polymer_designs) > 0, 'No polymer design provided. You need to define at least one.'
 
     for polymer_design in polymer_designs:
         try:
@@ -182,6 +184,7 @@ def _load_biopolymer_design_from_config(config):
         msg_error = 'The `biopolymers` key is missing in the input design protocol.'
         raise KeyError(msg_error)
 
+    assert len(biopolymer_designs) > 0, 'No biopolymer design provided. You need to define at least one.'
     assert len(biopolymer_designs) == 1, 'Only one biopolymer per design protocol is allowed (for now).'
 
     for biopolymer_design in biopolymer_designs:
