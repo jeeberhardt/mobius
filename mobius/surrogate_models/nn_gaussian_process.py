@@ -1,52 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Mobius - Gaussian Process Regressor with Language model
+# Mobius - Gaussian Process Regressor with Large Language model
 #
-
-from abc import ABC, abstractmethod
 
 import botorch
 import gpytorch
 import numpy as np
 import torch
 from botorch.fit import fit_gpytorch_model
-from sklearn.metrics import r2_score
 from sklearn.exceptions import NotFittedError
 
-
-class _SurrogateModel(ABC):
-
-    @property
-    @abstractmethod
-    def X_train(self):
-        pass
-
-    @property
-    @abstractmethod
-    def y_train(self):
-        pass
-
-    @abstractmethod
-    def fit(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def predict(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def score(self):
-        raise NotImplementedError()
+from .surrogate_model import _SurrogateModel
 
 
 # We will use the simplest form of GP model, exact inference
-class _ExactGPLModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchModel):
+class _ExactGPLLModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchModel):
     # to inform GPyTorchModel API
     _num_outputs = 1
 
     def __init__(self, train_x, train_y, likelihood, kernel, transformer):
-        super(_ExactGPLModel, self).__init__(train_x, train_y, likelihood)
+        super(_ExactGPLLModel, self).__init__(train_x, train_y, likelihood)
         self.mean_module = gpytorch.means.ConstantMean()
         self.covar_module = gpytorch.kernels.ScaleKernel(kernel)
         self.transformer = transformer
@@ -95,40 +69,6 @@ class GPLLModel(_SurrogateModel):
         self._model = None
         self._X_train = None
         self._y_train = None
-
-    @property
-    def X_train(self):
-        """
-        Returns the training dataset after transformation.
-
-        Raises
-        ------
-        NotFittedError
-            If the model instance is not fitted yet.
-
-        """
-        if self._X_train is None:
-            msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
-            raise NotFittedError(msg)
-
-        return self._X_train
-
-    @property
-    def y_train(self):
-        """
-        Returns the target values.
-
-        Raises
-        ------
-        NotFittedError
-            If the model instance is not fitted yet.
-
-        """
-        if self._y_train is None:
-            msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
-            raise NotFittedError(msg)
-
-        return self._y_train
 
     def fit(self, X_train, y_train, y_noise=None):
         """
@@ -182,7 +122,7 @@ class GPLLModel(_SurrogateModel):
         else:
             self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
 
-        self._model = _ExactGPLModel(X_train, y_train, self._likelihood, self._kernel, self._transformer)
+        self._model = _ExactGPLLModel(X_train, y_train, self._likelihood, self._kernel, self._transformer)
 
         # Move model and likelihood to device
         self._model.to(self._device)
@@ -260,23 +200,3 @@ class GPLLModel(_SurrogateModel):
         sigma = predictions.stddev.detach().numpy()
 
         return mu, sigma
-
-    def score(self, X_test, y_test):
-        """
-        Returns the coefficient of determination R^2.
-
-        Parameters
-        ----------
-        X_test : array-like of shape (n_samples, n_features)
-            Query points where the GPR is evaluated.
-        y_test : array-like of shape (n_samples,)
-            True values of `X_test`.
-
-        Returns
-        -------
-        score : float
-            Coefficient of determination R^2.
-
-        """
-        mu, _ = self.predict(X_test)
-        return r2_score(y_test, mu)

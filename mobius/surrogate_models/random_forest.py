@@ -4,38 +4,11 @@
 # Mobius - Random Forest Regressor
 #
 
-from abc import ABC, abstractmethod
-
 import numpy as np
-
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import r2_score
 from sklearn.exceptions import NotFittedError
 
-
-class _SurrogateModel(ABC):
-
-    @property
-    @abstractmethod
-    def X_train(self):
-        pass
-
-    @property
-    @abstractmethod
-    def y_train(self):
-        pass
-
-    @abstractmethod
-    def fit(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def predict(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def score(self):
-        raise NotImplementedError()
+from .surrogate_model import _SurrogateModel
 
 
 class RFModel(_SurrogateModel):
@@ -72,50 +45,6 @@ class RFModel(_SurrogateModel):
         self._kwargs.setdefault('oob_score', True)
         self._kwargs.setdefault('bootstrap', True)
         self._kwargs.setdefault('max_samples', None)
-
-    @property
-    def X_train(self):
-        """
-        Returns the training dataset obtained after transformation.
-
-        Returns
-        -------
-        X_train : array-like of shape (n_samples, n_features)
-            The training dataset obtained after transformation.
-
-        Raises
-        ------
-        NotFittedError
-            If the model is not fitted yet.
-
-        """
-        if self._X_train is None:
-            msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
-            raise NotFittedError(msg)
-
-        return self._X_train
-
-    @property
-    def y_train(self):
-        """
-        Returns the target values.
-
-        Returns
-        -------
-        y_train : array-like of shape (n_smaples, )
-            The target values.
-
-        Raises
-        ------
-        NotFittedError
-            If the model is not fitted yet.
-
-        """
-        if self._y_train is None:
-            msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
-            raise NotFittedError(msg)
-
-        return self._y_train
 
     def fit(self, X_train, y_train):
         """
@@ -181,28 +110,3 @@ class RFModel(_SurrogateModel):
         sigma = np.std(estimations, axis=0)
 
         return mu, sigma
-
-    def score(self, X_test, y_test):
-        """
-        Returns the coefficient of determination :math:`R^2`.
-
-        Parameters
-        ----------
-        X_test : array-like of shape (n_samples, n_features)
-            Query points where the GPR is evaluated.
-        y_test : array-like of shape (n_samples,)
-            True values of `X_test`.
-
-        Returns
-        -------
-        score : float
-            Coefficient of determination :math:`R^2`.
-
-        Raises
-        ------
-        RuntimeError
-            If the instance is not fitted yet.
-
-        """
-        mu, _ = self.predict(X_test)
-        return r2_score(y_test, mu)
