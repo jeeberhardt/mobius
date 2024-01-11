@@ -62,7 +62,7 @@ class GPModel(_SurrogateModel):
 
     """
 
-    def __init__(self, kernel, input_transformer=None, device=None):
+    def __init__(self, kernel, input_transformer=None, device=None, missing_values=False):
         """
         Initializes the Gaussian Process Regressor (GPR) surrogate model.
 
@@ -77,6 +77,8 @@ class GPModel(_SurrogateModel):
         device : str or torch.device, default : None
             Device on which to run the model. Per default, the device is set to 
             'cuda' if available, otherwise to 'cpu'.
+        missing_values : bool, default : False
+            Whether we support missing values in the input data.
 
         """
         if device is None:
@@ -85,10 +87,12 @@ class GPModel(_SurrogateModel):
         self._kernel = kernel
         self._transformer = input_transformer
         self._device = device
+        self._missing_values = missing_values
         self._likelihood = None
         self._model = None
         self._X_train = None
         self._y_train = None
+        self._y_noise = None
 
     @property
     def X_train(self):
@@ -124,7 +128,7 @@ class GPModel(_SurrogateModel):
 
         return self._y_train
 
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, y_noise=None):
         """
         Fits the Gaussian Process Regressor (GPR) model.
 
@@ -134,11 +138,17 @@ class GPModel(_SurrogateModel):
             Input training dataset.
         y_train : array-like of shape (n_samples,)
             Target values.
+        y_noise : array-like of shape (n_samples,), default : None
+            Noise value associated to each target value (y_train), and expressed as 
+            standard deviation (sigma). Values are squared internally to obtain the variance.
 
         """
         # Make sure that inputs are numpy arrays, keep a persistant copy
         self._X_train = np.asarray(X_train).copy()
         self._y_train = np.asarray(y_train).copy()
+        if y_noise is not None:
+            self._y_noise = np.asarray(y_noise).copy()
+            self._y_noise = self._y_noise**2
 
          # Transform input data if necessary
         if self._transformer is not None:
@@ -146,20 +156,30 @@ class GPModel(_SurrogateModel):
             with torch.no_grad():
                 X_train = self._transformer.transform(self._X_train)
         else:
-            X_train = self._X_train.copy()
+            X_train = self._X_train
 
-        # Convert to torch tensors if necessary
+        # Convert to torch tensors (if necessary)
         if not torch.is_tensor(X_train):
             X_train = torch.from_numpy(X_train).float()
-        if not torch.is_tensor(y_train):
-            y_train = torch.from_numpy(y_train).float()
+        y_train = torch.from_numpy(self._y_train).float()
+        if y_noise is not None:
+            y_noise = torch.from_numpy(self._y_noise).float()
 
         # Move tensors to device
         X_train.to(self._device)
         y_train.to(self._device)
+        if y_noise is not None:
+            y_noise.to(self._device)
 
         noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
-        self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
+
+        if self._missing_values:
+            self._likelihood = gpytorch.likelihoods.GaussianLikelihoodWithMissingObs(noise_prior=noise_prior)
+        elif y_noise is not None:
+            self._likelihood = gpytorch.likelihoods.FixedNoiseGaussianLikelihood(noise=y_noise, learn_additional_noise=True)
+        else:
+            self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
+
         self._model = _ExactGPModel(X_train, y_train, self._likelihood, self._kernel)
 
         # Move model and likelihood to device
@@ -176,7 +196,7 @@ class GPModel(_SurrogateModel):
         # Train model!
         fit_gpytorch_model(mll)
 
-    def predict(self, X_test):
+    def predict(self, X_test, y_noise=None):
         """
         Predicts using the Gaussian Process Regressor (GPR) model.
 
@@ -184,6 +204,9 @@ class GPModel(_SurrogateModel):
         ----------
         X_test : array-like of shape (n_samples, n_features)
             Query points where the GPR is evaluated.
+        y_noise : array-like of shape (n_samples,), default : None
+            Noise value associated to each query point (X_test), and expressed as 
+            standard deviation (sigma). Values are squared internally to obtain the variance.
 
         Returns
         -------
@@ -199,6 +222,9 @@ class GPModel(_SurrogateModel):
 
         """
         X_test = np.asarray(X_test)
+        if y_noise is not None:
+            y_noise = np.asarray(y_noise)
+            y_noise = y_noise**2
 
         if self._model is None:
             msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
@@ -216,14 +242,18 @@ class GPModel(_SurrogateModel):
 
         if not torch.is_tensor(X_test):
             X_test = torch.from_numpy(np.asarray(X_test)).float()
+        if y_noise is not None:
+            y_noise = torch.from_numpy(y_noise).float()
         
         # Move tensors to device
         X_test.to(self._device)
+        if y_noise is not None:
+            y_noise.to(self._device)
 
         # Make predictions by feeding model through likelihood
         # Set fast_pred_var state to False, otherwise cannot pickle GPModel
         with torch.no_grad(), gpytorch.settings.fast_pred_var(state=False):
-            predictions = self._likelihood(self._model(X_test))
+            predictions = self._likelihood(self._model(X_test), noise=y_noise)
 
         mu = predictions.mean.detach().numpy()
         sigma = predictions.stddev.detach().numpy()

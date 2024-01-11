@@ -130,7 +130,7 @@ class GPLModel(_SurrogateModel):
 
         return self._y_train
 
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, y_noise=None):
         """
         Fits the Gaussian Process Regressor (GPR) model.
 
@@ -140,11 +140,17 @@ class GPLModel(_SurrogateModel):
             Input training dataset.
         y_train : array-like of shape (n_samples,)
             Target values.
+        y_noise : array-like of shape (n_samples,), default : None
+            Noise value associated to each target value (y_train), and expressed as 
+            standard deviation (sigma). Values are squared internally to obtain the variance.
 
         """
-        # Save a copy of the training data and make sure that inputs are numpy arrays
+        # Make sure that inputs are numpy arrays, keep a persistant copy
         self._X_train = np.asarray(X_train).copy()
         self._y_train = np.asarray(y_train).copy()
+        if y_noise is not None:
+            self._y_noise = np.asarray(y_noise).copy()
+            self._y_noise = self._y_noise**2
 
         # Tokenize sequences
         X_train = self._transformer.tokenize(self._X_train)
@@ -152,15 +158,23 @@ class GPLModel(_SurrogateModel):
         # Convert to torch tensors if necessary
         if not torch.is_tensor(X_train):
             X_train = torch.from_numpy(X_train).float()
-        if not torch.is_tensor(self._y_train):
-            y_train = torch.from_numpy(self._y_train).float()
+        y_train = torch.from_numpy(self._y_train).float()
+        if y_noise is not None:
+            y_noise = torch.from_numpy(self._y_noise).float()
 
         # Move tensors to device
         X_train.to(self._device)
         y_train.to(self._device)
+        if y_noise is not None:
+            y_noise.to(self._device)
 
         noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
-        self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
+
+        if self._noise is not None:
+            self._likelihood = gpytorch.likelihoods.FixedNoiseGaussianLikelihood(noise=y_noise, learn_additional_noise=True)
+        else:
+            self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
+
         self._model = _ExactGPLModel(X_train, y_train, self._likelihood, self._kernel, self._transformer)
 
         # Move model and likelihood to device
@@ -178,7 +192,7 @@ class GPLModel(_SurrogateModel):
         # Train model!
         fit_gpytorch_model(mll)
 
-    def predict(self, X_test):
+    def predict(self, X_test, y_noise=None):
         """
         Predicts using the Gaussian Process Regressor (GPR) model.
 
@@ -186,6 +200,9 @@ class GPLModel(_SurrogateModel):
         ----------
         X_test : array-like of shape (n_samples, n_features)
             Query points where the GPR is evaluated.
+        y_noise : array-like of shape (n_samples,), default : None
+            Noise value associated to each query point (X_test), and expressed as 
+            standard deviation (sigma). Values are squared internally to obtain the variance.
 
         Returns
         -------
@@ -201,6 +218,9 @@ class GPLModel(_SurrogateModel):
 
         """
         X_test = np.asarray(X_test)
+        if y_noise is not None:
+            y_noise = np.asarray(y_noise)
+            y_noise = y_noise**2
         
         if self._model is None:
             msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
@@ -216,14 +236,18 @@ class GPLModel(_SurrogateModel):
 
         if not torch.is_tensor(X_test):
             X_test = torch.from_numpy(np.asarray(X_test)).float()
+        if y_noise is not None:
+            y_noise = torch.from_numpy(y_noise).float()
 
         # Move tensors to device
         X_test.to(self._device)
+        if y_noise is not None:
+            y_noise.to(self._device)
 
         # Make predictions by feeding model through likelihood
         # Set fast_pred_var state to False, otherwise cannot pickle GPModel
         with torch.no_grad(), gpytorch.settings.fast_pred_var(state=False):
-            predictions = self._likelihood(self._model(X_test))
+            predictions = self._likelihood(self._model(X_test), noise=y_noise)
 
         mu = predictions.mean.detach().numpy()
         sigma = predictions.stddev.detach().numpy()
