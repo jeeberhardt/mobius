@@ -20,15 +20,36 @@ def parallel_acq(acquisition_function, X_test):
 
 class _AcquisitionFunction(ABC):
 
-    @property
-    @abstractmethod
-    def surrogate_model(self):
-        pass
+    def __init__(self, surrogate_models, maximize=False):
+        """
+        Acquisition function.
+
+        Parameters
+        ----------
+        surrogate_models: `_SurrogateModel` or list of `_SurrogateModel`
+            The surrogate model(s) to be used by the acquisition function.
+        maximize : bool or list of bool, default : False
+            Indicates whether the goal(s) is(are) to be maximised or minimized.
+
+        """
+        if not isinstance(surrogate_models, (list, tuple, np.ndarray)):
+            surrogate_models = [surrogate_models]
+        if not isinstance(maximize, (list, tuple, np.ndarray)):
+            maximize = [maximize]
+        
+        msg_error = "The number of surrogate models and maximize flags must be the same."
+        assert len(surrogate_models) == len(maximize), msg_error
+
+        self._surrogate_models = surrogate_models
+        self._maximize = np.asarray(maximize)
 
     @property
-    @abstractmethod
+    def surrogate_models(self):
+        return self._surrogate_models
+
+    @property
     def maximize(self):
-        pass
+        return self._maximize
 
     @property
     @abstractmethod
@@ -36,9 +57,8 @@ class _AcquisitionFunction(ABC):
         pass
 
     @property
-    @abstractmethod
     def number_of_objectives(self):
-        pass
+        return len(self._maximize)
 
     def fit(self, X_train, y_train, y_noise=None):
         """
@@ -131,27 +151,15 @@ class RandomImprovement(_AcquisitionFunction):
         msg_error += "number of low/high bounds."
         assert len(maximize) == len(low), msg_error
 
-        self._surrogate_model = DummyModel()
+        self._surrogate_models = DummyModel()
         self._low = np.asarray(low)
         self._high = np.asarray(high)
         self._maximize = np.asarray(maximize)
 
     @property
-    def surrogate_model(self):
-        return self._surrogate_model
-
-    @property
-    def maximize(self):
-        return self._maximize
-
-    @property
     def scaling_factors(self):
         return -1 * np.ones(len(self._maximize))
-    
-    @property
-    def number_of_objectives(self):
-        return len(self._maximize)
-    
+
     def fit(self, X_train, y_train, y_noise):
         """
         Fit the surrogate model(s) using existing data.
@@ -219,32 +227,11 @@ class Greedy(_AcquisitionFunction):
             Indicates whether the goal(s) is(are) to be maximised or minimized.
 
         """
-        if not isinstance(surrogate_models, (list, tuple, np.ndarray)):
-            surrogate_models = [surrogate_models]
-        if not isinstance(maximize, (list, tuple, np.ndarray)):
-            maximize = [maximize]
-        
-        msg_error = "The number of surrogate models and maximize flags must be the same."
-        assert len(surrogate_models) == len(maximize), msg_error
-
-        self._surrogate_models = surrogate_models
-        self._maximize = np.asarray(maximize)
-
-    @property
-    def surrogate_model(self):
-        return self._surrogate_models
-
-    @property
-    def maximize(self):
-        return self._maximize
+        super().__init__(surrogate_models, maximize)
 
     @property
     def scaling_factors(self):
         return (-1) ** (self._maximize)
-    
-    @property
-    def number_of_objectives(self):
-        return len(self._surrogate_models)
 
     def forward(self, X_test):
         """
@@ -308,34 +295,13 @@ class ExpectedImprovement(_AcquisitionFunction):
         https://github.com/thuijskens/bayesian-optimization/blob/master/python/gp.py
 
         """
-        if not isinstance(surrogate_models, (list, tuple, np.ndarray)):
-            surrogate_models = [surrogate_models]
-        if not isinstance(maximize, (list, tuple, np.ndarray)):
-            maximize = [maximize]
-        
-        msg_error = "The number of surrogate models and maximize flags must be the same."
-        assert len(surrogate_models) == len(maximize), msg_error
-
-        self._surrogate_models = surrogate_models
-        self._maximize = np.asarray(maximize)
+        super().__init__(surrogate_models, maximize)
         self._eps = eps
         self._xi = xi
 
     @property
-    def surrogate_model(self):
-        return self._surrogate_models
-
-    @property
-    def maximize(self):
-        return self._maximize
-
-    @property
     def scaling_factors(self):
         return -1 * np.ones(len(self._maximize))
-    
-    @property
-    def number_of_objectives(self):
-        return len(self._surrogate_models)
 
     def forward(self, X_test):
         """
@@ -410,33 +376,12 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
             Small number to avoid numerical instability.
 
         """
-        if not isinstance(surrogate_models, (list, tuple, np.ndarray)):
-            surrogate_models = [surrogate_models]
-        if not isinstance(maximize, (list, tuple, np.ndarray)):
-            maximize = [maximize]
-        
-        msg_error = "The number of surrogate models and maximize flags must be the same."
-        assert len(surrogate_models) == len(maximize), msg_error
-
-        self._surrogate_models = surrogate_models
-        self._maximize = np.asarray(maximize)
+        super().__init__(surrogate_models, maximize)
         self._eps = eps
-
-    @property
-    def surrogate_model(self):
-        return self._surrogate_models
-
-    @property
-    def maximize(self):
-        return self._maximize
 
     @property
     def scaling_factors(self):
         return -1 * np.ones(len(self._maximize))
-    
-    @property
-    def number_of_objectives(self):
-        return len(self._surrogate_models)
 
     def forward(self, X_test):
         """
@@ -510,35 +455,14 @@ class UpperConfidenceBound(_AcquisitionFunction):
             Exploitation-exploration trade-off parameter.
 
         """
-        if not isinstance(surrogate_models, (list, tuple, np.ndarray)):
-            surrogate_models = [surrogate_models]
-        if not isinstance(maximize, (list, tuple, np.ndarray)):
-            maximize = [maximize]
-        
-        msg_error = "The number of surrogate models and maximize flags must be the same."
-        assert len(surrogate_models) == len(maximize), msg_error
-
-        self._surrogate_models = surrogate_models
-        self._maximize = np.asarray(maximize)
+        super().__init__(surrogate_models, maximize)
         self._delta = 1. - beta
         self._beta = beta
 
     @property
-    def surrogate_model(self):
-        return self._surrogate_model
-    
-    @property
-    def maximize(self):
-        return self._maximize
-    
-    @property
     def scaling_factors(self):
         return -1 * np.ones(len(self._maximize))
-    
-    @property
-    def number_of_objectives(self):
-        return len(self._surrogate_models)
-    
+
     def forward(self, X_test):
         """
         Predict the Upper Confidence Bound values for input sequences.
