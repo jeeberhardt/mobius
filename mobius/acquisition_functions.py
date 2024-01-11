@@ -175,7 +175,7 @@ class RandomImprovement(_AcquisitionFunction):
         Parameters
         ----------
         X_test : array-like of shape (n_sequences,) or (n_sequences, n_features)
-            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors (training data).
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors.
 
         Returns
         -------
@@ -253,7 +253,7 @@ class Greedy(_AcquisitionFunction):
         Parameters
         ----------
         X_test : array-like of shape (n_sequences,) or (n_sequences, n_features)
-            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors (training data).
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors.
 
         Returns
         -------
@@ -344,7 +344,7 @@ class ExpectedImprovement(_AcquisitionFunction):
         Parameters
         ----------
         X_test : array-like of shape (n_sequences,) or (n_sequences, n_features)
-            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors (training data).
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors.
 
         Returns
         -------
@@ -445,7 +445,7 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
         Parameters
         ----------
         X_test : array-like of shape (n_sequences,) or (n_sequences, n_features)
-            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors (training data).
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors.
 
         Returns
         -------
@@ -546,7 +546,7 @@ class UpperConfidenceBound(_AcquisitionFunction):
         Parameters
         ----------
         X_test : array-like of shape (n_sequences,) or (n_sequences, n_features)
-            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors (training data).
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors.
 
         Returns
         -------
