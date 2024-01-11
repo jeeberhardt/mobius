@@ -6,7 +6,7 @@
 
 from .dummy_model import DummyModel
 from .gaussian_process import GPModel
-from .nn_gaussian_process import GPLLModel
+from .gaussian_process_llm import GPLLModel
 from .random_forest import RFModel
 
 __all__ = ['DummyModel', 'GPModel', 'GPLLModel', 'RFModel']
