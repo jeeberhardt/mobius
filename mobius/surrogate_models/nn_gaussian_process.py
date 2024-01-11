@@ -61,7 +61,7 @@ class _ExactGPLModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchMo
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
 
-class GPLModel(_SurrogateModel):
+class GPLLModel(_SurrogateModel):
     """
     Class for the Gaussian Process Regressor (GPR) surrogate model with Language model.
 
