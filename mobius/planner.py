@@ -95,35 +95,35 @@ class _Planner(ABC):
 
 def batch_selection(results, filters=None, batch_size=96):
     """
-    Function for selecting the polymer batch to be synthesized next.
+    Function for selecting the sequence batch to be synthesized next.
 
     Parameters
     ----------
-    results : `tuple` of (ndarray of shape (n_polymers,), ndarray of shape (n_polymers, n_scores)) or list of `tuple`
+    results : `tuple` of (ndarray of shape (n_sequences,), ndarray of shape (n_sequences, n_scores)) or list of `tuple`
         Contains the results from the optimization.
     batch_size : int, default: 96
-        Number of polymers to select.
+        Number of sequences to select.
 
     Returns
     -------
-    suggested_polymers : ndarray of shape (batch_size,)
-        Array containing the suggested polymers.
+    suggested_sequences : ndarray of shape (batch_size,)
+        Array containing the suggested sequences.
     predicted_values : ndarray of shape (batch_size, n_scores)
-        Array containing the predicted values of the suggested polymers.
+        Array containing the predicted values of the suggested sequences.
 
     """
-    suggested_polymers = []
+    suggested_sequences = []
     predicted_values = []
 
     if not isinstance(results, list):
         results = [results]
 
-    # Get the polymers and predicted values from the pymoo results
+    # Get the sequences and predicted values from the pymoo results
     for result in results:
-        suggested_polymers.append(result[0])
+        suggested_sequences.append(result[0])
         predicted_values.append(result[1])
 
-    suggested_polymers = np.concatenate(suggested_polymers).flatten()
+    suggested_sequences = np.concatenate(suggested_sequences).flatten()
     predicted_values = np.concatenate(predicted_values)
 
     if predicted_values.shape[1] <= 2:
@@ -131,9 +131,9 @@ def batch_selection(results, filters=None, batch_size=96):
     else:
         crowding_function = calc_mnn_fast
 
-    # Return all the polymers if batch_size is not provided
+    # Return all the sequences if batch_size is not provided
     if batch_size is None:
-        return suggested_polymers, predicted_values
+        return suggested_sequences, predicted_values
 
     # Do the selection based on the predicted values
     if predicted_values.shape[1] == 1:
@@ -147,15 +147,15 @@ def batch_selection(results, filters=None, batch_size=96):
         _, ranks = NonDominatedSorting().do(predicted_values, return_rank=True)
 
         for current_rank in range(0, np.max(ranks)):
-            # Get the indices of the polymers in the current rank
+            # Get the indices of the sequences in the current rank
             current_indices = np.where(ranks == current_rank)[0]
 
             if len(selected_indices) + len(current_indices) <= batch_size:
-                # Select all the polymers in the current rank
+                # Select all the sequences in the current rank
                 selected_indices.extend(current_indices)
             else:
-                # Get the crowding distances for the polymers in the current rank
-                # while taking into account the already selected polymers
+                # Get the crowding distances for the sequences in the current rank
+                # while taking into account the already selected sequences
                 cd = crowding_function(predicted_values[np.concatenate((selected_indices, current_indices)).astype(int)])
                 cd = cd[len(selected_indices):]
 
@@ -163,16 +163,16 @@ def batch_selection(results, filters=None, batch_size=96):
                 current_indices = current_indices[np.isfinite(cd)]
                 cd = cd[np.isfinite(cd)]
 
-                # Select the polymers with the highest crowding distance
+                # Select the sequences with the highest crowding distance
                 selected_indices.extend(current_indices[np.argsort(cd)[::-1][:batch_size - len(selected_indices)]])
 
             if len(selected_indices) >= batch_size:
                 break
 
-    suggested_polymers = suggested_polymers[selected_indices]
+    suggested_sequences = suggested_sequences[selected_indices]
     predicted_values = predicted_values[selected_indices]
 
-    return suggested_polymers, predicted_values
+    return suggested_sequences, predicted_values
 
 
 class Planner(_Planner):
@@ -183,113 +183,111 @@ class Planner(_Planner):
 
     def __init__(self, acquisition_function, optimizer):
         """
-        Initialize the polymer planner.
+        Initialize the planner.
 
         Parameters
         ----------
         acquisition_function : `_AcquisitionFunction`
-            The acquisition functions that will be used to score the polymers. For single-objective
+            The acquisition functions that will be used to score the sequences. For single-objective
             optimisation, only one acquisition function is required. For multi-objective optimisation,
             a list of acquisition functions is required.
         optimizer : `_GeneticAlgorithm`
-            The optimizer that will be used to optimize the polymers.
+            The optimizer that will be used to optimize the sequences.
 
         """
         self._results = None
-        self._polymers = None
+        self._sequences = None
         self._values = None
+        self._noise = None
         self._acq_fun = acquisition_function
         self._optimizer = optimizer
 
     def ask(self, batch_size=None):
         """
-        Function to suggest new polymers/peptides based on previous experiments.
+        Function to suggest new sequences based on previous experiments.
 
         Parameters
         ----------
         batch_size : int, default: None
-            Total number of new polymers/peptides that will be returned. If not 
-            provided, it will return all the polymers found during the optimization.
+            Total number of new sequences that will be returned. If not 
+            provided, it will return all the sequences found during the optimization.
 
         Returns
         -------
-        polymers : ndarray of shape (batch_size,)
-            Suggested polymers/peptides. The returned number of polymers 
+        sequences : ndarray of shape (batch_size,)
+            Suggested sequences. The returned number of sequences 
             will be equal to `batch_size`.
-        values : ndarray of shape (batch_size, n_scores)
-            Predicted values for each suggested polymers/peptides. The 
+        values : ndarray of shape (batch_size, n_predicted_scores)
+            Predicted values for each suggested sequences. The 
             returned number will be equal to `batch_size`.
 
         """
-        self._results = None
-        suggested_polymers = self._polymers.copy()
-        predicted_values = self._values.copy()
-
-        # Run the optimizer to suggest new polymers
-        self._results = self._optimizer.run(suggested_polymers, predicted_values, self._acq_fun)
+        # Run the optimizer to suggest new sequences
+        self._results = self._optimizer.run(self._sequences.copy(), self._values.copy(), self._acq_fun)
 
         # Select batch polyners to be synthesized
-        suggested_polymers, predicted_values = batch_selection(self._results, batch_size)
+        suggested_sequences, predicted_values = batch_selection(self._results, batch_size)
 
-        return suggested_polymers, predicted_values
+        return suggested_sequences, predicted_values
 
-    def tell(self, polymers, values, fitting=True):
+    def tell(self, sequences, values, noises=None, fitting=True):
         """
         Function to fit the surrogate model using data from past experiments.
 
         Parameters
         ----------
-        polymers : list of str
-            Polymers/peptides in HELM format.
-        values : array-like of shape (n_samples, n_objectives)
-            Values associated to each polymer/peptide.
+        sequences : array-like of shape (n_sequences,)
+            Sequences in HELM format (for polymers) or FASTA format (for bipolymers) (training data).
+        values : array-like of shape (n_sequences, n_targets)
+            Values associated to each sequence (target values).
+        noises : array-like of shape (n_sequences, n_targets), default: None
+            Noise values associated to each sequence, and expressed as
+            standard deviation (sigma). Values are squared internally to 
+            obtain the variance.
         fitting : bool, default: True
             Whether to fit the surrogate model or not.
 
         """
         self._results = None
-        self._polymers = np.asarray(polymers).copy()
+        self._sequences = np.asarray(sequences).copy()
         self._values = np.asarray(values).copy()
-
-        if self._values.ndim == 1:
-            raise ValueError(
-                "Expected 2D array, got 1D array instead:\narray={}.\n"
-                "Reshape your data either using array.reshape(-1, 1) if "
-                "your data has a single feature or array.reshape(1, -1) "
-                "if it contains a single sample.".format(self._values)
-            )
+        self._noises = np.asarray(noises).copy() if noises is not None else None
 
         # We fit all the surrogate models
         if fitting:
-            self._acq_fun.fit(self._polymers, self._values)
+            self._acq_fun.fit(self._sequences, self._values, self._noises)
 
-    def recommand(self, polymers, values, batch_size=None, fitting=True):
+    def recommand(self, sequences, values, noises=None, batch_size=None, fitting=True):
         """
-        Function to suggest new polymers/peptides based on existing/previous data.
+        Function to suggest new sequences based on existing/previous data.
 
         Parameters
         ----------
-        polymers : list of str
-            Polymers/peptides in HELM format.
-        values : list of int of float
-            Value associated to each polymer/peptide.
+        sequences : array-like of shape (n_sequences,)
+            Sequences in HELM format (for polymers) or FASTA format (for bipolymers) (training data).
+        values : array-like of shape (n_sequences, n_targets)
+            Values associated to each sequence (target values).
+        noises : array-like of shape (n_samples,), default: None
+            Noise value associated to each sequence, and expressed as
+            standard deviation (sigma). Values are squared internally to 
+            obtain the variance.
         batch_size : int, default: None
-            Total number of new polymers/peptides that will be returned. If not 
-            provided, it will return all the polymers found during the optimization.
+            Total number of new sequences that will be returned. If not 
+            provided, it will return all the sequences found during the optimization.
         fitting : bool, default: True
             Whether to fit the surrogate model or not.
 
         Returns
         -------
-        polymers : ndarray of shape (batch_size,)
-            Suggested polymers/peptides. The returned number of 
-            polymers/peptides will be equal to `batch_size`.
+        sequences : ndarray of shape (batch_size,)
+            Suggested sequencess. The returned number of 
+            sequences will be equal to `batch_size`.
         values : ndarray of shape (batch_size, n_scores)
-            Predicted values for each suggested polymers/peptides. The 
+            Predicted values for each suggested sequences. The 
             returned number will be equal to `batch_size`.
 
         """
-        self.tell(polymers, values, fitting)
-        suggested_polymers, predicted_values = self.ask(batch_size)
+        self.tell(sequences, values, noises, fitting)
+        suggested_sequences, predicted_values = self.ask(batch_size)
 
-        return suggested_polymers, predicted_values
+        return suggested_sequences, predicted_values

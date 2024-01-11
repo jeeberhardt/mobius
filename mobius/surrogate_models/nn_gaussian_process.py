@@ -152,6 +152,13 @@ class GPLModel(_SurrogateModel):
             self._y_noise = np.asarray(y_noise).copy()
             self._y_noise = self._y_noise**2
 
+        # Check that the number of polymers in X_train, y_train and y_noise are the same
+        msg_error = "The number of sequences in X_train and values in y_train must be the same."
+        assert self._X_train.shape[0] == self._y_train.shape[0], msg_error
+        if y_noise is not None:
+            msg_error = "The number of sequences in X_train and values in y_noise must be the same."
+            assert self._X_train.shape[0] == self._y_noise.shape[0], msg_error
+
         # Tokenize sequences
         X_train = self._transformer.tokenize(self._X_train)
 

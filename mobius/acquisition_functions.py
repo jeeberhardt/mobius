@@ -40,9 +40,43 @@ class _AcquisitionFunction(ABC):
     def number_of_objectives(self):
         pass
 
-    @abstractmethod
-    def fit(self):
-        pass
+    def fit(self, X_train, y_train, y_noise=None):
+        """
+        Fit the surrogate model(s) using existing data.
+
+        Parameters
+        ----------
+        X_train : array-like of shape (n_sequences,) or (n_sequences, n_features)
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors (training data).
+        y_train : array-like of shape (n_sequences, n_targets)
+            Values associated to each sequence (target values).
+        y_noise : array-like of shape (n_sequences, n_targets), default : None
+            Noise values associated to the target values.
+
+        """
+        X_train = np.asarray(X_train)
+        y_train = np.asarray(y_train)
+        y_noise = np.asarray(y_noise) if y_noise is not None else None
+
+        # Check that y_train and y_noise are not 1D arrays
+        msg_error = "Expected 2D array, got 1D array instead:\narray={}.\n"
+        msg_error += "Reshape your data either using array.reshape(-1, 1) if "
+        msg_error += "your data has a single feature or array.reshape(1, -1) "
+        msg_error += "if it contains a single sample."
+        assert y_train.ndim > 1, msg_error.format(y_train)
+        if y_noise is not None:
+            assert y_noise.ndim > 1, msg_error.format(y_noise)
+        
+        # Check that the number of target values in y_train/y_noise and surrogate_models are the same
+        msg_error = "The number of target values in y_train and surrogate_models must be the same."
+        assert y_train.shape[1] == len(self._surrogate_models), msg_error
+        if y_noise is not None:
+            msg_error = "The number of target noises in y_noise and surrogate_models must be the same."
+            assert y_noise.shape[1] == len(self._surrogate_models), msg_error
+
+        # We fit the surrogate model associated with each acquisition function
+        for i, surrogate_model in enumerate(self._surrogate_models):
+            surrogate_model.fit(X_train, y_train[:, i], y_noise[:, i] if y_noise is not None else None)
 
     @abstractmethod
     def forward(self):
@@ -118,33 +152,35 @@ class RandomImprovement(_AcquisitionFunction):
     def number_of_objectives(self):
         return len(self._maximize)
     
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, y_noise):
         """
-        Fit the surrogate models using existing data.
+        Fit the surrogate model(s) using existing data.
 
         Parameters
         ----------
-        X_train : array-like of shape (n_polymers, n_features) or (n_polymers)
-            Feature vectors or polymers in HELM format.
-        y_train : array-like of shape (n_polymers, n_objectives)
-            Values associated to each polymer.
+        X_train : array-like of shape (n_sequences,) or (n_sequences, n_features)
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors (training data).
+        y_train : array-like of shape (n_sequences, n_targets)
+            Values associated to each sequence (target values).
+        y_noise : array-like of shape (n_sequences, n_targets), default : None
+            Noise values associated to the target values.
 
         """
         pass
 
     def forward(self, X_test):
         """
-        Predict random mean values for input sample `X_test`.
+        Predict the random mean values for input sequences.
 
         Parameters
         ----------
-        X_test : array-like of shape (n_polymers, n_features) or (n_polymers)
-            Feature vectors or polymers in HELM format.
+        X_test : array-like of shape (n_sequences,) or (n_sequences, n_features)
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors (training data).
 
         Returns
         -------
-        ndarray of shape (n_polymers, n_objectives)
-            The expected improvement values.
+        ndarray of shape (n_sequences, n_predicted_scores)
+            The random improvement values.
 
         """
         X_test = np.asarray(X_test)
@@ -209,46 +245,19 @@ class Greedy(_AcquisitionFunction):
     @property
     def number_of_objectives(self):
         return len(self._surrogate_models)
-    
-    def fit(self, X_train, y_train):
-        """
-        Fit the surrogate models using existing data.
-
-        Parameters
-        ----------
-        X_train : array-like of shape (n_polymers, n_features) or (n_polymers)
-            Feature vectors or polymers in HELM format.
-        y_train : array-like of shape (n_polymers, n_objectives)
-            Values associated to each polymer.
-
-        """
-        X_train = np.asarray(X_train)
-        y_train = np.asarray(y_train)
-
-        if y_train.ndim == 1:
-            raise ValueError(
-                "Expected 2D array, got 1D array instead:\narray={}.\n"
-                "Reshape your data either using array.reshape(-1, 1) if "
-                "your data has a single feature or array.reshape(1, -1) "
-                "if it contains a single sample.".format(y_train)
-            )
-
-        # We fit the surrogate model associated with each acquisition function
-        for i, surrogate_model in enumerate(self._surrogate_models):
-            surrogate_model.fit(X_train, y_train[:, i])
 
     def forward(self, X_test):
         """
-        Predict mean values by the surrogate model for input sample `X_test`.
+        Predict the mean values for input sequences.
 
         Parameters
         ----------
-        X_test : array-like of shape (n_polymers, n_features) or (n_polymers)
-            Feature vectors or polymers in HELM format.
+        X_test : array-like of shape (n_sequences,) or (n_sequences, n_features)
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors (training data).
 
         Returns
         -------
-        ndarray of shape (n_polymers, n_objectives)
+        ndarray of shape (n_sequences, n_predicted_scores)
             The expected improvement values.
 
         """
@@ -328,45 +337,18 @@ class ExpectedImprovement(_AcquisitionFunction):
     def number_of_objectives(self):
         return len(self._surrogate_models)
 
-    def fit(self, X_train, y_train):
-        """
-        Fit the surrogate models using existing data.
-
-        Parameters
-        ----------
-        X_train : array-like of shape (n_polymers, n_features) or (n_polymers)
-            Feature vectors or polymers in HELM format.
-        y_train : array-like of shape (n_polymers, n_objectives)
-            Values associated to each polymer.
-
-        """
-        X_train = np.asarray(X_train)
-        y_train = np.asarray(y_train)
-
-        if y_train.ndim == 1:
-            raise ValueError(
-                "Expected 2D array, got 1D array instead:\narray={}.\n"
-                "Reshape your data either using array.reshape(-1, 1) if "
-                "your data has a single feature or array.reshape(1, -1) "
-                "if it contains a single sample.".format(y_train)
-            )
-
-        # We fit the surrogate model associated with each acquisition function
-        for i, surrogate_model in enumerate(self._surrogate_models):
-            surrogate_model.fit(X_train, y_train[:, i])
-
     def forward(self, X_test):
         """
-        Predict the Expected Improvement values for input polymers.
+        Predict the Expected Improvement values for input sequences.
 
         Parameters
         ----------
-        X_test : array-like of shape (n_polymers, n_features) or (n_polymers)
-            Feature vectors or polymers in HELM format.
+        X_test : array-like of shape (n_sequences,) or (n_sequences, n_features)
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors (training data).
 
         Returns
         -------
-        ndarray of shape (n_polymers, n_objectives)
+        ndarray of shape (n_sequences, n_predicted_scores)
             The expected improvement values.
 
         """
@@ -455,46 +437,19 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
     @property
     def number_of_objectives(self):
         return len(self._surrogate_models)
-    
-    def fit(self, X_train, y_train):
-        """
-        Fit the surrogate models using existing data.
-
-        Parameters
-        ----------
-        X_train : array-like of shape (n_polymers, n_features) or (n_polymers)
-            Feature vectors or polymers in HELM format.
-        y_train : array-like of shape (n_polymers, n_objectives)
-            Values associated to each polymer.
-
-        """
-        X_train = np.asarray(X_train)
-        y_train = np.asarray(y_train)
-
-        if y_train.ndim == 1:
-            raise ValueError(
-                "Expected 2D array, got 1D array instead:\narray={}.\n"
-                "Reshape your data either using array.reshape(-1, 1) if "
-                "your data has a single feature or array.reshape(1, -1) "
-                "if it contains a single sample.".format(y_train)
-            )
-
-        # We fit the surrogate model associated with each acquisition function
-        for i, surrogate_model in enumerate(self._surrogate_models):
-            surrogate_model.fit(X_train, y_train[:, i])
 
     def forward(self, X_test):
         """
-        Predict the Probability of Improvement values for input sample `X_test`.
+        Predict the Probability of Improvement values for input sequences.
 
         Parameters
         ----------
-        X_test : array-like of shape (n_polymers, n_features) or (n_polymers)
-            Feature vectors or polymers in HELM format.
+        X_test : array-like of shape (n_sequences,) or (n_sequences, n_features)
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors (training data).
 
         Returns
         -------
-        ndarray of shape (n_polymers, n_objectives)
+        ndarray of shape (n_sequences, n_predicted_scores)
             The expected improvement values.
 
         """
@@ -584,45 +539,18 @@ class UpperConfidenceBound(_AcquisitionFunction):
     def number_of_objectives(self):
         return len(self._surrogate_models)
     
-    def fit(self, X_train, y_train):
-        """
-        Fit the surrogate models using existing data.
-
-        Parameters
-        ----------
-        X_train : array-like of shape (n_polymers, n_features) or (n_polymers)
-            Feature vectors or polymers in HELM format.
-        y_train : array-like of shape (n_polymers, n_objectives)
-            Values associated to each polymer.
-
-        """
-        X_train = np.asarray(X_train)
-        y_train = np.asarray(y_train)
-
-        if y_train.ndim == 1:
-            raise ValueError(
-                "Expected 2D array, got 1D array instead:\narray={}.\n"
-                "Reshape your data either using array.reshape(-1, 1) if "
-                "your data has a single feature or array.reshape(1, -1) "
-                "if it contains a single sample.".format(y_train)
-            )
-
-        # We fit the surrogate model associated with each acquisition function
-        for i, surrogate_model in enumerate(self._surrogate_models):
-            surrogate_model.fit(X_train, y_train[:, i])
-    
     def forward(self, X_test):
         """
-        Predict the Upper Confidence Bound values for input sample `X_test`.
+        Predict the Upper Confidence Bound values for input sequences.
 
         Parameters
         ----------
-        X_test : array-like of shape (n_polymers, n_features) or (n_polymers)
-            Feature vectors or polymers in HELM format.
+        X_test : array-like of shape (n_sequences,) or (n_sequences, n_features)
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors (training data).
 
         Returns
         -------
-        ndarray of shape (n_polymers, n_objectives)
+        ndarray of shape (n_sequences, n_predicted_scores)
             The expected improvement values.
 
         """
