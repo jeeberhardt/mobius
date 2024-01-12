@@ -129,9 +129,6 @@ class GPLLModel(_SurrogateModel):
         self._model.to(self._device)
         self._likelihood.to(self._device)
 
-        #print('model', self._model.get_device())
-        #print('likelihood', self._likelihood.get_device())
-
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self._likelihood, self._model)
 

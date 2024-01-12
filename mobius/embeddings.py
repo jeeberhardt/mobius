@@ -70,8 +70,6 @@ class ProteinEmbedding:
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        print('ProteinEmbedding device', device)
-
         self._model_name = model_name
         self._embedding_type = embedding_type
         self._standard_amino_acids = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
