@@ -69,6 +69,7 @@ class GPLLModel(_SurrogateModel):
         self._model = None
         self._X_train = None
         self._y_train = None
+        self._noise = None
 
     def fit(self, X_train, y_train, y_noise=None):
         """
