@@ -129,3 +129,7 @@ dmypy.json
 .pyre/
 mobius/.DS_Store
 .DS_Store
+
+# Ignore MHC data
+IEDB_MHC_I-2.9_matx_smm_smmpmbec
+examples/IEDB_MHC_I-2.9_matx_smm_smmpmbec
