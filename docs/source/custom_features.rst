@@ -45,7 +45,7 @@ it as shown below:
 .. code-block:: python
 
     import numpy as np
-    from molfeat.fingerprints import FPVecTransformer
+    from molfeat.trans.fp import FPVecTransformer
     from rdkit import Chem
     from mobius.utils import MolFromHELM
 
@@ -88,7 +88,7 @@ it as shown below:
             # Now we can use the FPVecTransformer class to transform the 
             # input sequences into fingerprints
             featurizer = FPVecTransformer(self._kind, length=self._dimensions)
-            fps = self._featurizer.transform(smiles)
+            fps = featurizer.transform(smiles)
             fps = np.asarray(fps)
 
             return fps

@@ -130,8 +130,8 @@ So, without further ado, let's get this optimization rolling!
     optimizer = SequenceGA(algorithm='GA', period=15, design_protocol_filename='sampling_macrocycle.yaml')
     ps = Planner(acq, optimizer)
 
-    peptides = list(seed_library)[:]
-    scores = list(scores_seed_library)[:]
+    peptides = seed_library.copy()
+    scores = scores_seed_library.copy()
 
     for i in range(5):
         suggested_peptides, _ = ps.recommand(peptides, scores.reshape(-1, 1), batch_size=96)
@@ -143,7 +143,7 @@ So, without further ado, let's get this optimization rolling!
         # purposes only and should be replaced with actual lab experiments.
         scores_suggested_peptides = fm.score(suggested_peptides)
 
-        peptides.extend(list(suggested_peptides))
+        peptides = np.concatenate([peptides, suggested_peptides])
         scores = np.concatenate((scores, scores_suggested_peptides), axis=0)
 
         best_seq = peptides[np.argmax(scores)]
