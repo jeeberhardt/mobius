@@ -266,7 +266,7 @@ def guess_input_formats(sequences):
 
     The regex used to recognize each format are the following:
     - FASTA: ^[^{}\[\].:,;=\$\-\(\)\+\*\n]+$
-    - HELM: ^[^>\n]*\{[^>\n]+\}[^>\n]*\$\$\$\$(V2\.0)?$
+    - HELM: ^[^>\n]*\{[^>\n]+\}[^>\n]*\$*\$\$\$(V2\.0)?$
 
     Parameters
     ----------
@@ -289,7 +289,7 @@ def guess_input_formats(sequences):
     formats = []
 
     for sequence in sequences:
-        if re.match('^[^>\n]*\{[^>\n]+\}[^>\n]*\$\$\$\$(V2\.0)?$', sequence):
+        if re.match('^[^>\n]*\{[^>\n]+\}[^>\n]*\$*\$\$\$(V2\.0)?$', sequence):
             formats.append('HELM')
         elif re.match('^[^{}\[\].:,;=\$\-\(\)\+\*\n]+$', sequence):
             formats.append('FASTA')
