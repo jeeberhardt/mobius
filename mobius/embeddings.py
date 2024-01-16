@@ -231,6 +231,6 @@ class ProteinEmbedding:
 
         """
         entropy = -torch.sum(probabilities * torch.log(probabilities), dim=-1)
-        entropy = entropy.detach().numpy()
+        entropy = entropy.detach().cpu().numpy()
 
         return entropy

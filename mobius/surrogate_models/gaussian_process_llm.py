@@ -111,10 +111,10 @@ class GPLLModel(_SurrogateModel):
             y_noise = torch.from_numpy(self._y_noise).float()
 
         # Move tensors to device
-        X_train.to(self._device)
-        y_train.to(self._device)
+        X_train = X_train.to(self._device)
+        y_train = y_train.to(self._device)
         if y_noise is not None:
-            y_noise.to(self._device)
+            y_noise = y_noise.to(self._device)
 
         noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
 
@@ -183,14 +183,15 @@ class GPLLModel(_SurrogateModel):
         X_test = self._transformer.tokenize(np.asarray(X_test))
 
         if not torch.is_tensor(X_test):
+            # asarray because you never know if self._transformer.transform returns a ndarray or not
             X_test = torch.from_numpy(np.asarray(X_test)).float()
         if y_noise is not None:
             y_noise = torch.from_numpy(y_noise).float()
 
         # Move tensors to device
-        X_test.to(self._device)
+        X_test = X_test.to(self._device)
         if y_noise is not None:
-            y_noise.to(self._device)
+            y_noise = y_noise.to(self._device)
 
         # Make predictions by feeding model through likelihood
         # Set fast_pred_var state to False, otherwise cannot pickle GPModel
@@ -200,7 +201,7 @@ class GPLLModel(_SurrogateModel):
             else:
                 predictions = self._likelihood(self._model(X_test), noise=y_noise)
 
-        mu = predictions.mean.detach().numpy()
-        sigma = predictions.stddev.detach().numpy()
+        mu = predictions.mean.detach().cpu().numpy()
+        sigma = predictions.stddev.detach().cpu().numpy()
 
         return mu, sigma
