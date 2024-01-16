@@ -195,7 +195,10 @@ class GPLLModel(_SurrogateModel):
         # Make predictions by feeding model through likelihood
         # Set fast_pred_var state to False, otherwise cannot pickle GPModel
         with torch.no_grad(), gpytorch.settings.fast_pred_var(state=False):
-            predictions = self._likelihood(self._model(X_test), noise=y_noise)
+            if y_noise is None:
+                predictions = self._likelihood(self._model(X_test))
+            else:
+                predictions = self._likelihood(self._model(X_test), noise=y_noise)
 
         mu = predictions.mean.detach().numpy()
         sigma = predictions.stddev.detach().numpy()
