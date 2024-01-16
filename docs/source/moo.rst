@@ -104,7 +104,7 @@ information about the `SMS-EMOA` algorithm, please refer to the
         for emulator in [hla_a32, hla_a26]:
             values = np.asarray(emulator.score(suggested_polymers))
             exp_values.append(values)
-        exp_values = np.hstack(exp_values)
+        exp_values = np.stack(exp_values, axis=1)
 
         # Add the suggested peptides to the library, and start over
         peptides = np.concatenate([apeptides, suggested_polymers])
