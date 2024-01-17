@@ -30,7 +30,6 @@ from .terminations import NoChange
 from .problem import Problem
 from ..utils import adjust_polymers_to_designs
 from ..utils import build_helm_string, parse_helm, get_scaffold_from_helm_string
-from ..utils import detect_malformed_helm_strings
 
 
 class PolymerCrossover(Crossover):
@@ -220,8 +219,6 @@ class PolymerMutation(Mutation):
         # for each individual
         for i in range(len(X)):
             r = _rng.random()
-
-            detect_malformed_helm_strings(X[i][0])
 
             # Applying mutation at defined probability rate
             if r < self._pm:
