@@ -23,6 +23,7 @@ from pymoo.core.duplicate import ElementwiseDuplicateElimination
 from pymoo.optimize import minimize
 from pymoo.termination.max_gen import MaximumGenerationTermination
 from pymoo.termination.robust import RobustTermination
+from pymoo.core.variable import get
 
 from .terminations import NoChange
 from .problem import Problem
@@ -52,6 +53,69 @@ class BioPolymerCrossover(Crossover):
         super().__init__(2,2)
 
         self._cx_points = cx_points
+        self._STRING_LENGTH_MULTIPLIER = 1.25
+
+    def do(self, problem, pop, parents=None, **kwargs):
+
+        # if a parents with array with mating indices is provided -> transform the input first
+        if parents is not None:
+            pop = [pop[mating] for mating in parents]
+
+        # get the dimensions necessary to create in and output
+        n_parents, n_offsprings = self.n_parents, self.n_offsprings
+        n_matings, n_var = len(pop), problem.n_var
+
+        # get the actual values from each of the parents
+        X = np.swapaxes(np.array([[parent.get("X") for parent in mating] for mating in pop]), 0, 1)
+        if self.vtype is not None:
+            X = X.astype(self.vtype)
+
+        # Burger hack to avoid truncating the HELM strings
+        if np.issubdtype(X.dtype, np.unicode_):
+            current_length = int(X.dtype.str[2:])
+            new_length = int(current_length * self._STRING_LENGTH_MULTIPLIER)
+            dtype = f'U{new_length}'
+        else:
+            dtype = X.dtype
+
+        # the array where the offsprings will be stored to
+        Xp = np.empty(shape=(n_offsprings, n_matings, n_var), dtype=dtype)
+
+        # the probability of executing the crossover
+        prob = get(self.prob, size=n_matings)
+
+        # a boolean mask when crossover is actually executed
+        cross = np.random.random(n_matings) < prob
+
+        # the design space from the parents used for the crossover
+        if np.any(cross):
+
+            # we can not prefilter for cross first, because there might be other variables using the same shape as X
+            Q = self._do(problem, X, **kwargs)
+            assert Q.shape == (n_offsprings, n_matings, problem.n_var), "Shape is incorrect of crossover impl."
+            Xp[:, cross] = Q[:, cross]
+
+        # now set the parents whenever NO crossover has been applied
+        for k in np.flatnonzero(~cross):
+            if n_offsprings < n_parents:
+                s = np.random.choice(np.arange(self.n_parents), size=n_offsprings, replace=False)
+            elif n_offsprings == n_parents:
+                s = np.arange(n_parents)
+            else:
+                s = []
+                while len(s) < n_offsprings:
+                    s.extend(np.random.permutation(n_parents))
+                s = s[:n_offsprings]
+
+            Xp[:, k] = np.copy(X[s, k])
+
+        # flatten the array to become a 2d-array
+        Xp = Xp.reshape(-1, X.shape[-1])
+
+        # create a population object
+        off = Population.new("X", Xp)
+
+        return off
 
     def _do(self, problem, X, **kwargs):
         _rng = np.random.default_rng()

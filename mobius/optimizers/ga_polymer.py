@@ -23,8 +23,7 @@ from pymoo.core.duplicate import ElementwiseDuplicateElimination
 from pymoo.optimize import minimize
 from pymoo.termination.max_gen import MaximumGenerationTermination
 from pymoo.termination.robust import RobustTermination
-from pymoo.core.operator import Operator
-from pymoo.core.variable import Real, get
+from pymoo.core.variable import get
 
 from .terminations import NoChange
 from .problem import Problem
@@ -73,7 +72,7 @@ class PolymerCrossover(Crossover):
         if self.vtype is not None:
             X = X.astype(self.vtype)
 
-        # Dirty hack to avoid truncating the HELM strings
+        # Burger hack to avoid truncating the HELM strings
         if np.issubdtype(X.dtype, np.unicode_):
             current_length = int(X.dtype.str[2:])
             new_length = int(current_length * self._STRING_LENGTH_MULTIPLIER)
