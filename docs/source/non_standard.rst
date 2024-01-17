@@ -64,7 +64,8 @@ With the emulator now in place, our next step is to define our lead sequence, wh
 only consists of standard amino acids. The Tanimoto score between the target 
 and the lead sequence is about 0.394. Using this as our starting point, 
 we'll generate a seed library comprising 96 sequences. These sequences are obtained 
-by applying the alanine and homolog scanning methods.
+by applying the homolog scanning method. To help the optimization process, we'll
+also include the non-standard amino acids in the seed library.
 
 .. code-block:: python
 
@@ -72,10 +73,14 @@ by applying the alanine and homolog scanning methods.
 
     seed_library = [lead]
 
-    for seq in alanine_scanning(lead):
-        seed_library.append(seq)
-
     for seq in homolog_scanning(lead):
+    seed_library.append(seq)
+
+    if len(seed_library) >= 48:
+        print('Reach max. number of peptides allowed.')
+        break
+
+    for seq in monomers_scanning(lead, monomers=['Me_dL', 'd1-Nal', 'Nva', 'dL', 'Me_dA']):
         seed_library.append(seq)
 
         if len(seed_library) >= 96:
@@ -155,71 +160,73 @@ Typically, you'd see output similar to the following:
 
 .. code-block:: none
 
-    N 001 (01/05) - Score: 0.003 - PEPTIDE1{V.P.L.T.A.K.F.G.L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 002 (02/05) - Score: 0.003 - PEPTIDE1{V.P.L.T.A.K.F.G.L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 003 (03/05) - Score: 0.003 - PEPTIDE1{V.P.L.T.A.K.F.G.L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 004 (04/05) - Score: 0.003 - PEPTIDE1{V.P.L.T.A.K.F.G.L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 005 (05/05) - Score: 0.003 - PEPTIDE1{V.P.L.T.A.K.F.G.L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    Reached maximum number of attempts 5, no improvement observed!
-    End SequenceGA - Best score: 0.003 - PEPTIDE1{V.P.L.T.A.K.F.G.L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    Best peptide found so far: PEPTIDE1{T.[d1-Nal].F.T.T.[dL].L.[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 / 0.601
+    Reach max. number of peptides allowed.
+    =================================================
+    n_gen  |  n_eval  |     f_avg     |     f_min    
+    =================================================
+        1 |        0 |  9.994160E+02 |  9.993780E+02
+        2 |      500 | -2.903180E-05 | -2.029716E-03
+        3 |     1000 | -8.865342E-05 | -2.364596E-03
+        ...
+        23 |    11000 | -5.129112E-03 | -6.048419E-03
+        24 |    11500 | -5.149737E-03 | -6.048419E-03
+        25 |    12000 | -5.166888E-03 | -6.048419E-03
+    Best peptide found so far: PEPTIDE1{K.P.[Me_dL].T.A.K.[Nva].[d1-Nal].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 / 0.681
+    =================================================
+    n_gen  |  n_eval  |     f_avg     |     f_min    
+    =================================================
+        1 |        0 |  9.995303E+02 |  9.993780E+02
+        2 |      500 | -4.593440E-05 | -5.979990E-03
+        3 |     1000 | -6.972748E-05 | -5.979990E-03
+        ...
+        18 |     8500 | -2.804339E-03 | -6.214865E-03
+        19 |     9000 | -2.836284E-03 | -6.214865E-03
+        20 |     9500 | -2.871679E-03 | -6.214865E-03
+    Best peptide found so far: PEPTIDE1{K.P.[Me_dL].T.[d1-Nal].[Nva].[d1-Nal].L.P.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 / 0.693
+    =================================================
+    n_gen  |  n_eval  |     f_avg     |     f_min    
+    =================================================
+        1 |        0 |  9.995849E+02 |  9.993780E+02
+        2 |      500 | -6.739627E-06 | -9.320378E-04
+        3 |     1000 | -2.525135E-05 | -1.521608E-03
+        ..
+        20 |     9500 | -1.024600E-03 | -3.324028E-03
+        21 |    10000 | -1.026064E-03 | -3.324028E-03
+        22 |    10500 | -1.028012E-03 | -3.324028E-03
+    Best peptide found so far: PEPTIDE1{K.P.[Me_dL].T.[d1-Nal].[Nva].[d1-Nal].[Me_dL].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 / 0.700
+    =================================================
+    n_gen  |  n_eval  |     f_avg     |     f_min    
+    =================================================
+        1 |        0 |  9.995928E+02 |  9.993780E+02
+        2 |      500 | -5.364803E-06 | -5.612711E-04
+        3 |     1000 | -1.867951E-05 | -1.238944E-03
+        ..
+        19 |     9000 | -3.378079E-04 | -2.658069E-03
+        20 |     9500 | -3.397515E-04 | -2.658069E-03
+        21 |    10000 | -3.405738E-04 | -2.658069E-03
+    Best peptide found so far: PEPTIDE1{K.P.[Me_dL].T.[dL].[Me_dA].[Nva].[d1-Nal].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 / 0.796
+    =================================================
+    n_gen  |  n_eval  |     f_avg     |     f_min    
+    =================================================
+        1 |        0 |  9.996075E+02 |  9.993780E+02
+        2 |      500 | -6.011269E-12 | -2.480689E-09
+        3 |     1000 | -1.727572E-10 | -4.100772E-08
+        ...
+        25 |    12000 | -3.302355E-05 | -2.168542E-03
+        26 |    12500 | -3.345462E-05 | -2.168542E-03
+        27 |    13000 | -3.429750E-05 | -2.168542E-03
+    Best peptide found so far: PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 / 1.000
 
-    N 001 (01/05) - Score: 0.000 - PEPTIDE1{T.[d1-Nal].F.T.T.[dL].L.[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)    
-    N 002 (02/05) - Score: 0.000 - PEPTIDE1{T.[d1-Nal].F.T.T.[dL].L.[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 003 (03/05) - Score: 0.000 - PEPTIDE1{T.[d1-Nal].F.T.T.[dL].L.[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 004 (04/05) - Score: 0.000 - PEPTIDE1{T.[d1-Nal].F.T.T.[dL].L.[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 005 (05/05) - Score: 0.000 - PEPTIDE1{T.[d1-Nal].F.T.T.[dL].L.[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    Reached maximum number of attempts 5, no improvement observed!
-    End SequenceGA - Best score: 0.000 - PEPTIDE1{T.[d1-Nal].F.T.T.[dL].L.[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    Best peptide found so far: PEPTIDE1{[ac].T.[Me_dA].T.[Me_dA].[d1-Nal].[Nva].[dL].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 / 0.707
-
-    N 001 (01/05) - Score: 0.002 - PEPTIDE1{[ac].T.[Me_dA].T.[Me_dA].[d1-Nal].[Nva].[dL].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)    
-    N 002 (02/05) - Score: 0.002 - PEPTIDE1{[ac].T.[Me_dA].T.[Me_dA].[d1-Nal].[Nva].[dL].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 003 (03/05) - Score: 0.002 - PEPTIDE1{[ac].T.[Me_dA].T.[Me_dA].[d1-Nal].[Nva].[dL].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 004 (04/05) - Score: 0.002 - PEPTIDE1{[ac].T.[Me_dA].T.[Me_dA].[d1-Nal].[Nva].[dL].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 005 (05/05) - Score: 0.002 - PEPTIDE1{[ac].T.[Me_dA].T.[Me_dA].[d1-Nal].[Nva].[dL].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    Reached maximum number of attempts 5, no improvement observed!
-    End SequenceGA - Best score: 0.002 - PEPTIDE1{[ac].T.[Me_dA].T.[Me_dA].[d1-Nal].[Nva].[dL].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    Best peptide found so far: PEPTIDE1{[ac].P.[dL].T.[d1-Nal].[d1-Nal].[Nva].[dL].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 / 0.758
-
-    N 001 (01/05) - Score: 0.003 - PEPTIDE1{[ac].P.[dL].T.[Me_dL].[Nva].[d1-Nal].[Nva].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 002 (02/05) - Score: 0.003 - PEPTIDE1{[ac].P.[dL].T.[Me_dL].[Nva].[d1-Nal].[Nva].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 003 (01/05) - Score: 0.006 - PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].L.A.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 004 (02/05) - Score: 0.006 - PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].L.A.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 005 (03/05) - Score: 0.006 - PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].L.A.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 006 (04/05) - Score: 0.006 - PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].L.A.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 007 (05/05) - Score: 0.006 - PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].L.A.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    Reached maximum number of attempts 5, no improvement observed!
-    End SequenceGA - Best score: 0.006 - PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].L.A.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    Best peptide found so far: PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].L.A.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 / 0.835
-
-    N 001 (01/05) - Score: 0.003 - PEPTIDE1{[ac].[Me_dL].[dL].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 002 (02/05) - Score: 0.003 - PEPTIDE1{[ac].[Me_dL].[dL].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 003 (03/05) - Score: 0.003 - PEPTIDE1{[ac].[Me_dL].[dL].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 004 (01/05) - Score: 0.013 - PEPTIDE1{[ac].P.[Me_dA].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 005 (02/05) - Score: 0.013 - PEPTIDE1{[ac].P.[Me_dA].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 006 (03/05) - Score: 0.013 - PEPTIDE1{[ac].P.[Me_dA].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 007 (04/05) - Score: 0.013 - PEPTIDE1{[ac].P.[Me_dA].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    N 008 (05/05) - Score: 0.013 - PEPTIDE1{[ac].P.[Me_dA].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    Reached maximum number of attempts 5, no improvement observed!
-    End SequenceGA - Best score: 0.013 - PEPTIDE1{[ac].P.[Me_dA].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 (10)
-    Best peptide found so far: PEPTIDE1{[ac].P.[Me_dA].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 / 0.922
-
-
-As you can see, while we didn't completely nail it, we got extremely close! The closest 
-sequence discovered bears a Tanimoto score of 0.922 when compared with the target sequence.
-This result is encouraging as it illustrates that the method is working. However, 
-it also highlights that there's still room for significant improvements. Let's consider 
-this a successful starting point and a call to further optimize our approach!
+As you can see, it nails it in the last generation! However, it tooks 5 generations to
+get there. This shows that there's still room for significant improvements. Let's consider 
+this a successful starting point and a call to further optimize our approach.
 
 .. warning::
 
     Before we wrap up, it's important to note that this experiment is a simplified scenario 
     and it might differ from real-world applications. In actual experiments, your results may 
     contain uncertainties, and more challenging still, you might not obtain a clear outcome for 
-    every peptide tested. However, don't let this discourage you! These challenges make the 
-    field of peptide optimization a dynamic and fascinating area to explore. 
-
+    every peptide tested.
 
 Adding non-standard monomers
 ----------------------------
