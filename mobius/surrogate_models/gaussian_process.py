@@ -67,6 +67,11 @@ class GPModel(_SurrogateModel):
         self._X_train = None
         self._y_train = None
         self._y_noise = None
+    
+    @property
+    def device(self):
+        """Returns the device on which the model is running."""
+        return self._device
 
     def fit(self, X_train, y_train, y_noise=None):
         """

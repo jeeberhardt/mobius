@@ -65,11 +65,12 @@ class ProteinEmbedding:
 
         """
         assert embedding_type in ['avg'], 'Only average embedding is supported at the moment.'
-        assert 'esm' in model_name, 'Only ESM models are supported at the moment.'
+        #assert 'esm' in model_name, 'Only ESM models are supported at the moment.'
 
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+        
+        self._device = device
         self._model_name = model_name
         self._embedding_type = embedding_type
         self._standard_amino_acids = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
@@ -88,7 +89,7 @@ class ProteinEmbedding:
             self._vocabulary_mask = None
 
         # Move model to device
-        self._model.to(device)
+        self._model.to(self._device)
 
         self.eval()
 
@@ -96,6 +97,11 @@ class ProteinEmbedding:
     def model(self):
         """Returns the model."""
         return self._model
+    
+    @property
+    def device(self):
+        """Returns the device on which the model is running."""
+        return self._device
 
     def eval(self):
         """Sets the model to evaluation mode."""
@@ -144,6 +150,9 @@ class ProteinEmbedding:
             tokens = torch.cat(tokens)
         else:
             tokens = self._tokenizer(sequences, return_tensors='pt', padding=True, truncation=True)['input_ids']
+        
+        # Move tensors to device
+        tokens = tokens.to(self._device)
 
         return tokens
 
