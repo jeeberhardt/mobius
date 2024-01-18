@@ -179,6 +179,9 @@ class ProteinEmbedding:
 
             tokens = torch.cat(tokens)
         else:
+            if isinstance(sequences, np.ndarray):
+                sequences = sequences.tolist()
+
             tokens = self._tokenizer(sequences, return_tensors='pt', padding=True, truncation=True)['input_ids']
         
         # Move tensors to device
