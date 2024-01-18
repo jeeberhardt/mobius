@@ -674,7 +674,10 @@ def parse_helm(polymer):
              ('SourceMonomerPosition', 'i4'), ('SourceAttachment', 'U2'),
              ('TargetMonomerPosition', 'i4'), ('TargetAttachment', 'U2')]
 
-    complex_polymer_str, connections, hydrogen_bonds, attributes, _ = polymer.split('$')
+    try:
+        complex_polymer_str, connections, hydrogen_bonds, attributes, _ = polymer.split('$')
+    except ValueError:
+        raise ValueError(f'Invalid HELM string: {polymer}')
 
     # Process polymer
     complex_polymer = {}

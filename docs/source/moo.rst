@@ -87,7 +87,7 @@ information about the `SMS-EMOA` algorithm, please refer to the
     acq = ExpectedImprovement([gpmodel_a32, gpmodel_a26], maximize=[False, False])
 
     # Instead of using the classic GA, we are going to use the SMS-EMOA algorithm
-    optimizer = SequenceGA(algorithm='SMSMOEA', period=15)
+    optimizer = SequenceGA(algorithm='SMSEMOA', period=15)
 
     ps = Planner(acq, optimizer)
 
