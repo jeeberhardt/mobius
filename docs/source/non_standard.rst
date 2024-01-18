@@ -217,7 +217,7 @@ Typically, you'd see output similar to the following:
         27 |    13000 | -3.429750E-05 | -2.168542E-03
     Best peptide found so far: PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0 / 1.000
 
-As you can see, it nailed it in the last generation! However, it tooks 5 generations to
+As you can see, it nailed it in the last generation! However, it took 5 generations to
 get there. This shows that there's still room for significant improvements. Let's consider 
 this a successful starting point and a call to further optimize our approach.
 
