@@ -182,7 +182,7 @@ class ProteinEmbedding:
             if isinstance(sequences, np.ndarray):
                 sequences = sequences.tolist()
 
-            tokens = self._tokenizer(sequences, return_tensors='pt', padding=True, truncation=True)['input_ids']
+            tokens = self._tokenizer(sequences, return_tensors='pt', padding=True, truncation=True)
         
         # Move tensors to device
         tokens = tokens.to(self._device)
@@ -215,7 +215,7 @@ class ProteinEmbedding:
             results = self._model(tokenized_sequences, repr_layers=[33])
             embeddings = results['representations'][33]
         else:
-            results = self._model(tokenized_sequences)
+            results = self._model(input_ids=tokenized_sequences.input_ids, attention_mask=tokenized_sequences.attention_mask)
             embeddings = results.last_hidden_state
 
         # Either flatten the embeddings or average it
