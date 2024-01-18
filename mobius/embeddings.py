@@ -4,6 +4,7 @@
 # Mobius - Protein Embeddings
 #
 
+import importlib
 import re
 
 import esm
@@ -45,16 +46,25 @@ def select_parameters(model, parameters_names):
 
 class ProteinEmbedding:
 
-    def __init__(self, model_name='esm1b_t33_650M_UR50S', embedding_type='avg', parameters_to_finetune=None, device=None):
+    def __init__(self, pretrained_model_name='esm1b_t33_650M_UR50S', embedding_type='avg', 
+                 parameters_to_finetune=None, device=None, model_name=None, tokenizer_name=None):
         """
         Initializes the ProteinEmbedding class.
 
         Parameters
         ----------
-        model_name : str
-            Name of the model to use for embedding.
+        pretrained_model_name : str
+            Name of the encoder model. The model will be downloaded from the huggingface repository, 
+            except for ESM models. Suggestions for pretrained_model_name are:
+            - ESM models: esm1b_t33_650M_UR50S, esm2_t36_3B_UR50D
+            - ProtT5: Rostlab/prot_t5_xl_uniref50, Rostlab/ProstT5, Rostlab/prot_bert
+            - Others: TianlaiChen/PepMLM-650M
         embedding_type : str
-            Type of embedding to use. Currently only 'avg' is supported.
+            Type of embedding to use, either 'residue' or 'avg' (average). The number of output features 
+            depends on the requested embedding type. With the 'avg' embedding type, the number of features 
+            is equal to the out_features size of the model, while for the 'residue' embedding type, the 
+            number of features will be equal to the out_features size times the number of tokens in the 
+            sequence.
         device : str
             Device to use for embedding.
         parameters_to_finetune : str or List of str (default=None)
@@ -62,30 +72,50 @@ class ProteinEmbedding:
         device : str or torch.device, default : None
             Device on which to run the model. Per default, the device is set to 
             'cuda' if available, otherwise to 'cpu'.
+        encoder_name : str, default : None
+            Name of the encoder model to use if `AutoModel` failed to load the model.
+        tokenizer_name : str, default : None
+            Name of the tokenizer to use if `AutoTokenizer` failed to load the tokenizer.
+
+        Notes
+        -----
+        To use Prot_t5_xl_uniref50 or ProstT5 encoders, you need to use the `T5Tokenizer` tokenizer.
 
         """
-        assert embedding_type in ['avg'], 'Only average embedding is supported at the moment.'
-        #assert 'esm' in model_name, 'Only ESM models are supported at the moment.'
+        assert embedding_type in ['residue', 'avg'], 'Only average (avg) and residue embeddings are supported.'
 
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         self._device = device
-        self._model_name = model_name
+        self._pretrained_model_name = pretrained_model_name
         self._embedding_type = embedding_type
         self._standard_amino_acids = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
                                       'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
         self._parameters_to_finetune = parameters_to_finetune
 
-        if 'esm' in model_name:
+        if 'esm' in pretrained_model_name:
             self._model_type = 'esm'
-            self._model, alphabet = esm.pretrained.load_model_and_alphabet(model_name)
+            self._model, alphabet = esm.pretrained.load_model_and_alphabet(pretrained_model_name)
             self._tokenizer = alphabet.get_batch_converter()
             self._vocabulary_mask  = np.array([True if token in self._standard_amino_acids else False for token in alphabet.all_toks])
         else:
             self._model_type = 'other'
-            self._model = AutoModel.from_pretrained(model_name)
-            self._tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+            if model_name is not None:
+                module = importlib.import_module('transformers')
+                model = getattr(module, model_name)
+                self._model = model.from_pretrained(pretrained_model_name)
+            else:
+                self._model = AutoModel.from_pretrained(pretrained_model_name)
+
+            if tokenizer_name is not None:
+                module = importlib.import_module('transformers')
+                tokenizer = getattr(module, tokenizer_name)
+                self._tokenizer = tokenizer.from_pretrained(pretrained_model_name, legacy=False)
+            else:
+                self._tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name, legacy=False)
+
             self._vocabulary_mask = None
 
         # Move model to device
@@ -170,7 +200,10 @@ class ProteinEmbedding:
         Returns
         -------
         embeddings : torch.Tensor of shape (n_sequences, n_features)
-            Embedding vectors for each sequence.
+            Embedding vectors for each sequence. The number of features depends on the requested embedding type.
+            With the 'avg' embedding type, the number of features is equal to the out_features size of the model, while
+            for the 'residue' embedding type, the number of features will be equal to the out_features size times
+            the number of tokens in the sequence.
         probabilities : torch.Tensor of shape (n_sequences, n_tokens, n_amino_acids)
             Probabilities of amino acids at each position per sequence. If return_probabilities is True.
 
@@ -182,7 +215,11 @@ class ProteinEmbedding:
             results = self._model(tokenized_sequences)
             embeddings = results.last_hidden_state
 
-        features = torch.mean(embeddings, 1)
+        # Either flatten the embeddings or average it
+        if self._embedding_type == 'residue':
+            features = embeddings.reshape(-1)
+        else:
+            features = torch.mean(embeddings, 1)
 
         if return_probabilities and self._vocabulary_mask is not None:
             if 'logits' not in results:
