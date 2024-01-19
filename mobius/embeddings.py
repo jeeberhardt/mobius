@@ -189,7 +189,7 @@ class ProteinEmbedding:
             # Need to add spaces between amino acids for some models (e.g. T5tokenizer)
             sequences = [' '.join(seq) for seq in sequences]
 
-            tokens = self._tokenizer(sequences, add_special_tokens=True, return_tensors='pt', padding="longest")
+            tokens = self._tokenizer(sequences, add_special_tokens=True, return_tensors='pt', padding="longest")['input_ids']
 
         # Move tensors to device
         tokens = tokens.to(self._device)
@@ -203,9 +203,7 @@ class ProteinEmbedding:
         Parameters
         ----------
         tokenized_sequences : torch.Tensor of shape (n_sequences, n_tokens) or dict
-            List of tokenized protein sequences to embed. The dictionary contains two keys:
-            - input_ids: torch.Tensor of shape (n_sequences, n_tokens)
-            - attention_mask: torch.Tensor of shape (n_sequences, n_tokens)
+            List of tokenized protein sequences to embed.
         return_probabilities : bool
             Whether to return the probabilities of amino acids at each position per sequence.
 
@@ -225,7 +223,7 @@ class ProteinEmbedding:
             results = self._model(tokenized_sequences, repr_layers=[33])
             embeddings = results['representations'][33]
         else:
-            results = self._model(input_ids=tokenized_sequences.input_ids, attention_mask=tokenized_sequences.attention_mask)
+            results = self._model(input_ids=tokenized_sequences)
             embeddings = results.last_hidden_state
 
         # Either flatten the embeddings or average it
