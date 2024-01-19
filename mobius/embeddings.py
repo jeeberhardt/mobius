@@ -183,8 +183,7 @@ class ProteinEmbedding:
             if isinstance(sequences, np.ndarray):
                 sequences = sequences.tolist()
 
-            tokens = self._tokenizer(sequences, add_special_tokens=True, do_lower_case=False, 
-                                     return_tensors='pt', padding="longest", padding=True)
+            tokens = self._tokenizer(sequences, add_special_tokens=True, do_lower_case=False, return_tensors='pt', padding="longest")
         
         # Move tensors to device
         tokens = tokens.to(self._device)
