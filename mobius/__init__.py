@@ -7,8 +7,9 @@
 from .forcefield import ForceField
 from .virtual_target import VirtualTarget
 
-from .acquisition_functions import ExpectedImprovement, ProbabilityOfImprovement
-from .acquisition_functions import Greedy, RandomImprovement, UpperConfidenceBound
+from .acquisition_functions import ExpectedImprovement, LogExpectedImprovement
+from .acquisition_functions import RandomImprovement, UpperConfidenceBound, ProbabilityOfImprovement
+from .acquisition_functions import PosteriorMean, PosteriorStandardDeviation
 from .mobius import Mobius
 from .planner import Planner
 from .descriptors import SimplePolymerDescriptors
@@ -38,7 +39,9 @@ __all__ = ['VirtualTarget', 'ForceField',
            'GPModel', 'GPLLModel', 'DummyModel', 'RFModel',
            'ProteinEmbedding',
            'TanimotoSimilarityKernel', 'CosineSimilarityKernel',
-           'ExpectedImprovement', 'ProbabilityOfImprovement', 'Greedy', 'RandomImprovement', 'UpperConfidenceBound',
+           'ExpectedImprovement', 'LogExpectedImprovement',
+           'PosteriorMean', 'PosteriorStandardDeviation', 
+           'ProbabilityOfImprovement', 'RandomImprovement', 'UpperConfidenceBound',
            'MHFingerprint', 'Map4Fingerprint', 'MorganFingerprint', 'SimplePolymerDescriptors',
            'SequenceGA', 'RandomGA', 'Pool',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 

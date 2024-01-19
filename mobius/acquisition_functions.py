@@ -200,9 +200,9 @@ class RandomImprovement(_AcquisitionFunction):
         return ri
 
 
-class Greedy(_AcquisitionFunction):
+class PosteriorMean(_AcquisitionFunction):
     """
-    Class for the Greedy acquisition function.
+    Class for the Posterior Mean (Greedy / Purely Exploitation) acquisition function.
 
     Attributes
     ----------
@@ -217,7 +217,7 @@ class Greedy(_AcquisitionFunction):
 
     def __init__(self, surrogate_models, maximize=False):
         """
-        Greedy acquisition function.
+        Posterior mean (Greedy / Purely Exploitation) acquisition function.
 
         Parameters
         ----------
@@ -235,7 +235,7 @@ class Greedy(_AcquisitionFunction):
 
     def forward(self, X_test):
         """
-        Predict the mean values for input sequences.
+        Predict the posterior mean values for input sequences.
 
         Parameters
         ----------
@@ -245,7 +245,7 @@ class Greedy(_AcquisitionFunction):
         Returns
         -------
         ndarray of shape (n_sequences, n_predicted_scores)
-            The expected improvement values.
+            The posterior mean values.
 
         """
         X_test = np.asarray(X_test)
@@ -254,6 +254,64 @@ class Greedy(_AcquisitionFunction):
         for i, surrogate_model in enumerate(self._surrogate_models):
             mu, _ = surrogate_model.predict(X_test)
             scores[:, i] = mu
+
+        return scores
+
+
+class PosteriorStandardDeviation(_AcquisitionFunction):
+    """
+    Class for the Posterior Standard Deviation (Purely Exploration) acquisition function.
+
+    Attributes
+    ----------
+    surrogate_model : list of `_SurrogateModel`
+        The surrogate models used by the acquisition function.
+    maximize : ndarray of bool of shape (surrogate_models,)
+        Tell if the goal(s) is to maximize (True) or minimize (False) the acquisition function.
+    scaling_factors : ndarray of shape (surrogate_models,)
+        Scaling factor used by Genetic Algorithm, so it's always a minimization.
+
+    """
+
+    def __init__(self, surrogate_models, maximize=False):
+        """
+        Posterior Standard Deviation (Purely Exploration) acquisition function.
+
+        Parameters
+        ----------
+        surrogate_models: `_SurrogateModel` or list of `_SurrogateModel`
+            The surrogate model(s) to be used by the acquisition function.
+        maximize : bool or list of bool, default : False
+            Indicates whether the goal(s) is(are) to be maximised or minimized.
+
+        """
+        super().__init__(surrogate_models, maximize)
+
+    @property
+    def scaling_factors(self):
+        return (-1) ** (self._maximize)
+
+    def forward(self, X_test):
+        """
+        Predict the standard deviation values for input sequences.
+
+        Parameters
+        ----------
+        X_test : array-like of shape (n_sequences,) or (n_sequences, n_features)
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors.
+
+        Returns
+        -------
+        ndarray of shape (n_sequences, n_predicted_scores)
+            The posterior standard deviation values.
+
+        """
+        X_test = np.asarray(X_test)
+        scores = np.zeros((X_test.shape[0], len(self._surrogate_models)))
+
+        for i, surrogate_model in enumerate(self._surrogate_models):
+            _, std = surrogate_model.predict(X_test)
+            scores[:, i] = std
 
         return scores
 
@@ -338,6 +396,89 @@ class ExpectedImprovement(_AcquisitionFunction):
             ucdf = norm.cdf(u)
             updf = norm.pdf(u)
             ei = sigma * (updf + u * ucdf)
+            ei[sigma == 0.0] == 0.0
+
+            scores[:, i] = ei
+
+        return scores
+    
+
+class LogExpectedImprovement(_AcquisitionFunction):
+    """
+    Class for the Log Expected Improvement acquisition function.
+
+    Attributes
+    ----------
+    surrogate_model : list of `_SurrogateModel`
+        The surrogate models used by the acquisition function.
+    scaling_factors : ndarray of shape (surrogate_models,)
+        Scaling factor used by Genetic Algorithm, so it's always a minimization.
+    maximize : ndarray of bool of shape (surrogate_models,)
+        Tell if the goal(s) is to maximize (True) or minimize (False) the acquisition function.
+    number_of_objectives : int
+        Number of objectives to optimize.
+
+    """
+
+    def __init__(self, surrogate_models, maximize=False, xi=0.00, eps=1e-9):
+        """
+        Log Expected improvement acquisition function.
+
+        Parameters
+        ----------
+        surrogate_models: `_SurrogateModel` or list of `_SurrogateModel`
+            The surrogate model(s) to be used by the acquisition function.
+        maximize : bool or list of bool, default : False
+            Indicates whether the goal(s) is(are) to be maximised or minimized.
+        xi : float, default : 0.
+            Exploitation-exploration trade-off parameter.
+        eps : float, default : 1e-9
+            Small number to avoid numerical instability.
+
+        """
+        super().__init__(surrogate_models, maximize)
+        self._eps = eps
+        self._xi = xi
+
+    @property
+    def scaling_factors(self):
+        return -1 * np.ones(len(self._maximize))
+
+    def forward(self, X_test):
+        """
+        Predict the Log Expected Improvement values for input sequences.
+
+        Parameters
+        ----------
+        X_test : array-like of shape (n_sequences,) or (n_sequences, n_features)
+            Sequences in HELM format (for polymers), FASTA format (for bipolymers) or feature vectors.
+
+        Returns
+        -------
+        ndarray of shape (n_sequences, n_predicted_scores)
+            The log expected improvement values.
+
+        """
+        X_test = np.asarray(X_test)
+        scores = np.zeros((X_test.shape[0], len(self._surrogate_models)))
+
+        for i, surrogate_model in enumerate(self._surrogate_models):
+            if self._maximize[i]:
+                best_f = np.max(surrogate_model.y_train)
+            else:
+                best_f = np.min(surrogate_model.y_train)
+
+            # calculate mean and stdev via surrogate function*
+            mu, sigma = surrogate_model.predict(X_test)
+
+            u = (mu - best_f - self._xi) / (sigma + self._eps)
+
+            if not self._maximize[i]:
+                u = -u
+
+            ucdf = norm.cdf(u)
+            updf = norm.pdf(u)
+            ei = np.log(sigma * (updf + u * ucdf))
             ei[sigma == 0.0] == 0.0
 
             scores[:, i] = ei
