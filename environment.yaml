@@ -21,7 +21,7 @@ dependencies:
   - sphinx == 6.2.1
   - sphinx_rtd_theme
   - transformers
-  - pytorch
+  - pytorch=*=*cuda*
   - pip:
     - mhfp
     - ray
