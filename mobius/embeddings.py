@@ -79,7 +79,13 @@ class ProteinEmbedding:
 
         Notes
         -----
-        To use Prot_t5_xl_uniref50 or ProstT5 encoders, you need to use the `T5Tokenizer` tokenizer.
+        - Prot_t5_xl_uniref50: Use the `T5EncoderModel` model and `T5Tokenizer` tokenizer.
+        - ProstT5: Use the `T5EncoderModel` model and `T5Tokenizer` tokenizer.
+
+        Raises
+        ------
+        AssertionError
+            If the embedding type is not supported.
 
         """
         assert embedding_type in ['residue', 'avg'], 'Only average (avg) and residue embeddings are supported.'
@@ -163,6 +169,13 @@ class ProteinEmbedding:
         -------
         tokens : torch.Tensor of shape (n_sequences, n_tokens)
             Tokenized sequences.
+
+        Raises
+        ------
+        AssertionError
+            If the sequences are not in FASTA format.
+        AssertionError
+            If the sequences have different lengths.
 
         """
         sequence_formats = np.unique(utils.guess_input_formats(sequences))
