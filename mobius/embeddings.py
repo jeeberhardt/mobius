@@ -18,7 +18,7 @@ from . import utils
 def select_parameters(model, parameters_names):
     """
     Selects parameters from a model based on their names.
-    
+
     Parameters
     ----------
     model : torch.nn.Module
@@ -86,7 +86,7 @@ class ProteinEmbedding:
 
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
+
         self._device = device
         self._pretrained_model_name = pretrained_model_name
         self._embedding_type = embedding_type
@@ -149,7 +149,7 @@ class ProteinEmbedding:
 
             for param in parameters_to_finetune:
                 param.requires_grad = True
-    
+
     def tokenize(self, sequences):
         """
         Tokenizes protein sequences.
@@ -171,6 +171,9 @@ class ProteinEmbedding:
         assert sequence_formats[0] == 'FASTA' and sequence_formats.size == 1, msg_error
         assert np.unique([len(s) for s in sequences]).size == 1, f'All sequences must have the same length.'
 
+        if not isinstance(sequences, (list, tuple, np.ndarray, torch.Tensor)):
+            sequences = [sequences]
+
         if self._model_type == 'esm':
             tokens = []
 
@@ -183,8 +186,11 @@ class ProteinEmbedding:
             if isinstance(sequences, np.ndarray):
                 sequences = sequences.tolist()
 
+            # Need to add spaces between amino acids for some models (e.g. T5tokenizer)
+            sequences = [' '.join(seq) for seq in sequences]
+
             tokens = self._tokenizer(sequences, add_special_tokens=True, return_tensors='pt', padding="longest")
-        
+
         # Move tensors to device
         tokens = tokens.to(self._device)
 
@@ -196,18 +202,21 @@ class ProteinEmbedding:
 
         Parameters
         ----------
-        tokenized_sequences : torch.Tensor of shape (n_sequences, n_tokens)
-            List of tokenized protein sequences to embed.
+        tokenized_sequences : torch.Tensor of shape (n_sequences, n_tokens) or dict
+            List of tokenized protein sequences to embed. The dictionary contains two keys:
+            - input_ids: torch.Tensor of shape (n_sequences, n_tokens)
+            - attention_mask: torch.Tensor of shape (n_sequences, n_tokens)
         return_probabilities : bool
             Whether to return the probabilities of amino acids at each position per sequence.
 
         Returns
         -------
         embeddings : torch.Tensor of shape (n_sequences, n_features)
-            Embedding vectors for each sequence. The number of features depends on the requested embedding type.
-            With the 'avg' embedding type, the number of features is equal to the out_features size of the model, while
-            for the 'residue' embedding type, the number of features will be equal to the out_features size times
-            the number of tokens in the sequence.
+            Embedding vectors for each sequence. The number of features depends on the requested 
+            embedding type. With the 'avg' embedding type, the number of features is equal to the 
+            out_features size of the model, while for the 'residue' embedding type, the number 
+            of features will be equal to the out_features size times the number of tokens in the 
+            sequence.
         probabilities : torch.Tensor of shape (n_sequences, n_tokens, n_amino_acids)
             Probabilities of amino acids at each position per sequence. If return_probabilities is True.
 
