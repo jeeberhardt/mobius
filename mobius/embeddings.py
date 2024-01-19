@@ -167,7 +167,8 @@ class ProteinEmbedding:
         """
         sequence_formats = np.unique(utils.guess_input_formats(sequences))
 
-        assert sequence_formats[0] == 'FASTA' and sequence_formats.size == 1, f'Only FASTA format is supported ({sequence_formats}).'
+        msg_error = f'Only FASTA format is supported. Got {sequence_formats}.'
+        assert sequence_formats[0] == 'FASTA' and sequence_formats.size == 1, msg_error
         assert np.unique([len(s) for s in sequences]).size == 1, f'All sequences must have the same length.'
 
         if self._model_type == 'esm':
@@ -182,7 +183,8 @@ class ProteinEmbedding:
             if isinstance(sequences, np.ndarray):
                 sequences = sequences.tolist()
 
-            tokens = self._tokenizer(sequences, return_tensors='pt', padding=True, truncation=True)
+            tokens = self._tokenizer(sequences, add_special_tokens=True, do_lower_case=False, 
+                                     return_tensors='pt', padding="longest", padding=True)
         
         # Move tensors to device
         tokens = tokens.to(self._device)
