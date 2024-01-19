@@ -199,7 +199,7 @@ class ProteinEmbedding:
             if isinstance(sequences, np.ndarray):
                 sequences = sequences.tolist()
 
-            # Need to add spaces between amino acids for some models (e.g. T5tokenizer)
+            # Need to add spaces between amino acids for some models (e.g. T5Tokenizer)
             sequences = [' '.join(seq) for seq in sequences]
 
             tokens = self._tokenizer(sequences, add_special_tokens=True, return_tensors='pt', padding="longest")['input_ids']
