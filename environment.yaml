@@ -15,6 +15,7 @@ dependencies:
   - pip
   - rdkit
   - seaborn
+  - sentencepiece
   - scikit-learn
   - scipy
   - sphinx == 6.2.1
