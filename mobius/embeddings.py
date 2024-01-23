@@ -242,6 +242,21 @@ class ProteinEmbedding:
                 self._tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name, legacy=False)
 
             self._vocabulary_mask = None
+        
+        # Setup model for finetuning
+        if self._layers_to_finetune is not None:
+            # Freeze all parameters
+            for param in self._model.parameters():
+                param.requires_grad = False
+
+            # Either replace layers with LoRA or apply traditional fine-tuning strategy
+            if self._lora:
+                replace_layers_with_lora(self._model, self._layers_to_finetune, self._lora_rank, self._lora_alpha)
+            else:
+                layers_to_finetune = select_parameters(self._model, self._layers_to_finetune)
+
+                for param in layers_to_finetune:
+                    param.requires_grad = True
 
         # Move model to device
         self._model.to(self._device)
@@ -265,20 +280,6 @@ class ProteinEmbedding:
     def train(self):
         """Sets the model to training mode."""
         self._model.train()
-
-        if self._layers_to_finetune is not None:
-            # Freeze all parameters
-            for param in self._model.parameters():
-                param.requires_grad = False
-
-            # Either replace layers with LoRA or apply traditional fine-tuning strategy
-            if self._lora:
-                replace_layers_with_lora(self._model, self._layers_to_finetune, self._lora_rank, self._lora_alpha)
-            else:
-                layers_to_finetune = select_parameters(self._model, self._layers_to_finetune)
-
-                for param in layers_to_finetune:
-                    param.requires_grad = True
 
     def tokenize(self, sequences):
         """
