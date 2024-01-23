@@ -15,6 +15,114 @@ from transformers import AutoModel, AutoTokenizer
 from . import utils
 
 
+class LoRALayer(torch.nn.Module):
+    def __init__(self, in_dim, out_dim, rank=8, alpha=16):
+        """
+        Initializes the LoRALayer class.
+
+        Parameters
+        ----------
+        in_dim : int
+            Input dimension.
+        out_dim : int
+            Output dimension.
+        rank : int, default : 8
+            Rank of the LoRA layer.
+        alpha : int, default : 16
+            Scaling factor of the LoRA layer.
+            
+        """
+        super().__init__()
+        self.scaling = alpha / rank
+        std_dev = 1 / torch.sqrt(torch.tensor(rank).float())
+        self.A = torch.nn.Parameter(torch.randn(in_dim, rank) * std_dev)
+        self.B = torch.nn.Parameter(torch.zeros(rank, out_dim))
+
+    def forward(self, x):
+        """
+        Computes the output of the layer.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor.
+
+        Returns
+        -------
+        output : torch.Tensor
+            Output tensor.
+
+        """
+        x = self.scaling * (x @ self.A @ self.B)
+        return x
+    
+    
+class LinearWithLoRA(torch.nn.Module):
+    def __init__(self, linear, rank=4, alpha=16):
+        """
+        Initializes the LinearWithLoRA class.
+
+        Parameters
+        ----------
+        linear : torch.nn.Linear
+            Linear layer.
+        rank : int, default : 4
+            Rank of the LoRA layer.
+        alpha : int, default : 16
+            Scaling factor of the LoRA layer.
+
+        """
+        super().__init__()
+        self.linear = linear
+        self.lora = LoRALayer(linear.in_features, linear.out_features, rank, alpha)
+
+    def forward(self, x):
+        """
+        Computes the output of the layer.
+        
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor.
+
+        Returns
+        -------
+        output : torch.Tensor
+            Output tensor.
+
+        """
+        return self.linear(x) + self.lora(x)
+    
+
+def replace_layers_with_lora(model, patterns, rank=4, alpha=16):
+    """
+    Replaces linear layers with LoRA layers.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model.
+    patterns : str or List of str
+        Patterns to select the layers to replace.
+    rank : int, default : 4
+        Rank of the LoRA layer.
+    alpha : int, default : 16
+        Scaling factor of the LoRA layer.
+
+    Raises
+    ------
+    AssertionError
+        If the layer to replace is not a torch.nn.Linear.
+
+    """
+    for m_name, module in dict(model.named_modules()).items():
+        for c_name, layer in dict(module.named_children()).items():
+            if any(re.search(pattern, f'{m_name}.{c_name}') for pattern in patterns):
+                msg_error = f'LoRA can only be applied to torch.nn.Linear, but {layer} is {type(layer)}.'
+                assert isinstance(layer, torch.nn.Linear), msg_error
+                setattr(module, c_name, LinearWithLoRA(layer, rank, alpha))
+
+
 def select_parameters(model, parameters_names):
     """
     Selects parameters from a model based on their names.
@@ -47,7 +155,8 @@ def select_parameters(model, parameters_names):
 class ProteinEmbedding:
 
     def __init__(self, pretrained_model_name='esm1b_t33_650M_UR50S', embedding_type='avg', 
-                 parameters_to_finetune=None, device=None, model_name=None, tokenizer_name=None):
+                 device=None, model_name=None, tokenizer_name=None,
+                 layers_to_finetune=None, lora=False, lora_rank=4, lora_alpha=16):
         """
         Initializes the ProteinEmbedding class.
 
@@ -67,8 +176,6 @@ class ProteinEmbedding:
             sequence.
         device : str
             Device to use for embedding.
-        parameters_to_finetune : str or List of str (default=None)
-            Name the parameters to finetune. Per default, no parameters are finetuned.
         device : str or torch.device, default : None
             Device on which to run the model. Per default, the device is set to 
             'cuda' if available, otherwise to 'cpu'.
@@ -76,6 +183,15 @@ class ProteinEmbedding:
             Name of the encoder model to use if `AutoModel` failed to load the model.
         tokenizer_name : str, default : None
             Name of the tokenizer to use if `AutoTokenizer` failed to load the tokenizer.
+        layers_to_finetune : str or List of str (default=None)
+            Name the layers or weight parameters to finetune. Per default, no parameters are finetuned.
+        lora : bool, default : False
+            Whether to use LoRA layers. If True, the linear layers of the model will be replaced by
+            LoRA layers. If False, apply traditional fine-tuning strategy (modify weights directly).
+        lora_rank : int, default : 4
+            Rank of the LoRA layer. Only if lora=True.
+        lora_alpha : int, default : 16
+            Scaling factor of the LoRA layer. Only if lora=True.
 
         Notes
         -----
@@ -98,7 +214,10 @@ class ProteinEmbedding:
         self._embedding_type = embedding_type
         self._standard_amino_acids = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
                                       'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
-        self._parameters_to_finetune = parameters_to_finetune
+        self._layers_to_finetune = layers_to_finetune
+        self._lora = lora
+        self._lora_rank = lora_rank
+        self._lora_alpha = lora_alpha
 
         if 'esm' in pretrained_model_name:
             self._model_type = 'esm'
@@ -133,7 +252,7 @@ class ProteinEmbedding:
     def model(self):
         """Returns the model."""
         return self._model
-    
+
     @property
     def device(self):
         """Returns the device on which the model is running."""
@@ -147,14 +266,19 @@ class ProteinEmbedding:
         """Sets the model to training mode."""
         self._model.train()
 
-        if self._parameters_to_finetune is not None:
+        if self._layers_to_finetune is not None:
+            # Freeze all parameters
             for param in self._model.parameters():
                 param.requires_grad = False
 
-            parameters_to_finetune = select_parameters(self._model, self._parameters_to_finetune)
+            # Either replace layers with LoRA or apply traditional fine-tuning strategy
+            if self._lora:
+                replace_layers_with_lora(self._model, self._layers_to_finetune, self._lora_rank, self._lora_alpha)
+            else:
+                layers_to_finetune = select_parameters(self._model, self._layers_to_finetune)
 
-            for param in parameters_to_finetune:
-                param.requires_grad = True
+                for param in layers_to_finetune:
+                    param.requires_grad = True
 
     def tokenize(self, sequences):
         """
