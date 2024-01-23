@@ -74,7 +74,15 @@ class LinearWithLoRA(torch.nn.Module):
         """
         super().__init__()
         self.linear = linear
+        self.bias = linear.bias
         self.lora = LoRALayer(linear.in_features, linear.out_features, rank, alpha)
+    
+    @property
+    def weight(self):
+        """Returns the weight of the linear layer."""
+        # This is a dirty hack to make it work
+        # The model is looking for the weight attribute, and does not use the forward method
+        return self.linear.weight + (self.lora.scaling * (self.lora.A @ self.lora.B))
 
     def forward(self, x):
         """
