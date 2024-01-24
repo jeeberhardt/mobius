@@ -361,9 +361,9 @@ class ProteinEmbedding:
         if layers_to_unfreeze is None:
             layers_to_unfreeze = ".*"
 
-        layers_to_finetune = select_parameters(self._model, layers_to_unfreeze)
+        selected_parameters = select_parameters(self._model, layers_to_unfreeze)
 
-        for param in layers_to_finetune:
+        for param in selected_parameters:
             param.requires_grad = True
 
     def tokenize(self, sequences):
