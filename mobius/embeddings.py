@@ -102,7 +102,7 @@ class LinearWithLoRA(torch.nn.Module):
         """
         has_bias = True if linear.bias is not None else False
 
-        lora_linear = LoRALayer(linear.in_features, linear.out_features, has_bias, rank, alpha)
+        lora_linear = LinearWithLoRA(linear.in_features, linear.out_features, has_bias, rank, alpha)
         # Replace the randomly initialized linear layer with the input linear
         lora_linear.linear = linear
 
