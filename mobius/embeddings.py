@@ -30,7 +30,7 @@ class LoRALayer(torch.nn.Module):
             Rank of the LoRA layer.
         alpha : int, default : 16
             Scaling factor of the LoRA layer.
-            
+
         """
         super().__init__()
         self.scaling = alpha
@@ -55,8 +55,8 @@ class LoRALayer(torch.nn.Module):
         """
         x = self.scaling * (x @ self.A @ self.B)
         return x
-    
-    
+
+
 class LinearWithLoRA(torch.nn.Module):
     def __init__(self, in_features, out_features, bias=True, rank=4, alpha=16):
         """
@@ -127,14 +127,14 @@ class LinearWithLoRA(torch.nn.Module):
             fused_linear.bias = self.bias
 
         return fused_linear
-    
+
     @property
     def weight(self):
         """Returns the weight of the linear layer."""
         # This is a dirty hack to make it work. I do not like it. This happens when 
         # the model is looking for the weight attribute, and does not use the forward method.
         return self.linear.weight + (self.lora.scaling * (self.lora.A @ self.lora.B))
-    
+
     @property
     def bias(self):
         """Returns the bias of the linear layer."""
@@ -143,7 +143,7 @@ class LinearWithLoRA(torch.nn.Module):
     def forward(self, x):
         """
         Computes the output of the layer.
-        
+
         Parameters
         ----------
         x : torch.Tensor
@@ -156,7 +156,7 @@ class LinearWithLoRA(torch.nn.Module):
 
         """
         return self.linear(x) + self.lora(x)
-    
+
 
 def replace_layers_with_lora(model, patterns, rank=4, alpha=16):
     """
@@ -307,10 +307,10 @@ class ProteinEmbedding:
                 self._tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name, legacy=False)
 
             self._vocabulary_mask = None
-        
+
         # Freeze all parameters
         self.freeze()
-        
+
         # Setup model for finetuning
         if self._layers_to_finetune is not None:
             # Either replace layers with LoRA or apply traditional fine-tuning strategy 
@@ -342,7 +342,7 @@ class ProteinEmbedding:
     def train(self):
         """Sets the model to training mode."""
         self._model.train()
-    
+
     def freeze(self):
         """Freezes all parameters of the model."""
         for param in self._model.parameters():
@@ -361,7 +361,7 @@ class ProteinEmbedding:
         ------
         ValueError
             If no parameters were found with the pattern.
-        
+
         """
         if layers_to_unfreeze is None:
             layers_to_unfreeze = [".*"]
