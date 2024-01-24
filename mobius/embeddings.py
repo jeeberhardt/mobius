@@ -16,15 +16,15 @@ from . import utils
 
 
 class LoRALayer(torch.nn.Module):
-    def __init__(self, in_dim, out_dim, rank=8, alpha=16):
+    def __init__(self, in_features, out_features, rank=8, alpha=16):
         """
         Initializes the LoRALayer class.
 
         Parameters
         ----------
-        in_dim : int
+        in_features : int
             Input dimension.
-        out_dim : int
+        out_features : int
             Output dimension.
         rank : int, default : 8
             Rank of the LoRA layer.
@@ -33,10 +33,10 @@ class LoRALayer(torch.nn.Module):
             
         """
         super().__init__()
-        self.scaling = alpha / rank
+        self.scaling = alpha
         std_dev = 1 / torch.sqrt(torch.tensor(rank).float())
-        self.A = torch.nn.Parameter(torch.randn(in_dim, rank) * std_dev)
-        self.B = torch.nn.Parameter(torch.zeros(rank, out_dim))
+        self.A = torch.nn.Parameter(torch.randn(in_features, rank) * std_dev)
+        self.B = torch.nn.Parameter(torch.zeros(rank, out_features))
 
     def forward(self, x):
         """
@@ -58,9 +58,32 @@ class LoRALayer(torch.nn.Module):
     
     
 class LinearWithLoRA(torch.nn.Module):
-    def __init__(self, linear, rank=4, alpha=16):
+    def __init__(self, in_features, out_features, bias=True, rank=4, alpha=16):
         """
         Initializes the LinearWithLoRA class.
+
+        Parameters
+        ----------
+        in_features : int
+            Size of each input sample.
+        out_features : int
+            Size of each output sample.
+        bias : bool, default : True
+            If set to False, the layer will not learn an additive bias.
+        rank : int, default : 4
+            Rank of the LoRA layer.
+        alpha : int, default : 16
+            Scaling factor of the LoRA layer.
+
+        """
+        super().__init__()
+        self.linear = torch.nn.Linear(in_features, out_features, bias=bias)
+        self.lora = LoRALayer(in_features, out_features, rank, alpha)
+
+    @staticmethod
+    def from_linear(linear, rank=4, alpha=16):
+        """
+        Initializes the LinearWithLoRA class from a linear layer.
 
         Parameters
         ----------
@@ -71,11 +94,39 @@ class LinearWithLoRA(torch.nn.Module):
         alpha : int, default : 16
             Scaling factor of the LoRA layer.
 
+        Returns
+        -------
+        LinearWithLoRA
+            Linear layer with LoRA.
+
         """
-        super().__init__()
-        self.linear = linear
-        self.bias = linear.bias
-        self.lora = LoRALayer(linear.in_features, linear.out_features, rank, alpha)
+        has_bias = True if linear.bias is not None else False
+
+        lora_linear = LoRALayer(linear.in_features, linear.out_features, has_bias, rank, alpha)
+        # Replace the randomly initialized linear layer with the input linear
+        lora_linear.linear = linear
+
+        return lora_linear
+
+    def to_linear(self):
+        """
+        Converts the LinearWithLoRA layer to a linear layer.
+
+        Returns
+        -------
+        torch.nn.Linear
+            Linear layer.
+
+        """
+        linear = self.linear
+        has_bias = True if self.linear.bias is not None else False
+
+        fused_linear = torch.nn.Linear(linear.in_features, linear.out_features, bias=has_bias)
+        fused_linear.weight = self.weight
+        if has_bias:
+            fused_linear.bias = self.bias
+
+        return fused_linear
     
     @property
     def weight(self):
@@ -83,6 +134,11 @@ class LinearWithLoRA(torch.nn.Module):
         # This is a dirty hack to make it work
         # The model is looking for the weight attribute, and does not use the forward method
         return self.linear.weight + (self.lora.scaling * (self.lora.A @ self.lora.B))
+    
+    @property
+    def bias(self):
+        """Returns the bias of the linear layer."""
+        return self.linear.bias
 
     def forward(self, x):
         """
@@ -128,7 +184,7 @@ def replace_layers_with_lora(model, patterns, rank=4, alpha=16):
             if any(re.search(pattern, f'{m_name}.{c_name}') for pattern in patterns):
                 msg_error = f'LoRA can only be applied to torch.nn.Linear, but {layer} is {type(layer)}.'
                 assert isinstance(layer, torch.nn.Linear), msg_error
-                setattr(module, c_name, LinearWithLoRA(layer, rank, alpha))
+                setattr(module, c_name, LinearWithLoRA.from_linear(layer, rank, alpha))
 
 
 def select_parameters(model, parameters_names):
@@ -164,7 +220,7 @@ class ProteinEmbedding:
 
     def __init__(self, pretrained_model_name='esm1b_t33_650M_UR50S', embedding_type='avg', 
                  device=None, model_name=None, tokenizer_name=None,
-                 layers_to_finetune=None, lora=False, lora_rank=4, lora_alpha=16):
+                 layers_to_finetune=None, lora=False, lora_rank=4, lora_alpha=8):
         """
         Initializes the ProteinEmbedding class.
 
@@ -195,11 +251,12 @@ class ProteinEmbedding:
             Name the layers or weight parameters to finetune. Per default, no parameters are finetuned.
         lora : bool, default : False
             Whether to use LoRA layers. If True, the linear layers of the model will be replaced by
-            LoRA layers. If False, apply traditional fine-tuning strategy (modify weights directly).
+            LoRA layers. If False, apply traditional fine-tuning strategy (modify linear weights directly).
         lora_rank : int, default : 4
             Rank of the LoRA layer. Only if lora=True.
-        lora_alpha : int, default : 16
-            Scaling factor of the LoRA layer. Only if lora=True.
+        lora_alpha : int, default : 8
+            Scaling factor of the LoRA layer. Only if lora=True. As a rule of thumb, alpha is set to
+            two times the rank (alpha = 2 * rank).
 
         Notes
         -----
@@ -251,20 +308,17 @@ class ProteinEmbedding:
 
             self._vocabulary_mask = None
         
+        # Freeze all parameters
+        self.freeze()
+        
         # Setup model for finetuning
         if self._layers_to_finetune is not None:
-            # Freeze all parameters
-            for param in self._model.parameters():
-                param.requires_grad = False
-
-            # Either replace layers with LoRA or apply traditional fine-tuning strategy
+            # Either replace layers with LoRA or apply traditional fine-tuning strategy 
+            # by unfreezing weights in the selected layers.
             if self._lora:
                 replace_layers_with_lora(self._model, self._layers_to_finetune, self._lora_rank, self._lora_alpha)
             else:
-                layers_to_finetune = select_parameters(self._model, self._layers_to_finetune)
-
-                for param in layers_to_finetune:
-                    param.requires_grad = True
+                self.unfreeze(self._layers_to_finetune)
 
         # Move model to device
         self._model.to(self._device)
@@ -288,6 +342,29 @@ class ProteinEmbedding:
     def train(self):
         """Sets the model to training mode."""
         self._model.train()
+    
+    def freeze(self):
+        """Freezes all parameters of the model."""
+        for param in self._model.parameters():
+            param.requires_grad = False
+
+    def unfreeze(self, layers_to_unfreeze=None):
+        """Unfreezes parameters of the model.
+
+        Parameters
+        ----------
+        layers_to_unfreeze : str or List of str, default : None
+            Name the layers or weight parameters to unfreeze. Per default, 
+            all parameters are unfreezed (".*").
+        
+        """
+        if layers_to_unfreeze is None:
+            layers_to_unfreeze = ".*"
+
+        layers_to_finetune = select_parameters(self._model, layers_to_unfreeze)
+
+        for param in layers_to_finetune:
+            param.requires_grad = True
 
     def tokenize(self, sequences):
         """
