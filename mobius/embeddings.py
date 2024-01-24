@@ -131,8 +131,8 @@ class LinearWithLoRA(torch.nn.Module):
     @property
     def weight(self):
         """Returns the weight of the linear layer."""
-        # This is a dirty hack to make it work
-        # The model is looking for the weight attribute, and does not use the forward method
+        # This is a dirty hack to make it work. I do not like it. This happens when 
+        # the model is looking for the weight attribute, and does not use the forward method.
         return self.linear.weight + (self.lora.scaling * (self.lora.A @ self.lora.B))
     
     @property
