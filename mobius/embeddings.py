@@ -354,17 +354,31 @@ class ProteinEmbedding:
         Parameters
         ----------
         layers_to_unfreeze : str or List of str, default : None
-            Name the layers or weight parameters to unfreeze. Per default, 
-            all parameters are unfreezed (".*").
+            Name(s) or regular expression(s) to select the layers or weight parameters 
+            to be unfrozen. If None, all parameters are unfreezed (".*"). 
+
+        Raises
+        ------
+        ValueError
+            If no parameters were found with the pattern.
         
         """
         if layers_to_unfreeze is None:
-            layers_to_unfreeze = ".*"
+            layers_to_unfreeze = [".*"]
 
-        selected_parameters = select_parameters(self._model, layers_to_unfreeze)
+        if not isinstance(layers_to_unfreeze, (list, tuple, np.ndarray)):
+            layers_to_unfreeze = [layers_to_unfreeze]
 
-        for param in selected_parameters:
-            param.requires_grad = True
+        for pattern in layers_to_unfreeze:
+            selected_parameters = select_parameters(self._model, pattern)
+
+            # This is a safeguard to avoid wrong patterns
+            if len(selected_parameters) == 0:
+                msg_error = f'No parameters were found with the pattern {pattern}.'
+                raise ValueError(msg_error)
+
+            for param in selected_parameters:
+                param.requires_grad = True
 
     def tokenize(self, sequences):
         """
