@@ -372,6 +372,7 @@ class ProteinEmbedding:
         for pattern in layers_to_unfreeze:
             selected_parameters = select_parameters(self._model, pattern)
 
+            # Check that the pattern matches at least one parameter
             # This is a safeguard to avoid wrong patterns
             if len(selected_parameters) == 0:
                 msg_error = f'No parameters were found with the pattern {pattern}.'
