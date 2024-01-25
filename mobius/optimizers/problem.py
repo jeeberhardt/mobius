@@ -57,30 +57,38 @@ class Problem(Problem):
 
         """
         sequences = x.ravel()
-        pre_evaluation_penalty = 999.
 
         if self._pre_evaluation:
             # For the first GA generation, we use the experimental scores
             # then we will use the acquisition scores from the surrogate models.
             try:
-                # We shift all the experimental scores in the opposite direction
-                # by a large number to ensure that the sequences generated during the
-                # optimization will be better acquisition scores.
                 acq_values = np.array([self._prior_data[p] for p in sequences])
-                acq_values += -1. * self._acq_fun.scaling_factors * pre_evaluation_penalty
-                if self._filters:
-                    # We convert booleans to int, and flip the values, so 0 means feasible, and 1 means infeasible.
-                    feasibility = 1 - np.column_stack([f.apply(sequences) for f in self._filters]).astype(int)
             except KeyError:
                 msg = f'Some sequences not found in the input experimental data. '
                 msg += 'Did you forget to turn on the eval mode?'
                 raise RuntimeError(msg)
+            
+            # We want to shift all the experimental scores in the opposite direction
+            # so that the sequences generated during the optimization will have 
+            # better (meaning lower) acquisition scores than the experimental ones.
+            # If we are maximizing, we first flip the values, so the minimum becomes 
+            # the maximum, and vice versa.
+            if self._acq_fun.maximize:
+                acq_values *= -1
+            # Finally we shift the acquisition scores to the right, the maximum 
+            # acquisition score becomes now the minimum, and superior than zeros.
+            acq_values += np.abs(np.min(acq_values)) + (np.max(acq_values) - np.min(acq_values))
+
+            # Turn off automatically the pre-evaluation mode
+            # Now it will use the acquisition scores from the surrogate models
+            self.eval()
         else:
             # Evaluate unseen sequence with acquisition scores from surrogate models
             acq_values = self._acq_fun.forward(sequences) * self._acq_fun.scaling_factors
-            if self._filters:
-                # We convert booleans to int, and flip the values, so 0 means feasible, and 1 means infeasible.
-                feasibility = 1 - np.column_stack([f.apply(sequences) for f in self._filters]).astype(int)
+
+        if self._filters:
+            # We convert booleans to int, and flip the values, so 0 means feasible, and 1 means infeasible.
+            feasibility = 1 - np.column_stack([f.apply(sequences) for f in self._filters]).astype(int)
 
         out["F"] = acq_values
         if self._filters:

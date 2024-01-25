@@ -401,15 +401,11 @@ class SerialPolymerGA():
         # Initialize the problem
         problem = Problem(polymers, scores, acquisition_functions, self._filters)
 
-        # ... and pre-initialize the population with the experimental data.
+        # ... and initialize the population with the experimental data.
         # This is only for the first GA generation.
         X = polymers.reshape(polymers.shape[0], -1)
         pop = Population.new("X", X)
         Evaluator().eval(problem, pop)
-
-        # Turn off the pre-evaluation mode
-        # Now it will use the acquisition scores from the surrogate models
-        problem.eval()
 
         # Initialize genetic operators
         mutation = PolymerMutation(self._designs, self._pm, self._minimum_mutations, self._maximum_mutations)
