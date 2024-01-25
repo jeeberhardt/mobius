@@ -39,7 +39,6 @@ class Problem(Problem):
         super().__init__(n_var=1, n_obj=acq_fun.number_of_objectives, n_ieq_constr=n_ieq_constr)
 
         self._prior_data = {p: s for p, s in zip(sequences, scores)}
-        self._sequences_cache = {}
         self._acq_fun = acq_fun
         self._filters = filters
         self._pre_evaluation = True
