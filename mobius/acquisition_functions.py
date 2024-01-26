@@ -565,9 +565,16 @@ class ProbabilityOfImprovement(_AcquisitionFunction):
         return scores
 
 
-class UpperConfidenceBound(_AcquisitionFunction):
+class LowerUpperConfidenceBound(_AcquisitionFunction):
     """
-    Class for the Upper Confidence Bound acquisition function.
+    Class for the Lower/Upper Confidence Bound acquisition function.
+
+    Depending on the objective (minimization or maximization), the Lower/Upper
+    Confidence Bound acquisition function is defined as follows:
+
+    `LCB(x) = mu(x) - beta * sigma(x)` when minimizing and 
+    `UCB(x) = mu(x) + beta * sigma(x)` when maximizing , where `mu` and `sigma` 
+    are the posterior mean and standard deviation, respectively.
 
     Attributes
     ----------
@@ -582,9 +589,9 @@ class UpperConfidenceBound(_AcquisitionFunction):
 
     """
 
-    def __init__(self, surrogate_models, maximize=False, beta=0.25):
+    def __init__(self, surrogate_models, maximize=False, beta=0.2):
         """
-        Upper Confidence Bound acquisition function.
+        Lower/Upper Confidence Bound acquisition function.
 
         Parameters
         ----------
@@ -592,21 +599,20 @@ class UpperConfidenceBound(_AcquisitionFunction):
             The surrogate model(s) to be used by the acquisition function.
         maximize : bool or list of bool, default : False
             Indicates whether the goal(s) is(are) to be maximised or minimized.
-        beta : float, default : 0.25
+        beta : float, default : 0.2
             Exploitation-exploration trade-off parameter.
 
         """
         super().__init__(surrogate_models, maximize)
-        self._delta = 1. - beta
         self._beta = beta
 
     @property
     def scaling_factors(self):
-        return -1 * np.ones(len(self._maximize))
+        return (-1) ** (self._maximize)
 
     def forward(self, X_test):
         """
-        Predict the Upper Confidence Bound values for input sequences.
+        Predict the Lower/Upper Confidence Bound values for input sequences.
 
         Parameters
         ----------
@@ -626,8 +632,11 @@ class UpperConfidenceBound(_AcquisitionFunction):
             # calculate mean and stdev via surrogate function
             mu, sigma = surrogate_model.predict(X_test)
 
-            # calculate the upper confidence bound
-            ucb = (self._delta * mu) + (self._beta * sigma)
+            # calculate the lower/upper confidence bound
+            if self._maximize[i]:
+                ucb = mu + (self._beta * sigma)
+            else:
+                ucb = mu - (self._beta * sigma)
             
             scores[:, i] = ucb
 

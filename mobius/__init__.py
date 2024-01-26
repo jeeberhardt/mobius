@@ -8,7 +8,7 @@ from .forcefield import ForceField
 from .virtual_target import VirtualTarget
 
 from .acquisition_functions import ExpectedImprovement, LogExpectedImprovement
-from .acquisition_functions import RandomImprovement, UpperConfidenceBound, ProbabilityOfImprovement
+from .acquisition_functions import RandomImprovement, LowerUpperConfidenceBound, ProbabilityOfImprovement
 from .acquisition_functions import PosteriorMean, PosteriorStandardDeviation
 from .mobius import Mobius
 from .planner import Planner
@@ -41,7 +41,7 @@ __all__ = ['VirtualTarget', 'ForceField',
            'TanimotoSimilarityKernel', 'CosineSimilarityKernel',
            'ExpectedImprovement', 'LogExpectedImprovement',
            'PosteriorMean', 'PosteriorStandardDeviation', 
-           'ProbabilityOfImprovement', 'RandomImprovement', 'UpperConfidenceBound',
+           'ProbabilityOfImprovement', 'RandomImprovement', 'LowerUpperConfidenceBound',
            'MHFingerprint', 'Map4Fingerprint', 'MorganFingerprint', 'SimplePolymerDescriptors',
            'SequenceGA', 'RandomGA', 'Pool',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 
