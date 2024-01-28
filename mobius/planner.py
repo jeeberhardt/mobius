@@ -93,7 +93,7 @@ class _Planner(ABC):
         raise NotImplementedError()
 
 
-def batch_selection(results, filters=None, batch_size=96):
+def batch_selection(results, batch_size=96):
     """
     Function for selecting the sequence batch to be synthesized next.
 
