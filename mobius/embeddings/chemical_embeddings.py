@@ -209,8 +209,6 @@ class ChemicalEmbedding:
 
         tokens = self._tokenizer(molecules, add_special_tokens=True, return_tensors='pt', 
                                  padding=padding, truncation=False, max_length=max_length)['input_ids']
-        
-        print(tokens.shape)
 
         # Move tensors to device
         tokens = tokens.to(self._device)
