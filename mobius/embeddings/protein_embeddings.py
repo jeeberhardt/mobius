@@ -240,6 +240,8 @@ class ProteinEmbedding:
             # Need to add spaces between amino acids for some models (e.g. T5Tokenizer)
             sequences = [' '.join(seq) for seq in sequences]
 
+            # Truncation is False because we want to keep the full sequence. It will fail 
+            # if the sequence is longer than the maximum length, so we avoid bad surprises.
             tokens = self._tokenizer(sequences, add_special_tokens=True, return_tensors='pt', 
                                      padding=padding, truncation=False, max_length=max_length)['input_ids']
 
