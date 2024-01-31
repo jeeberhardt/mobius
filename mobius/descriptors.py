@@ -72,6 +72,8 @@ class SimplePolymerDescriptors:
 
         for simple_polymer in polymers:
             tmp = [self._descriptors[self._descriptors['AA1'] == m].values[0][2:] for m in simple_polymer]
-            transformed.append(tmp)
+            transformed.append(np.asarray(tmp).flatten())
+        
+        transformed = np.asarray(transformed).astype(float)
 
-        return np.asarray(transformed)
+        return transformed
