@@ -186,10 +186,13 @@ class ChemicalEmbedding:
 
         Returns
         -------
-        tokens : torch.Tensor of shape (n_molecules, n_tokens)
-            Tokenized molecules.
-        attention_mask : torch.Tensor of shape (n_molecules, n_tokens)
-            Attention mask for the tokenized molecules. Returns None if the model does not use attention masks.
+        output : dict
+            Dictionary containing the following fields:
+            - tokens : torch.Tensor of shape (n_molecules, n_tokens)
+                Tokenized molecules.
+            - attention_mask : torch.Tensor of shape (n_molecules, n_tokens) or None
+                Attention mask for the tokenized molecules. None if the model 
+                does not use attention masks.
 
         """
         attention_mask = None
@@ -215,12 +218,18 @@ class ChemicalEmbedding:
         # if the sequence is longer than the maximum length, so we avoid bad surprises.
         output = self._tokenizer(molecules, add_special_tokens=True, return_tensors='pt', padding=padding, truncation=False, max_length=max_length)
 
-        # Move tensors to device
-        tokens = output['input_ids'].to(self._device)
+        tokens = output['input_ids']
         if 'attention_mask' in output:
-            attention_mask = output['attention_mask'].to(self._device)
+            attention_mask = output['attention_mask']
 
-        return tokens, attention_mask
+        # Move tensors to device
+        tokens = tokens.to(self._device)
+        if attention_mask is not None:
+            attention_mask = attention_mask.to(self._device)
+        
+        output = {'tokens': tokens, 'attention_mask': attention_mask}
+
+        return output
 
     def embed(self, tokenized_molecules, attention_mask=None):
         """
@@ -269,7 +278,7 @@ class ChemicalEmbedding:
             Embedding vectors for each molecule.
 
         """
-        tokenized_molecules, attention_mask = self.tokenize(molecules)
-        results = self.embed(tokenized_molecules, attention_mask)
+        tokenized_molecules = self.tokenize(molecules)
+        results = self.embed(tokenized_molecules['tokens'], tokenized_molecules['attention_mask'])
 
         return results

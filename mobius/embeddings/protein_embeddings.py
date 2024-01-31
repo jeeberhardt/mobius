@@ -198,10 +198,13 @@ class ProteinEmbedding:
 
         Returns
         -------
-        tokens : torch.Tensor of shape (n_sequences, n_tokens)
-            Tokenized sequences.
-        attention_mask : torch.Tensor of shape (n_sequences, n_tokens)
-            Attention mask for the tokenized molecules. Returns None if the model does not use attention masks.
+        output : dict
+            Dictionary containing the following fields:
+            - tokens : torch.Tensor of shape (n_molecules, n_tokens)
+                Tokenized molecules.
+            - attention_mask : torch.Tensor of shape (n_molecules, n_tokens) or None
+                Attention mask for the tokenized molecules. None if the model 
+                does not use attention masks.
 
         Raises
         ------
@@ -255,8 +258,10 @@ class ProteinEmbedding:
         tokens = tokens.to(self._device)
         if attention_mask is not None:
             attention_mask = attention_mask.to(self._device)
+        
+        output = {'tokens': tokens, 'attention_mask': attention_mask}
 
-        return tokens, attention_mask
+        return output
 
     def embed(self, tokenized_sequences, attention_mask=None, return_probabilities=False):
         """
@@ -266,6 +271,8 @@ class ProteinEmbedding:
         ----------
         tokenized_sequences : torch.Tensor of shape (n_sequences, n_tokens) or dict
             List of tokenized protein sequences to embed.
+        attention_mask : torch.Tensor of shape (n_sequences, n_tokens), default : None
+            Attention mask for the tokenized sequences.
         return_probabilities : bool
             Whether to return the probabilities of amino acids at each position per sequence.
 
@@ -328,8 +335,8 @@ class ProteinEmbedding:
             Probabilities of amino acids at each position per sequence. If return_probabilities is True.
 
         """
-        tokenized_sequences, attention_mask = self.tokenize(sequences)
-        results = self.embed(tokenized_sequences, attention_mask, return_probabilities)
+        tokenized_sequences = self.tokenize(sequences)
+        results = self.embed(tokenized_sequences['tokens'], tokenized_sequences['attention_mask'], return_probabilities)
 
         return results
 
