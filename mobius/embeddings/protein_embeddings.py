@@ -200,6 +200,8 @@ class ProteinEmbedding:
         -------
         tokens : torch.Tensor of shape (n_sequences, n_tokens)
             Tokenized sequences.
+        attention_mask : torch.Tensor of shape (n_sequences, n_tokens)
+            Attention mask for the tokenized molecules. Returns None if the model does not use attention masks.
 
         Raises
         ------
@@ -209,6 +211,7 @@ class ProteinEmbedding:
             If the sequences have different lengths.
 
         """
+        attention_mask = None
         sequence_formats = np.unique(utils.guess_input_formats(sequences))
 
         msg_error = f'Only FASTA format is supported. Got {sequence_formats}.'
@@ -242,15 +245,20 @@ class ProteinEmbedding:
 
             # Truncation is False because we want to keep the full sequence. It will fail 
             # if the sequence is longer than the maximum length, so we avoid bad surprises.
-            tokens = self._tokenizer(sequences, add_special_tokens=True, return_tensors='pt', 
-                                     padding=padding, truncation=False, max_length=max_length)['input_ids']
+            output = self._tokenizer(sequences, add_special_tokens=True, return_tensors='pt', padding=padding, truncation=False, max_length=max_length)
+
+            tokens = output['input_ids']
+            if 'attention_mask' in output:
+                attention_mask = output['attention_mask']
 
         # Move tensors to device
         tokens = tokens.to(self._device)
+        if attention_mask is not None:
+            attention_mask = attention_mask.to(self._device)
 
-        return tokens
+        return tokens, attention_mask
 
-    def embed(self, tokenized_sequences, return_probabilities=False):
+    def embed(self, tokenized_sequences, attention_mask=None, return_probabilities=False):
         """
         Computes embedding vectors for protein sequences.
 
@@ -277,7 +285,7 @@ class ProteinEmbedding:
             results = self._model(tokenized_sequences, repr_layers=[33])
             embeddings = results['representations'][33]
         else:
-            results = self._model(input_ids=tokenized_sequences)
+            results = self._model(input_ids=tokenized_sequences, attention_mask=attention_mask)
             embeddings = results.last_hidden_state
 
         # Either flatten the embeddings or average it
@@ -320,8 +328,8 @@ class ProteinEmbedding:
             Probabilities of amino acids at each position per sequence. If return_probabilities is True.
 
         """
-        tokenized_sequences = self.tokenize(sequences)
-        results = self.embed(tokenized_sequences, return_probabilities)
+        tokenized_sequences, attention_mask = self.tokenize(sequences)
+        results = self.embed(tokenized_sequences, attention_mask, return_probabilities)
 
         return results
 
