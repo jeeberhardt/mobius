@@ -209,7 +209,7 @@ class MHFingerprint:
 
     """
 
-    def __init__(self, input_type='helm_rdkit', dimensions=4096, radius=3, rings=True, kekulize=True, 
+    def __init__(self, input_type='helm', dimensions=4096, radius=3, rings=True, kekulize=True, 
                  HELM_parser='mobius', HELM_extra_library_filename=None):
         """
         Constructs a new instance of the MHFingerprint class.
@@ -307,16 +307,15 @@ class MorganFingerprint:
 
     """
 
-    def __init__(self, input_type='helm_rdkit', dimensions=4096, radius=2, 
+    def __init__(self, input_type='helm', dimensions=4096, radius=2, 
                  HELM_parser='mobius', HELM_extra_library_filename=None):
         """
         Constructs a new instance of the MorganFingerprint class.
 
         Parameters
         ----------
-        input_type : str, default : 'helm_rdkit'
-            The type of input polymers. It can be 'fasta', 'helm_rdkit', 
-            'helm', or 'smiles'.
+        input_type : str, default : 'helm'
+            The type of input polymers. It can be either 'fasta', 'helm', or 'smiles'.
         dimensions : int, default : 4096
             The length of the fingerprint vector.
         radius : int, default : 2
