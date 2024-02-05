@@ -15,6 +15,69 @@ from .utils import replace_layers_with_lora, select_parameters
 from .. import utils
 
 
+class BatchConverter(object):
+    """Callable to convert an unprocessed (labels + strings) batch to a
+    processed (labels + tensor) batch.
+    
+    Taken from https://github.com/facebookresearch/esm/blob/main/esm/data.py#L253 and
+    modified because their version is not convenient.
+
+    """
+
+    def __init__(self, alphabet):
+        self.alphabet = alphabet
+
+    def __call__(self, raw_batch, padding='longest', truncation=False, max_length=None):
+        # RoBERTa uses an eos token, while ESM-1 does not.
+        batch_size = len(raw_batch)
+        batch_labels, seq_str_list = zip(*raw_batch)
+
+        seq_encoded_list = [self.alphabet.encode(seq_str) for seq_str in seq_str_list]
+        size_seq_encoded_list = np.asarray([len(seq_encoded) for seq_encoded in seq_encoded_list])
+
+        if padding == 'longest':
+            max_length = np.max(size_seq_encoded_list)
+        elif padding == 'max_length':
+            assert max_length is not None, 'When padding is set to `max_length`, the `max_length` argument must be defined.'
+
+        if truncation:
+            for i in np.argwhere(size_seq_encoded_list > max_length).flatten():
+                seq_encoded_list[i] = seq_encoded_list[i][:max_length]
+        else:
+            msg_error = f'Some sequences are longer than `max_length` ({max_length}), but truncation is not allowed. '
+            msg_error += 'Please increase `max_length` or set truncation to True.'
+            assert np.argwhere(size_seq_encoded_list > max_length).size == 0, msg_error
+        
+        tokens = torch.empty(
+            (
+                batch_size,
+                max_length + int(self.alphabet.prepend_bos) + int(self.alphabet.append_eos),
+            ),
+            dtype=torch.int64,
+        )
+        tokens.fill_(self.alphabet.padding_idx)
+        labels = []
+        strs = []
+
+        for i, (label, seq_str, seq_encoded) in enumerate(
+            zip(batch_labels, seq_str_list, seq_encoded_list)
+        ):
+            labels.append(label)
+            strs.append(seq_str)
+            if self.alphabet.prepend_bos:
+                tokens[i, 0] = self.alphabet.cls_idx
+            seq = torch.tensor(seq_encoded, dtype=torch.int64)
+            tokens[
+                i,
+                int(self.alphabet.prepend_bos) : len(seq_encoded)
+                + int(self.alphabet.prepend_bos),
+            ] = seq
+            if self.alphabet.append_eos:
+                tokens[i, len(seq_encoded) + int(self.alphabet.prepend_bos)] = self.alphabet.eos_idx
+
+        return labels, strs, tokens
+
+
 class ProteinEmbedding:
 
     def __init__(self, pretrained_model_name='esm1b_t33_650M_UR50S', embedding_type='avg', 
@@ -93,7 +156,7 @@ class ProteinEmbedding:
         if 'esm' in pretrained_model_name:
             self._model_type = 'esm'
             self._model, alphabet = esm.pretrained.load_model_and_alphabet(pretrained_model_name)
-            self._tokenizer = alphabet.get_batch_converter()
+            self._tokenizer = BatchConverter(alphabet)
             self._vocabulary_mask  = np.array([True if token in self._standard_amino_acids else False for token in alphabet.all_toks])
         else:
             self._model_type = 'other'
@@ -214,12 +277,12 @@ class ProteinEmbedding:
             If the sequences have different lengths.
 
         """
-        attention_mask = None
+        attention_mask = torch.Tensor([])
         sequence_formats = np.unique(utils.guess_input_formats(sequences))
 
         msg_error = f'Only FASTA format is supported. Got {sequence_formats}.'
         assert sequence_formats[0] == 'FASTA' and sequence_formats.size == 1, msg_error
-        assert np.unique([len(s) for s in sequences]).size == 1, f'All sequences must have the same length.'
+        #assert np.unique([len(s) for s in sequences]).size == 1, f'All sequences must have the same length.'
 
         if not isinstance(sequences, (list, tuple, np.ndarray, torch.Tensor)):
             sequences = [sequences]
@@ -232,13 +295,7 @@ class ProteinEmbedding:
             max_length = self._padding_length
 
         if self._model_type == 'esm':
-            tokens = []
-
-            for seq in sequences:
-                _, _, token = self._tokenizer([('sequence', seq)])
-                tokens.append(token)
-
-            tokens = torch.cat(tokens)
+            _, _, tokens = self._tokenizer([('sequence', seq) for seq in sequences], padding=padding, truncation=False, max_length=max_length)
         else:
             if isinstance(sequences, np.ndarray):
                 sequences = sequences.tolist()
@@ -256,8 +313,7 @@ class ProteinEmbedding:
 
         # Move tensors to device
         tokens = tokens.to(self._device)
-        if attention_mask is not None:
-            attention_mask = attention_mask.to(self._device)
+        attention_mask = attention_mask.to(self._device)
         
         output = {'tokens': tokens, 'attention_mask': attention_mask}
 

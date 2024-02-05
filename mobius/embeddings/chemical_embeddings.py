@@ -195,7 +195,7 @@ class ChemicalEmbedding:
                 does not use attention masks.
 
         """
-        attention_mask = None
+        attention_mask = torch.Tensor([])
 
         if not isinstance(molecules, (list, tuple, np.ndarray, torch.Tensor)):
             molecules = [molecules]
@@ -224,8 +224,7 @@ class ChemicalEmbedding:
 
         # Move tensors to device
         tokens = tokens.to(self._device)
-        if attention_mask is not None:
-            attention_mask = attention_mask.to(self._device)
+        attention_mask = attention_mask.to(self._device)
         
         output = {'tokens': tokens, 'attention_mask': attention_mask}
 
