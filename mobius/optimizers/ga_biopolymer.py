@@ -53,69 +53,6 @@ class BioPolymerCrossover(Crossover):
         super().__init__(2,2)
 
         self._cx_points = cx_points
-        self._STRING_LENGTH_MULTIPLIER = 1.25
-
-    def do(self, problem, pop, parents=None, **kwargs):
-
-        # if a parents with array with mating indices is provided -> transform the input first
-        if parents is not None:
-            pop = [pop[mating] for mating in parents]
-
-        # get the dimensions necessary to create in and output
-        n_parents, n_offsprings = self.n_parents, self.n_offsprings
-        n_matings, n_var = len(pop), problem.n_var
-
-        # get the actual values from each of the parents
-        X = np.swapaxes(np.array([[parent.get("X") for parent in mating] for mating in pop]), 0, 1)
-        if self.vtype is not None:
-            X = X.astype(self.vtype)
-
-        # Burger hack to avoid truncating the HELM strings
-        if np.issubdtype(X.dtype, np.unicode_):
-            current_length = int(X.dtype.str[2:])
-            new_length = int(current_length * self._STRING_LENGTH_MULTIPLIER)
-            dtype = f'U{new_length}'
-        else:
-            dtype = X.dtype
-
-        # the array where the offsprings will be stored to
-        Xp = np.empty(shape=(n_offsprings, n_matings, n_var), dtype=dtype)
-
-        # the probability of executing the crossover
-        prob = get(self.prob, size=n_matings)
-
-        # a boolean mask when crossover is actually executed
-        cross = np.random.random(n_matings) < prob
-
-        # the design space from the parents used for the crossover
-        if np.any(cross):
-
-            # we can not prefilter for cross first, because there might be other variables using the same shape as X
-            Q = self._do(problem, X, **kwargs)
-            assert Q.shape == (n_offsprings, n_matings, problem.n_var), "Shape is incorrect of crossover impl."
-            Xp[:, cross] = Q[:, cross]
-
-        # now set the parents whenever NO crossover has been applied
-        for k in np.flatnonzero(~cross):
-            if n_offsprings < n_parents:
-                s = np.random.choice(np.arange(self.n_parents), size=n_offsprings, replace=False)
-            elif n_offsprings == n_parents:
-                s = np.arange(n_parents)
-            else:
-                s = []
-                while len(s) < n_offsprings:
-                    s.extend(np.random.permutation(n_parents))
-                s = s[:n_offsprings]
-
-            Xp[:, k] = np.copy(X[s, k])
-
-        # flatten the array to become a 2d-array
-        Xp = Xp.reshape(-1, X.shape[-1])
-
-        # create a population object
-        off = Population.new("X", Xp)
-
-        return off
 
     def _do(self, problem, X, **kwargs):
         _rng = np.random.default_rng()
@@ -163,15 +100,14 @@ class BioPolymerMutation(Mutation):
     Class to define mutation behaviour applied to new generation of biopolymers (in FASTA format).
     """
 
-    def __init__(self, designs, pm=0.1, minimum_mutations=1, maximum_mutations=None):
+    def __init__(self, design, pm=0.1, minimum_mutations=1, maximum_mutations=None):
         """
         Initialize the mutation class for new generation of polymers.
 
         Parameters
         ----------
-        _designs : dictionary
-            Dictionary with biopolymers (in FASTA format) and defined set of monomers to 
-            use for each position.
+        design : dictionary
+            Dictionnary of all the positions allowed to be optimized.
         pm : float, default : 0.1
             Probability of mutation.
         minimum_mutations : int, default : 1
@@ -181,7 +117,7 @@ class BioPolymerMutation(Mutation):
 
         """
         super().__init__()
-        self._designs = designs
+        self._design = design
         self._pm = pm
         self._maximum_mutations = maximum_mutations
         self._minimum_mutations = minimum_mutations
@@ -191,8 +127,7 @@ class BioPolymerMutation(Mutation):
 
         mutant_biopolymers = []
 
-        _, design = list(self._designs.items())[0]
-        possible_positions = list(design.keys())
+        possible_positions = [k for k, v in self._design.items() if v is not None]
 
         # for each individual
         for i in range(len(X)):
@@ -204,7 +139,9 @@ class BioPolymerMutation(Mutation):
                 mutant_biopolymer = list(biopolymer)
 
                 # Choose a random number of mutations between min and max
-                if self._minimum_mutations == self._maximum_mutations:
+                if len(possible_positions) == 1:
+                    number_mutations = 1
+                elif self._minimum_mutations == self._maximum_mutations:
                     number_mutations = self._maximum_mutations
                 elif self._maximum_mutations is None:
                     number_mutations = _rng.integers(low=self._minimum_mutations, high=len(possible_positions))
@@ -218,7 +155,7 @@ class BioPolymerMutation(Mutation):
 
                 # Do mutations
                 for mutation_position in mutation_positions:
-                    chosen_monomer = _rng.choice(design[mutation_position])
+                    chosen_monomer = _rng.choice(self._design[mutation_position])
                     # -1 , because specific positions are 1-based in the design protocol
                     mutant_biopolymer[mutation_position - 1] = chosen_monomer
 
@@ -247,9 +184,8 @@ class SerialBioPolymerGA():
 
     """
 
-    def __init__(self, algorithm, designs=None, filters=None,
-                 n_gen=1000, n_pop=500, period=50, cx_points=2, pm=0.1, 
-                 minimum_mutations=1, maximum_mutations=None,
+    def __init__(self, algorithm, n_gen=1000, n_pop=500, period=50, 
+                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=None,
                  save_history=False, **kwargs):
         """
         Initialize the Single/Multi-Objectives GA optimization for biopolymers only. The 
@@ -261,10 +197,6 @@ class SerialBioPolymerGA():
         algorithm : str
             Algorithm to use for the optimization. Can be 'GA' for single-objective 
             optimization, or 'SMSEMOA', 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
-        designs : list of designs, default: None
-            List of designs to use during the biopolymer optimization.
-        filters : list of filter methods, default: None
-            List of filter methods to use during the biopolymer optimization.
         n_gen : int, default : 1000
             Number of GA generation to run.
         n_population : int, default : 500
@@ -292,9 +224,6 @@ class SerialBioPolymerGA():
         msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
         assert algorithm in self._available_algorithms, msg_error
 
-        # Design protocol
-        self._designs = designs
-        self._filters = filters
         # GA Parameters
         self._optimization_type = 'single' if algorithm in self._single else 'multi'
         self._method = self._available_algorithms[algorithm]
@@ -307,7 +236,7 @@ class SerialBioPolymerGA():
         self._maximum_mutations = maximum_mutations
         self._save_history = save_history
 
-    def run(self, biopolymers, scores, acquisition_functions):
+    def run(self, biopolymers, scores, acquisition_functions, design, filters=None):
         """
         Run the Single/Multi-Objectives GA optimization for biopolymers only.
 
@@ -319,6 +248,10 @@ class SerialBioPolymerGA():
             Score associated to each biopolymer.
         acquisition_function : `AcquisitionFunction`
             The acquisition function that will be used to score the biopolymer.
+        design : dictionnary
+            Dictionnary of all the positions allowed to be optimized.
+        filters : list of filter methods, default: None
+            List of filter methods to use during the biopolymer optimization.
 
         Returns
         -------
@@ -329,7 +262,7 @@ class SerialBioPolymerGA():
 
         """
         # Initialize the problem
-        problem = Problem(biopolymers, scores, acquisition_functions, self._filters)
+        problem = Problem(biopolymers, scores, acquisition_functions, filters)
 
         # ... and pre-initialize the population with the experimental data.
         # This is only for the first GA generation.
@@ -342,7 +275,7 @@ class SerialBioPolymerGA():
         problem.eval()
 
         # Initialize genetic operators
-        mutation = BioPolymerMutation(self._designs, self._pm, self._minimum_mutations, self._maximum_mutations)
+        mutation = BioPolymerMutation(design, self._pm, self._minimum_mutations, self._maximum_mutations)
         crossover = BioPolymerCrossover(self._cx_points)
         duplicates = DuplicateElimination()
 

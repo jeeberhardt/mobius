@@ -408,58 +408,16 @@ def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
     return np.asarray(random_polymers)
 
 
-def check_polymers_with_designs(polymers, designs):
+def adjust_polymers_to_design(polymers, design):
     """
-    Checks if the given polymers are valid based on the designs.
+    Modify polymers to fit a given design.
 
     Parameters
     ----------
     polymers : List
         List of polymers in HELM format.
-    designs : dictionary
-        Dictionary with scaffold polymers and defined set of monomers
-        to use for each position.
-
-    Returns
-    -------
-    ndarray
-        ndarray of boolean values indicating whether the 
-        polymers are valid or not based on the designs.
-
-    """
-    validity = np.ones(shape=(len(polymers),), dtype=bool)
-
-    for i, polymer in enumerate(polymers):
-        scaffold_polymer = get_scaffold_from_helm_string(polymer)
-
-        try:
-            scaffold_design = designs[scaffold_polymer]
-        except:
-            validity[i] = False
-            continue
-
-        complex_polymer, _, _, _ = parse_helm(polymer)
-
-        for pid, simple_polymer in complex_polymer.items():
-            for i, monomer in enumerate(simple_polymer):
-                if monomer not in scaffold_design[pid][i + 1]:
-                    validity[i] = False
-                    break
-
-    return validity
-
-
-def adjust_polymers_to_designs(polymers, designs):
-    """
-    Modify polymers to fit the given designs.
-
-    Parameters
-    ----------
-    polymers : List
-        List of polymers in HELM format.
-    designs : dictionary
-        Dictionary with scaffold polymers and defined set of monomers
-        to use for each position.
+    design : dictionary
+        Dictionnary of all the positions allowed to be optimized.
 
     Returns
     -------
@@ -474,14 +432,6 @@ def adjust_polymers_to_designs(polymers, designs):
     modified = np.zeros(shape=(len(polymers),), dtype=bool)
 
     for i, polymer in enumerate(polymers):
-        scaffold = get_scaffold_from_helm_string(polymer)
-
-        try:
-            scaffold_design = designs[scaffold]
-        except KeyError:
-            msg_error = 'Scaffold %s corresponding to %s not found in the scaffold designs.' % (scaffold, polymer)
-            raise KeyError(msg_error)
-
         complex_polymer, connections, _, _ = parse_helm(polymer)
 
         for pid, simple_polymer in complex_polymer.items():
@@ -489,8 +439,8 @@ def adjust_polymers_to_designs(polymers, designs):
             modified_simple_polymer = list(simple_polymer)
 
             for j, monomer in enumerate(simple_polymer):
-                if monomer not in scaffold_design[pid][j + 1]:
-                    modified_simple_polymer[j] = np.random.choice(scaffold_design[pid][j + 1])
+                if monomer not in design[pid][j + 1]:
+                    modified_simple_polymer[j] = np.random.choice(design[pid][j + 1])
                     modified[i] = True
 
             modified_complex_polymer[pid] = modified_simple_polymer
@@ -537,6 +487,52 @@ def group_polymers_by_scaffold(polymers, return_index=False):
         scaffold_polymer = get_scaffold_from_helm_string(polymer)
         groups[scaffold_polymer].append(polymer)
         group_indices[scaffold_polymer].append(i)
+
+    if return_index:
+        return groups, group_indices
+    else:
+        return groups
+
+
+def group_biopolymers_by_design(biopolymers, designs, return_index=False):
+    """
+    Groups a list biopolymers in FASTA format by design using the sequence lengths.
+
+    Parameters
+    ----------
+    biopolymers : List of str
+        List of input biopolymers in FASTA format to group.
+    designs : Dictionnary
+        Dictionnary containing the design protocol.
+    return_index : bool, default : False
+        Whether to return also the original index of the grouped biopolymers.
+
+    Returns
+    -------
+    groups : Dict[str, List of str]
+        A dictionary with the biopolymer names as keys and 
+        lists of grouped biopolymers as values.
+    group_indices : Dict[str, List of int]
+        If `return_index` is True, a dictionary with biopolymer names 
+        as keys and lists of indices of the original biopolymers.
+
+    """
+    groups = defaultdict(list)
+    group_indices = defaultdict(list)
+    design_by_lengths = defaultdict(list)
+
+    # Gather all the design names by the length of the sequences they will be applied to.
+    # Example: {8: ['PEPTIDE1', 'PEPTIDE2'] -> PEPTIDE1 and PEPTIDE2 will be both applied to 8-mers
+    for name, positions in designs.items():
+        design_by_lengths[len(positions)].append(name)
+
+    for i, biopolymer in enumerate(biopolymers):
+        length = len(biopolymer)
+
+        # A sequence can be part of multiple designs
+        for name in design_by_lengths[length]:
+            groups[name].append(biopolymer)
+            group_indices[name].append(i)
 
     if return_index:
         return groups, group_indices

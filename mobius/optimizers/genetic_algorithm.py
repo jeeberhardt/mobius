@@ -12,6 +12,7 @@ import yaml
 
 import numpy as np
 import ray
+import torch
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore")
     from pymoo.algorithms.moo.age2 import AGEMOEA2
@@ -23,14 +24,19 @@ from .ga_biopolymer import SerialBioPolymerGA
 from .ga_polymer import SerialPolymerGA
 from ..utils import guess_input_formats
 from ..utils import generate_random_polymers_from_designs
-from ..utils import group_polymers_by_scaffold
+from ..utils import group_polymers_by_scaffold, group_biopolymers_by_design
 from ..utils import parse_helm, get_scaffold_from_helm_string
 from ..utils import generate_design_protocol_from_polymers
 
 
 @ray.remote
-def parallel_ga(gao, polymers, scores, acquisition_function):
-    return gao.run(polymers, scores, acquisition_function)
+def parallel_ga(gao, polymers, scores, acquisition_function, design, filters):
+    return gao.run(polymers, scores, acquisition_function, design, filters)
+
+
+@ray.remote(num_gpus=1)
+def parallel_ga_gpu(gao, polymers, scores, acquisition_function, design, filters):
+    return gao.run(polymers, scores, acquisition_function, design, filters)
 
 
 def _load_polymer_design_from_config(config):
@@ -185,18 +191,24 @@ def _load_biopolymer_design_from_config(config):
         raise KeyError(msg_error)
 
     assert len(biopolymer_designs) > 0, 'No biopolymer design provided. You need to define at least one.'
-    assert len(biopolymer_designs) == 1, 'Only one biopolymer per design protocol is allowed (for now).'
 
     for biopolymer_design in biopolymer_designs:
-        design = {}
+        # Check if all the keys exists
+        assert 'name' in biopolymer_design, 'A `name` key is missing in the input design protocol.'
+        assert 'length' in biopolymer_design, 'A `length` key is missing in the input design protocol.'
+        assert 'positions' in biopolymer_design, 'A `positions` key is missing in the input design protocol.'
 
         biopolymer_name = biopolymer_design['name']
         positions = biopolymer_design['positions']
+        length = biopolymer_design['length']
 
         try:
             starting_residue = biopolymer_design['starting_residue']
         except:
             starting_residue = 1
+
+        # Generate the default design. if a position is later defined, None will be replaced.
+        design = {position : None for position in range(starting_residue, length + 1)}
 
         for position in positions:
             user_defined_monomers = positions[position]
@@ -338,7 +350,7 @@ class SequenceGA():
     def __init__(self, algorithm, design_protocol_filename=None,
                  n_gen=1000, n_pop=500, period=50, cx_points=2, pm=0.1, 
                  minimum_mutations=1, maximum_mutations=None, 
-                 n_process=-1, save_history=False, **kwargs):
+                 n_process=-1, n_gpu=-1, save_history=False, **kwargs):
         """
         Initialize the Single/Multi-Objectives SequenceGA optimization.
 
@@ -370,6 +382,8 @@ class SequenceGA():
             Maximal number of mutations introduced in the new child.
         n_process : int, default : -1
             Number of process to run in parallel. Per default, use all the available core.
+        n_gpu : int, default : -1
+            Number of GPUs to use in parallel. Per default, use all the available gpus.
         save_history : bool, default : False
             Save the history of the optimization. This can be useful to debug the
             optimization, but it can take a lot of memory.
@@ -436,6 +450,7 @@ class SequenceGA():
         # Parameters
         self._optimization_type = 'single' if algorithm in self._single else 'multi'
         self._n_process = n_process
+        self._n_gpus = n_gpu
         self._parameters = {'algorithm': algorithm,
                             'design_protocol_filename': design_protocol_filename,
                             'n_gen': n_gen,
@@ -544,31 +559,43 @@ class SequenceGA():
             else:
                 raise ValueError('A design protocol must be provided for biopolymers optimization.')
 
-            group_indices = {key: np.arange(len(sequences)) for key in designs.keys()}
+            groups, group_indices = group_biopolymers_by_design(sequences, designs, return_index=True)
 
         # Initialize the GA optimization object
-        seq_gao = serial_seq_ga(designs=designs, filters=filters, **self._parameters)
+        seq_gao = serial_seq_ga(**self._parameters)
 
         # Run the GA optimization
-        if len(group_indices) == 1:
+        if len(groups) == 1:
             indices = list(group_indices.values())[0]
-            results = seq_gao.run(sequences[indices], scores[indices], acquisition_function)
+            design = designs[list(group_indices.keys())[0]]
+            results = seq_gao.run(sequences[indices], scores[indices], acquisition_function, design, filters)
         else:
-            # Take the minimal amount of CPUs needed or available
+            # Take the minimal amount of CPUs/GPUs needed or what is available
             if self._n_process == -1:
-                self._n_process = min([os.cpu_count(), len(group_indices)])
+                self._n_process = min([os.cpu_count(), len(groups)])
 
-            # Dispatch all the scaffold accross different independent Sequence GA opt.
-            ray.init(num_cpus=self._n_process, ignore_reinit_error=True)
+            if self._n_gpus == -1:
+                if torch.cuda.is_available():
+                    self._n_gpus = min([torch.cuda.device_count(), len(groups)])
+                else:
+                    self._n_gpus = 0
 
-            refs = [parallel_ga.remote(seq_gao, sequences[seq_ids], scores[seq_ids], acquisition_function) 
-                    for _, seq_ids in group_indices.items()]
+            ray.init(num_cpus=self._n_process, num_gpus=self._n_gpus, ignore_reinit_error=True)
+
+            if self._n_gpus > 0:
+                # If there are GPUs available, use the gpu version of parallel_ga
+                parallel_ga = parallel_ga_gpu
+
+            # Dispatch all the sequences accross different independent Sequence GA opt.
+            refs = [parallel_ga.remote(seq_gao, sequences[seq_ids], scores[seq_ids], acquisition_function, designs[name], filters) 
+                    for name, seq_ids in group_indices.items()]
 
             try:
                 results = ray.get(refs)
-            except:
+            except Exception as error:
+                print("An error occurred:", type(error).__name__, "–", error)
                 ray.shutdown()
-                sys.exit(0)
+                sys.exit(1)
 
             ray.shutdown()
 

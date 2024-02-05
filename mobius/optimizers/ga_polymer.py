@@ -27,7 +27,7 @@ from pymoo.core.variable import get
 
 from .terminations import NoChange
 from .problem import Problem
-from ..utils import adjust_polymers_to_designs
+from ..utils import adjust_polymers_to_design
 from ..utils import build_helm_string, parse_helm, get_scaffold_from_helm_string
 
 
@@ -184,15 +184,14 @@ class PolymerMutation(Mutation):
     Class to define mutation behaviour applied to new generation of polymers (in HELM format).
     """
 
-    def __init__(self, scaffold_designs, pm=0.1, minimum_mutations=1, maximum_mutations=None, keep_connections=True):
+    def __init__(self, design, pm=0.1, minimum_mutations=1, maximum_mutations=None, keep_connections=True):
         """
         Initialize the mutation class for new generation of polymers.
 
         Parameters
         ----------
-        scaffold_designs : dictionary
-            Dictionary with polymer scaffolds (in HELM format) and defined set of monomers to 
-            use for each position.
+        design : dictionary
+            Dictionnary of all the positions allowed to be optimized.
         pm : float, default : 0.1
             Probability of mutation.
         minimum_mutations : int, default : 1
@@ -204,7 +203,7 @@ class PolymerMutation(Mutation):
 
         """
         super().__init__()
-        self._scaffold_designs = scaffold_designs
+        self._design = design
         self._pm = pm
         self._maximum_mutations = maximum_mutations
         self._minimum_mutations = minimum_mutations
@@ -222,11 +221,6 @@ class PolymerMutation(Mutation):
             # Applying mutation at defined probability rate
             if r < self._pm:
                 polymer = X[i][0]
-
-                scaffold = get_scaffold_from_helm_string(polymer)
-                assert scaffold in self._scaffold_designs, 'Scaffold %s not found in the scaffold designs.' % scaffold
-
-                scaffold_design = self._scaffold_designs[scaffold]
 
                 complex_polymer, connections, _, _ = parse_helm(polymer)
 
@@ -247,7 +241,9 @@ class PolymerMutation(Mutation):
                         possible_positions = list(range(len(simple_polymer)))
 
                     # Choose a random number of mutations between min and max
-                    if self._minimum_mutations == self._maximum_mutations:
+                    if len(possible_positions) == 1:
+                        number_mutations = 1
+                    elif self._minimum_mutations == self._maximum_mutations:
                         number_mutations = self._maximum_mutations
                     elif self._maximum_mutations is None:
                         number_mutations = _rng.integers(low=self._minimum_mutations, high=len(possible_positions))
@@ -262,7 +258,7 @@ class PolymerMutation(Mutation):
                     # Do mutations
                     for mutation_position in mutation_positions:
                         # +1 , because positions are 1-based in HELM
-                        chosen_monomer = _rng.choice(scaffold_design[pid][mutation_position + 1])
+                        chosen_monomer = _rng.choice(self._design[pid][mutation_position + 1])
                         mutated_simple_polymer[mutation_position] = chosen_monomer
 
                 mutant_complex_polymer[pid] = (mutated_simple_polymer, mutation_positions)
@@ -312,9 +308,8 @@ class SerialPolymerGA():
 
     """
 
-    def __init__(self, algorithm, designs=None, filters=None,
-                 n_gen=1000, n_pop=500, period=50, cx_points=2, pm=0.1, 
-                 minimum_mutations=1, maximum_mutations=None,
+    def __init__(self, algorithm, n_gen=1000, n_pop=500, period=50, 
+                 cx_points=2, pm=0.1, minimum_mutations=1, maximum_mutations=None,
                  save_history=False, **kwargs):
         """
         Initialize the Single/Multi-Objectives GA optimization for polymers. The 
@@ -326,12 +321,6 @@ class SerialPolymerGA():
         algorithm : str
             Algorithm to use for the optimization. Can be 'GA' for single-objective 
             optimization, or 'SMSEMOA', 'NSGA2' or 'AGEMOEA2' for multi-objectives optimization.
-        designs : list of designs, default: None
-            List of designs to use during the polymer optimization. If not provided,
-            a default design protocol will be generated automatically based on the
-            polymers provided during the optimization, with no filters.
-        filters : list of filter methods, default: None
-            List of filter methods to use during the polymer optimization.
         n_gen : int, default : 1000
             Number of GA generation to run.
         n_population : int, default : 500
@@ -359,9 +348,6 @@ class SerialPolymerGA():
         msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
         assert algorithm in self._available_algorithms, msg_error
 
-        # Design protocol
-        self._designs = designs
-        self._filters = filters
         # GA Parameters
         self._optimization_type = 'single' if algorithm in self._single else 'multi'
         self._method = self._available_algorithms[algorithm]
@@ -374,7 +360,7 @@ class SerialPolymerGA():
         self._maximum_mutations = maximum_mutations
         self._save_history = save_history
 
-    def run(self, polymers, scores, acquisition_functions):
+    def run(self, polymers, scores, acquisition_functions, design, filters=None):
         """
         Run the Single/Multi-Objectives GA optimization for polymers only.
 
@@ -386,6 +372,10 @@ class SerialPolymerGA():
             Score associated to each polymer.
         acquisition_function : `AcquisitionFunction`
             The acquisition function that will be used to score the polymer.
+        design : dictionnary
+            Dictionnary of all the positions allowed to be optimized.
+        filters : list of filter methods, default: None
+            List of filter methods to use during the polymer optimization.
 
         Returns
         -------
@@ -396,10 +386,10 @@ class SerialPolymerGA():
 
         """
         # Starts by automatically adjusting the input polymers to the design
-        polymers, _ = adjust_polymers_to_designs(polymers, self._designs)
+        polymers, _ = adjust_polymers_to_design(polymers, design)
 
         # Initialize the problem
-        problem = Problem(polymers, scores, acquisition_functions, self._filters)
+        problem = Problem(polymers, scores, acquisition_functions, filters)
 
         # ... and initialize the population with the experimental data.
         # This is only for the first GA generation.
@@ -408,7 +398,7 @@ class SerialPolymerGA():
         Evaluator().eval(problem, pop)
 
         # Initialize genetic operators
-        mutation = PolymerMutation(self._designs, self._pm, self._minimum_mutations, self._maximum_mutations)
+        mutation = PolymerMutation(design, self._pm, self._minimum_mutations, self._maximum_mutations)
         crossover = PolymerCrossover(self._cx_points)
         duplicates = DuplicateElimination()
 
