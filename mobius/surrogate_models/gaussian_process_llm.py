@@ -113,7 +113,7 @@ class GPLLModel(_SurrogateModel):
         # Convert to torch tensors if necessary
         if not torch.is_tensor(X_tokens):
             X_tokens = torch.from_numpy(np.asarray(X_tokens)).float()
-        if not torch.is_tensor(X_attention_mask) and X_attention_mask is not None:
+        if not torch.is_tensor(X_attention_mask):
             X_attention_mask = torch.from_numpy(np.asarray(X_attention_mask)).float()
         y_train = torch.from_numpy(self._y_train).float()
         if y_noise is not None:
@@ -127,11 +127,10 @@ class GPLLModel(_SurrogateModel):
         if y_noise is not None:
             y_noise = y_noise.to(self._device)
 
-        noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
-
         if self._noise is not None:
             self._likelihood = gpytorch.likelihoods.FixedNoiseGaussianLikelihood(noise=y_noise, learn_additional_noise=True)
         else:
+            noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
             self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
 
         self._model = _ExactGPLLModel([X_tokens, X_attention_mask], y_train, self._likelihood, self._kernel, self._transformer)
@@ -198,7 +197,7 @@ class GPLLModel(_SurrogateModel):
         # Convert to torch tensors if necessary
         if not torch.is_tensor(X_tokens):
             X_tokens = torch.from_numpy(np.asarray(X_tokens)).float()
-        if not torch.is_tensor(X_attention_mask) and X_attention_mask is not None:
+        if not torch.is_tensor(X_attention_mask):
             X_attention_mask = torch.from_numpy(np.asarray(X_attention_mask)).float()
         if y_noise is not None:
             y_noise = torch.from_numpy(y_noise).float()
