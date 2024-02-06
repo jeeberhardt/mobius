@@ -157,6 +157,7 @@ class ProteinEmbedding:
             self._model_type = 'esm'
             self._model, alphabet = esm.pretrained.load_model_and_alphabet(pretrained_model_name)
             self._tokenizer = BatchConverter(alphabet)
+            # plm._tokenizer.alphabet.padding_idx
             self._vocabulary_mask  = np.array([True if token in self._standard_amino_acids else False for token in alphabet.all_toks])
         else:
             self._model_type = 'other'
@@ -176,6 +177,8 @@ class ProteinEmbedding:
                 self._tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name, legacy=False)
 
             self._vocabulary_mask = None
+            # plm._tokenizer.get_vocab()
+            # plm._tokenizer.pad_token_id
 
         # Freeze all parameters
         self.freeze()
