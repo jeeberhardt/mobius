@@ -157,7 +157,7 @@ class ProteinEmbedding:
             self._model_type = 'esm'
             self._model, alphabet = esm.pretrained.load_model_and_alphabet(pretrained_model_name)
             self._tokenizer = BatchConverter(alphabet)
-            # plm._tokenizer.alphabet.padding_idx
+            self._padding_token = self._tokenizer.alphabet.padding_idx
             self._vocabulary_mask  = np.array([True if token in self._standard_amino_acids else False for token in alphabet.all_toks])
         else:
             self._model_type = 'other'
@@ -176,9 +176,8 @@ class ProteinEmbedding:
             else:
                 self._tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name, legacy=False)
 
+            self._padding_token = self._tokenizer.pad_token_id
             self._vocabulary_mask = None
-            # plm._tokenizer.get_vocab()
-            # plm._tokenizer.pad_token_id
 
         # Freeze all parameters
         self.freeze()
@@ -356,9 +355,13 @@ class ProteinEmbedding:
 
         # Either flatten the embeddings or average it
         if self._embedding_type == 'residue':
-            features = embeddings.reshape(-1)
+            new_shape = (embeddings.shape[0], embeddings.shape[1] * embeddings.shape[2])
+            features = embeddings.reshape(new_shape)
         else:
-            features = torch.mean(embeddings, 1)
+            # Source: https://stackoverflow.com/a/69314298
+            mask = tokenized_sequences != self._padding_token
+            denom = torch.sum(mask, -1, keepdim=True)
+            features = torch.sum(embeddings * mask.unsqueeze(-1), dim=1) / denom
 
         if return_probabilities and self._vocabulary_mask is not None:
             if 'logits' not in results:

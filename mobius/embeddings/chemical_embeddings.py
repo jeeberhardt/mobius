@@ -102,6 +102,8 @@ class ChemicalEmbedding:
         else:
             self._tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name, legacy=False)
 
+        self._padding_token = self._tokenizer.pad_token_id
+
         # Freeze all parameters
         self.freeze()
 
@@ -256,9 +258,13 @@ class ChemicalEmbedding:
 
         # Either flatten the embeddings or average it
         if self._embedding_type == 'atom':
-            features = embeddings.reshape(-1)
+            new_shape = (embeddings.shape[0], embeddings.shape[1] * embeddings.shape[2])
+            features = embeddings.reshape(new_shape)
         else:
-            features = torch.mean(embeddings, 1)
+            # Source: https://stackoverflow.com/a/69314298
+            mask = tokenized_molecules != self._padding_token
+            denom = torch.sum(mask, -1, keepdim=True)
+            features = torch.sum(embeddings * mask.unsqueeze(-1), dim=1) / denom
 
         return features
 
