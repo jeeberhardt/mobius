@@ -63,7 +63,8 @@ class ChemicalEmbedding:
             sequences have the same length. If None, the maximum length will be set to the length of 
             the longest sequence in the batch.
         add_extra_space : bool, default : False
-            During tokenization, add an extra space between smiles characters.
+            During tokenization, add an extra space between smiles characters. This is required for some
+            models. if True, the SMILES will be tokenized as 'C C C O' instead of 'CCCO'.
 
         Raises
         ------

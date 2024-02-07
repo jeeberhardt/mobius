@@ -127,7 +127,8 @@ class ProteinEmbedding:
             the longest sequence in the batch.
         add_extra_space : bool, default : True
             During tokenization, add an extra space between amino acid characters. This is required
-            for some models, like T5Tokenizer.
+            for some models, like T5Tokenizer. If False, the sequences will be tokenized without extra 
+            spaces.
 
         Notes
         -----
