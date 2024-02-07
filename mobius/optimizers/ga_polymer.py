@@ -24,7 +24,9 @@ from pymoo.optimize import minimize
 from pymoo.termination.max_gen import MaximumGenerationTermination
 from pymoo.termination.robust import RobustTermination
 from pymoo.core.variable import get
+from pymoo.util.display.multi import MultiObjectiveOutput
 
+from .display import SingleObjectiveOutput
 from .terminations import NoChange
 from .problem import Problem
 from ..utils import adjust_polymers_to_design
@@ -412,9 +414,16 @@ class SerialPolymerGA():
         max_gen_termination = MaximumGenerationTermination(self._n_gen)
         termination = TerminateIfAny(max_gen_termination, no_change_termination)
 
+        # Display function
+        if self._optimization_type == 'single':
+            output = SingleObjectiveOutput()
+        else:
+            output = MultiObjectiveOutput()
+
         # ... and run!
         results = minimize(problem, algorithm, termination=termination,
-                           verbose=True, save_history=self._save_history)
+                           verbose=True, save_history=self._save_history, 
+                           output=output)
 
         polymers = results.pop.get('X')
         scores = results.pop.get('F')
