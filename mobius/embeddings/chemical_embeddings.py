@@ -20,7 +20,7 @@ class ChemicalEmbedding:
     def __init__(self, pretrained_model_name, input_type='helm', embedding_type='avg', 
                  device=None, model_name=None, tokenizer_name=None,
                  layers_to_finetune=None, lora=False, lora_rank=4, lora_alpha=8,
-                 padding_length=None):
+                 padding_length=None, add_extra_space=False):
         """
         Initializes the ProteinEmbedding class.
 
@@ -62,6 +62,8 @@ class ChemicalEmbedding:
             are longer than the SMILES used to train the surrogate model. This is used to ensure all 
             sequences have the same length. If None, the maximum length will be set to the length of 
             the longest sequence in the batch.
+        add_extra_space : bool, default : False
+            During tokenization, add an extra space between smiles characters.
 
         Raises
         ------
@@ -72,7 +74,7 @@ class ChemicalEmbedding:
             If the input type is not supported.
 
         """
-        assert input_type in ['helm', 'smiles'], 'Only HELM and SMILES format are supported.'
+        assert input_type in ['fasta', 'helm', 'smiles'], 'Only FASTA, HELM and SMILES format are supported.'
         assert embedding_type in ['atom', 'avg'], 'Only average (avg) and residue embeddings are supported.'
 
         if device is None:
@@ -87,6 +89,7 @@ class ChemicalEmbedding:
         self._lora_rank = lora_rank
         self._lora_alpha = lora_alpha
         self._padding_length = padding_length
+        self._add_extra_space = add_extra_space
 
         if model_name is not None:
             module = importlib.import_module('transformers')
@@ -205,6 +208,8 @@ class ChemicalEmbedding:
         if self._input_type == 'helm':
             molecules = utils.MolFromHELM(molecules)
             molecules = [Chem.MolToSmiles(mol) for mol in molecules]
+        elif self._input_type == 'fasta':
+            molecules = [Chem.MolToSmiles(Chem.MolFromFasta(mol)) for mol in molecules]
 
         if self._padding_length is None:
             padding = 'longest'
@@ -213,8 +218,9 @@ class ChemicalEmbedding:
             padding = 'max_length'
             max_length = self._padding_length
 
-        # Need to add spaces between amino acids for some models (e.g. T5Tokenizer)
-        molecules = [' '.join(seq) for seq in molecules]
+        # Need to add spaces between string characters for some models (e.g. T5Tokenizer)
+        if self._add_extra_space:
+            molecules = [' '.join(seq) for seq in molecules]
 
         # Truncation is False because we want to keep the full sequence. It will fail 
         # if the sequence is longer than the maximum length, so we avoid bad surprises.

@@ -83,7 +83,7 @@ class ProteinEmbedding:
     def __init__(self, pretrained_model_name='esm1b_t33_650M_UR50S', embedding_type='avg', 
                  device=None, model_name=None, tokenizer_name=None,
                  layers_to_finetune=None, lora=False, lora_rank=4, lora_alpha=8,
-                 padding_length=None):
+                 padding_length=None, add_extra_space=True):
         """
         Initializes the ProteinEmbedding class.
 
@@ -125,6 +125,9 @@ class ProteinEmbedding:
             are longer than the SMILES used to train the surrogate model. This is used to ensure all 
             sequences have the same length. If None, the maximum length will be set to the length of 
             the longest sequence in the batch.
+        add_extra_space : bool, default : True
+            During tokenization, add an extra space between amino acid characters. This is required
+            for some models, like T5Tokenizer.
 
         Notes
         -----
@@ -152,6 +155,7 @@ class ProteinEmbedding:
         self._lora_rank = lora_rank
         self._lora_alpha = lora_alpha
         self._padding_length = padding_length
+        self._add_extra_space = add_extra_space
 
         if 'esm' in pretrained_model_name:
             self._model_type = 'esm'
@@ -302,8 +306,9 @@ class ProteinEmbedding:
             if isinstance(sequences, np.ndarray):
                 sequences = sequences.tolist()
 
-            # Need to add spaces between amino acids for some models (e.g. T5Tokenizer)
-            sequences = [' '.join(seq) for seq in sequences]
+            # Need to add spaces between string characters (amino acids) for some models (e.g. T5Tokenizer)
+            if self._add_extra_space:
+                sequences = [' '.join(seq) for seq in sequences]
 
             # Truncation is False because we want to keep the full sequence. It will fail 
             # if the sequence is longer than the maximum length, so we avoid bad surprises.
