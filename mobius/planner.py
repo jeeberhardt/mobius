@@ -93,7 +93,7 @@ class _Planner(ABC):
         raise NotImplementedError()
 
 
-def batch_selection(results, batch_size=96):
+def batch_selection(results, batch_size=96, known_sequences=None):
     """
     Function for selecting the sequence batch to be synthesized next.
 
@@ -103,6 +103,9 @@ def batch_selection(results, batch_size=96):
         Contains the results from the optimization.
     batch_size : int, default: 96
         Number of sequences to select.
+    known_sequences : ndarray of shape (n_sequences,), default: None
+        Array containing the sequences that have been already synthesized. These sequences will be used to
+        remove duplicates from the suggested sequences.
 
     Returns
     -------
@@ -125,6 +128,12 @@ def batch_selection(results, batch_size=96):
 
     suggested_sequences = np.concatenate(suggested_sequences).flatten()
     predicted_values = np.concatenate(predicted_values)
+
+    # We remove the sequences that have already been synthesized
+    if known_sequences is not None:
+        common_sequences = np.in1d(suggested_sequences, known_sequences)
+        suggested_sequences = suggested_sequences[~common_sequences]
+        predicted_values = predicted_values[~common_sequences]
 
     if predicted_values.shape[1] <= 2:
         crowding_function = calc_crowding_distance
@@ -226,7 +235,7 @@ class Planner(_Planner):
         self._results = self._optimizer.run(self._sequences.copy(), self._values.copy(), self._acq_fun)
 
         # Select batch polyners to be synthesized
-        suggested_sequences, predicted_values = batch_selection(self._results, batch_size)
+        suggested_sequences, predicted_values = batch_selection(self._results, self._sequences, batch_size)
 
         return suggested_sequences, predicted_values
 
