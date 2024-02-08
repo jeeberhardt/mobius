@@ -585,6 +585,8 @@ class SequenceGA():
             if self._n_gpus > 0:
                 # If there are GPUs available, use the gpu version of parallel_ga
                 parallel_ga = parallel_ga_gpu
+            else:
+                parallel_ga = parallel_ga
 
             # Dispatch all the sequences accross different independent Sequence GA opt.
             refs = [parallel_ga.remote(seq_gao, sequences[seq_ids], scores[seq_ids], acquisition_function, designs[name], filters) 
