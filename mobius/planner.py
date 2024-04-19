@@ -235,7 +235,7 @@ class Planner(_Planner):
         self._results = self._optimizer.run(self._sequences.copy(), self._values.copy(), self._acq_fun)
 
         # Select batch polyners to be synthesized
-        suggested_sequences, predicted_values = batch_selection(self._results, self._sequences, batch_size)
+        suggested_sequences, predicted_values = batch_selection(self._results, batch_size, self._sequences)
 
         return suggested_sequences, predicted_values
 
