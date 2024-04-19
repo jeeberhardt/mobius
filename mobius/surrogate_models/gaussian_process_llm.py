@@ -185,7 +185,6 @@ class GPLLModel(_SurrogateModel):
 
         # Tokenize sequences
         X_tokens = self._transformer.tokenize(X_test)
-        X_tokens = X_test['tokens']
 
         # Convert to torch tensors if necessary
         if not torch.is_tensor(X_tokens):
