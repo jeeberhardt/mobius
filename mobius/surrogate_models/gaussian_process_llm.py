@@ -28,8 +28,8 @@ class _ExactGPLLModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchM
         # So the optimizer can find the transformer parameters
         self._model = self.transformer.model
 
-    def forward(self, tokens, attention_mask=None):
-        x = self.transformer.embed(tokens, attention_mask=attention_mask)
+    def forward(self, tokens):
+        x = self.transformer.embed(tokens)
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
@@ -106,23 +106,17 @@ class GPLLModel(_SurrogateModel):
             assert self._X_train.shape[0] == self._y_noise.shape[0], msg_error
 
         # Tokenize sequences
-        X_train = self._transformer.tokenize(self._X_train)
-        X_tokens = X_train['tokens']
-        X_attention_mask = X_train['attention_mask']
+        X_tokens = self._transformer.tokenize(self._X_train)
 
         # Convert to torch tensors if necessary
         if not torch.is_tensor(X_tokens):
             X_tokens = torch.from_numpy(np.asarray(X_tokens)).float()
-        if not torch.is_tensor(X_attention_mask):
-            X_attention_mask = torch.from_numpy(np.asarray(X_attention_mask)).float()
         y_train = torch.from_numpy(self._y_train).float()
         if y_noise is not None:
             y_noise = torch.from_numpy(self._y_noise).float()
 
         # Move tensors to device
         X_tokens = X_tokens.to(self._device)
-        if X_attention_mask is not None:
-            X_attention_mask = X_attention_mask.to(self._device)
         y_train = y_train.to(self._device)
         if y_noise is not None:
             y_noise = y_noise.to(self._device)
@@ -133,7 +127,7 @@ class GPLLModel(_SurrogateModel):
             noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
             self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
 
-        self._model = _ExactGPLLModel([X_tokens, X_attention_mask], y_train, self._likelihood, self._kernel, self._transformer)
+        self._model = _ExactGPLLModel(X_tokens, y_train, self._likelihood, self._kernel, self._transformer)
 
         # Move model and likelihood to device
         self._model.to(self._device)
@@ -190,22 +184,17 @@ class GPLLModel(_SurrogateModel):
         self._likelihood.eval()
 
         # Tokenize sequences
-        X_test = self._transformer.tokenize(X_test)
+        X_tokens = self._transformer.tokenize(X_test)
         X_tokens = X_test['tokens']
-        X_attention_mask = X_test['attention_mask']
 
         # Convert to torch tensors if necessary
         if not torch.is_tensor(X_tokens):
             X_tokens = torch.from_numpy(np.asarray(X_tokens)).float()
-        if not torch.is_tensor(X_attention_mask):
-            X_attention_mask = torch.from_numpy(np.asarray(X_attention_mask)).float()
         if y_noise is not None:
             y_noise = torch.from_numpy(y_noise).float()
 
         # Move tensors to device
         X_tokens = X_tokens.to(self._device)
-        if X_attention_mask is not None:
-            X_attention_mask = X_attention_mask.to(self._device)
         if y_noise is not None:
             y_noise = y_noise.to(self._device)
 
@@ -213,9 +202,9 @@ class GPLLModel(_SurrogateModel):
         # Set fast_pred_var state to False, otherwise cannot pickle GPModel
         with torch.no_grad(), gpytorch.settings.fast_pred_var(state=False):
             if y_noise is None:
-                predictions = self._likelihood(self._model(X_tokens, X_attention_mask))
+                predictions = self._likelihood(self._model(X_tokens))
             else:
-                predictions = self._likelihood(self._model(X_tokens, X_attention_mask), noise=y_noise)
+                predictions = self._likelihood(self._model(X_tokens), noise=y_noise)
 
         mu = predictions.mean.detach().cpu().numpy()
         sigma = predictions.stddev.detach().cpu().numpy()

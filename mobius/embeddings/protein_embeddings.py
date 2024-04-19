@@ -268,13 +268,8 @@ class ProteinEmbedding:
 
         Returns
         -------
-        output : dict
-            Dictionary containing the following fields:
-            - tokens : torch.Tensor of shape (n_molecules, n_tokens)
-                Tokenized molecules.
-            - attention_mask : torch.Tensor of shape (n_molecules, n_tokens) or None
-                Attention mask for the tokenized molecules. None if the model 
-                does not use attention masks.
+        tokens : torch.Tensor of shape (n_sequences, n_tokens)
+            Tokenized sequences.
 
         Raises
         ------
@@ -284,7 +279,6 @@ class ProteinEmbedding:
             If the sequences have different lengths.
 
         """
-        attention_mask = torch.Tensor([])
         sequence_formats = np.unique(utils.guess_input_formats(sequences))
 
         msg_error = f'Only FASTA format is supported. Got {sequence_formats}.'
@@ -314,20 +308,14 @@ class ProteinEmbedding:
             # Truncation is False because we want to keep the full sequence. It will fail 
             # if the sequence is longer than the maximum length, so we avoid bad surprises.
             output = self._tokenizer(sequences, add_special_tokens=True, return_tensors='pt', padding=padding, truncation=False, max_length=max_length)
-
             tokens = output['input_ids']
-            if 'attention_mask' in output:
-                attention_mask = output['attention_mask']
 
         # Move tensors to device
         tokens = tokens.to(self._device)
-        attention_mask = attention_mask.to(self._device)
-        
-        output = {'tokens': tokens, 'attention_mask': attention_mask}
 
-        return output
+        return tokens
 
-    def embed(self, tokenized_sequences, attention_mask=None, return_probabilities=False):
+    def embed(self, tokenized_sequences, return_probabilities=False):
         """
         Computes embedding vectors for protein sequences.
 
@@ -335,8 +323,6 @@ class ProteinEmbedding:
         ----------
         tokenized_sequences : torch.Tensor of shape (n_sequences, n_tokens) or dict
             List of tokenized protein sequences to embed.
-        attention_mask : torch.Tensor of shape (n_sequences, n_tokens), default : None
-            Attention mask for the tokenized sequences.
         return_probabilities : bool
             Whether to return the probabilities of amino acids at each position per sequence.
 
@@ -356,7 +342,7 @@ class ProteinEmbedding:
             results = self._model(tokenized_sequences, repr_layers=[33])
             embeddings = results['representations'][33]
         else:
-            results = self._model(input_ids=tokenized_sequences, attention_mask=attention_mask)
+            results = self._model(input_ids=tokenized_sequences)
             embeddings = results.last_hidden_state
 
         # Either flatten the embeddings or average it
@@ -404,7 +390,7 @@ class ProteinEmbedding:
 
         """
         tokenized_sequences = self.tokenize(sequences)
-        results = self.embed(tokenized_sequences['tokens'], tokenized_sequences['attention_mask'], return_probabilities)
+        results = self.embed(tokenized_sequences, return_probabilities)
 
         return results
 
