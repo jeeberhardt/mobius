@@ -1,6 +1,0 @@
-design:
-  monomers:
-    default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
-  scaffolds:
-    - PEPTIDE1{X.X.X.X.X.X.X.X.X}$$$$V2.0
-    - PEPTIDE1{X.X.X.X.X.X.X.X.X.X}$$$$V2.0
