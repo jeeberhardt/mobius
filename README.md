@@ -10,7 +10,7 @@ A python package for optimizing peptide sequences using Bayesian optimization (B
 - Use design protocols to customize the sequence optimization
 - Integrate protein or chemical Language Models, and fine-tune them on existing data (classical or LoRA).
 - Easily extensible to add your own molecular representations or other ML models
-- Can be seamlessly integrated with other tools (doking, pyRosetta, AlphaFold, etc..)
+- Can be seamlessly integrated with other tools (docking, pyRosetta, AlphaFold, etc..)
 
 ## Installation
 
