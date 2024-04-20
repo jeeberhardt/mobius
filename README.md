@@ -1,12 +1,22 @@
 # Mobius
 
-A python package for optimizing peptide sequences using Bayesian optimization (BO) for single/multiple objectives.
+A python package for optimizing peptide sequences using Bayesian optimization (BO).
+
+## Features
+
+- Single or multi-objectives optimization, with constraints
+- Supports linear and non-linear peptide sequences (macrocyclic, lasso, branched, etc, ...)
+- Supports any non-standard amino-acid residues and modifications
+- Use design protocols to customize the sequence optimization
+- Integrate protein or chemical Language Models, and fine-tune them on existing data (classical or LoRA).
+- Easily extensible to add your own molecular representations or other ML models
+- Can be seamlessly integrated with other tools (doking, pyRosetta, AlphaFold, etc..)
 
 ## Installation
 
 First, you need to download the python package:
 ```bash
-git clone https://git.scicore.unibas.ch/schwede/mobius.git@v0.5
+git clone https://git.scicore.unibas.ch/schwede/mobius.git
 ```
 
 Now you can set up the environment using `mamba`. For more instructions on how to install `mamba`, see: https://github.com/conda-forge/miniforge#miniforge3 
