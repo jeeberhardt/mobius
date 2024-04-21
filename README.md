@@ -75,7 +75,7 @@ for seq in homolog_scanning(lead_peptide):
 The seed library is then virtually tested (Make/Test) using the linear peptide emulator we defined earlier.
 WARNING: This is for benchmarking purpose only. This step is supposed to be an actual lab experiment.
 ```python
-pic50_seed_library = lpe_one.score(seed_library)
+pic50_seed_library = lpe.score(seed_library)
 ```
 
 Once we have the results from our first lab experiment we can now start the Bayesian Optimization (BO). First, 
@@ -84,7 +84,7 @@ and the acquisition function (Expected Improvement).
 ```python
 map4 = Map4Fingerprint(input_type='helm', dimensions=4096, radius=1)
 gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
-acq_fun = ExpectedImprovement(gpmodel, maximize=[False, False])
+acq_fun = ExpectedImprovement(gpmodel, maximize=False)
 ```
 
 ... and now let's define the search protocol in a YAML configuration file (`design_protocol.yaml`) that will be used 
@@ -133,7 +133,7 @@ for i in range(3):
     # Get the pIC50 (Make/Test) of all the suggested peptides using the MHC emulator
     # WARNING: This is for benchmarking purpose only. This 
     # step is supposed to be an actual lab experiment.
-    pic50_suggested_peptides = lpe_one.score(suggested_peptides)
+    pic50_suggested_peptides = lpe.score(suggested_peptides)
     
     # Add all the new data
     peptides = np.concatenate([peptides, suggested_peptides])
