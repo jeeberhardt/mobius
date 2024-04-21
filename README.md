@@ -145,9 +145,11 @@ for i in range(3):
 If mobius is useful for your work please cite the following [paper](https://doi.org/10.26434/chemrxiv-2023-b7l81-v2):
 
 ```bibtex
-@article{eberhardt2024combining,
+@misc{eberhardt2024combining,
   title={Combining Bayesian optimization with sequence-or structure-based strategies for optimization of protein-peptide binding},
   author={Eberhardt, Jerome and Lees, Aidan and Lill, Markus and Schwede, Torsten},
+  url = {https://doi.org/10.26434/chemrxiv-2023-b7l81-v2},
+  doi = {10.26434/chemrxiv-2023-b7l81-v2},
   year={2024}
 }
 ```
