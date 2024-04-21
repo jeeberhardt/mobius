@@ -38,10 +38,6 @@ pip install -e .
 ## Quick tutorial
 
 ```python
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-
 import numpy as np
 from mobius import Map4Fingerprint
 from mobius import GPModel, ExpectedImprovement, TanimotoSimilarityKernel
@@ -87,9 +83,7 @@ we define the molecular fingerprint we want to use as well as the surrogate mode
 and the acquisition function (Expected Improvement).
 ```python
 map4 = Map4Fingerprint(input_type='helm', dimensions=4096, radius=1)
-
 gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
-
 acq_fun = ExpectedImprovement(gpmodel, maximize=[False, False])
 ```
 
