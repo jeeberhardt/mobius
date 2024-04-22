@@ -1,0 +1,30 @@
+name: Mirror GitLab Repository
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # Triggers the workflow every 30 minutes
+  workflow_dispatch:
+
+jobs:
+  mirror-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository from GitLab
+        run: |
+          git clone https://git.scicore.unibas.ch/schwede/mobius.git /tmp/repo
+
+      - name: Check for new changes
+        id: check_changes
+        run: |
+          cd /tmp/repo
+          git fetch
+          git diff --quiet HEAD origin/main || echo "has_changes=true" >> $GITHUB_ENV
+
+      - name: Push to GitHub
+        if: env.has_changes == 'true'
+        run: |
+          cd /tmp/repo
+          git push https://github.com/jeeberhardt/mobius.git master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
