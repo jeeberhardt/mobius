@@ -12,13 +12,19 @@ jobs:
     steps:
       - name: Clone repository from GitLab
         run: |
-          git clone https://git.scicore.unibas.ch/schwede/mobius.git /tmp/repo
+          git clone -b master https://git.scicore.unibas.ch/schwede/mobius.git /tmp/repo
 
-      - name: Push to GitHub
+      - name: GitHub config
         run: |
           cd /tmp/repo
           git config --local user.email env.EMAIL
           git config --local user.name env.USERNAME
-          git push https://github.com/jeeberhardt/mobius.git master
+          git remote set-url origin git@github.com:jeeberhardt/mobius.git
+          git push origin master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Push changes to GitHub
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
