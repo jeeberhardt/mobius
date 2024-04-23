@@ -27,4 +27,5 @@ jobs:
         run: |
           cd /tmp/repo
           git pull
+          git config pull.rebase false
           git push origin master
