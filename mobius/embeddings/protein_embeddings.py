@@ -156,6 +156,7 @@ class ProteinEmbedding:
         self._lora_alpha = lora_alpha
         self._padding_length = padding_length
         self._add_extra_space = add_extra_space
+
         # https://github.com/google/sentencepiece?tab=readme-ov-file#whitespace-is-treated-as-a-basic-symbol
         meta_symbol = u"\u2581"
 
@@ -165,9 +166,9 @@ class ProteinEmbedding:
             self._tokenizer = BatchConverter(alphabet)
             # Get BOS, EOS and PAD tokens
             self._bos_token = self._tokenizer.alphabet.cls_idx
-            self._eos_token = self._tokenizer.eos_idx
+            self._eos_token = self._tokenizer.alphabet.eos_idx
             self._padding_token = self._tokenizer.alphabet.padding_idx
-            self._vocabulary_mask  = np.array([True if token in self._standard_amino_acids else False for token in alphabet.all_toks])
+            self._vocab = alphabet.all_toks
         else:
             self._model_type = 'other'
 
@@ -189,8 +190,12 @@ class ProteinEmbedding:
             self._bos_token = self._tokenizer.bos_token_id
             self._eos_token = self._tokenizer.eos_token_id
             self._padding_token = self._tokenizer.pad_token_id
-            vocab = self._tokenizer.get_vocab()
-            self._vocabulary_mask = np.array([True if token.replace(meta_symbol, "") in self._standard_amino_acids else False for token in vocab])
+            # Remove the meta symbol from tokens used in sentencepiece
+            self._vocab = [token.replace(meta_symbol, "") for token in self._tokenizer.get_vocab()]
+
+        # Get idx of the natural amino acids in the pLM vocab, so we select only these
+        # And we keep the same amino acid order for each pLM
+        self._vocabulary_idx = np.array([self._vocab.index(aa) for aa in self._standard_amino_acids if aa in self._vocab])
 
         # Freeze all parameters
         self.freeze()
@@ -208,6 +213,11 @@ class ProteinEmbedding:
         self._model.to(self._device)
 
         self.eval()
+
+    @property
+    def vocab(self):
+        """Returns the tokens vocabulary."""
+        return self._vocab
 
     @property
     def model(self):
@@ -291,7 +301,6 @@ class ProteinEmbedding:
 
         msg_error = f'Only FASTA format is supported. Got {sequence_formats}.'
         assert sequence_formats[0] == 'FASTA' and sequence_formats.size == 1, msg_error
-        #assert np.unique([len(s) for s in sequences]).size == 1, f'All sequences must have the same length.'
 
         if not isinstance(sequences, (list, tuple, np.ndarray, torch.Tensor)):
             sequences = [sequences]
@@ -336,14 +345,15 @@ class ProteinEmbedding:
 
         Returns
         -------
-        embeddings : torch.Tensor of shape (n_sequences, n_features)
+        embeddings : torch.Tensor of shape (n_sequence, n_residues, n_features) or list of torch.Tensors of shape (n_residues, n_features)
             Embedding vectors for each sequence. The number of features depends on the requested 
             embedding type. With the 'avg' embedding type, the number of features is equal to the 
             out_features size of the model, while for the 'residue' embedding type, the number 
             of features will be equal to the out_features size times the number of tokens in the 
-            sequence.
-        probabilities : torch.Tensor of shape (n_sequences, n_tokens, n_amino_acids)
-            Probabilities of amino acids at each position per sequence. If return_probabilities is True.
+            sequence. Returns a list of torch.Tensors if the sequences have different lengths.
+        probabilities : torch.Tensor of shape (n_sequences, n_residues, n_amino_acids) or list of torch.Tensors of shape (n_residues, n_amino_acids)
+            Probabilities of amino acids at each position per sequence. If return_probabilities is 
+            True. Returns a list of torch.Tensors if the sequences have different lengths.
 
         """
         # Mask for selecting sequence and not the BOS, EOS and PAD tokens
@@ -397,11 +407,11 @@ class ProteinEmbedding:
                 num_trues = sequence_mask.sum(dim=1).max().item()  # This assumes all batches have the same number of Trues
                 logits = selected_elements.reshape(logits.shape[0], num_trues, logits.shape[2])
                 # We keep only the probabilities of the standard amino acids, not the special tokens
-                logits = logits[:, :, self._vocabulary_mask]
+                logits = logits[:, :, self._vocabulary_idx]
             else:
                 # If not all the same length, then we need to iterate through all..
                 # We keep only the probabilities of the standard amino acids, not the special tokens
-                logits = [l[m][:, self._vocabulary_mask] for l, m in zip(logits, sequence_mask)]
+                logits = [l[m][:, self._vocabulary_idx] for l, m in zip(logits, sequence_mask)]
 
             # We apply softmax to get probabilities from logits
             softmax = torch.nn.Softmax(dim=-1)
