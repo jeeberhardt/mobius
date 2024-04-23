@@ -22,7 +22,6 @@ jobs:
           git remote set-url origin git@github.com:jeeberhardt/mobius.git
       
       - name: Push changes to GitHub
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository: /tmp/repo
+        run: |
+          cd /tmp/repo
+          git push origin master
