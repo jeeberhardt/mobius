@@ -20,10 +20,9 @@ jobs:
           git config --local user.email env.EMAIL
           git config --local user.name env.USERNAME
           git remote set-url origin git@github.com:jeeberhardt/mobius.git
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Push changes to GitHub
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository: /tmp/repo
