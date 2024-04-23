@@ -19,11 +19,12 @@ jobs:
           cd /tmp/repo
           git config --local user.email env.EMAIL
           git config --local user.name env.USERNAME
-          git remote set-url --push origin https://jeeberhardt:$ACCESS_TOKEN@github.com/jeeberhardt/mobius
+          git remote set-url origin https://jeeberhardt:$TOKEN@github.com/jeeberhardt/mobius
         env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-      
+          ACCESS_TOKEN: ${{ secrets.TOKEN }}
+
       - name: Push changes to GitHub
         run: |
           cd /tmp/repo
+          git pull
           git push origin master
