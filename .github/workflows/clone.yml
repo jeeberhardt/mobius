@@ -2,7 +2,7 @@ name: Mirror GitLab Repository
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # Triggers the workflow every 30 minutes
+    - cron: '0 0 * * *'  # Triggers the workflow every 30 minutes
   workflow_dispatch:
 
 jobs:
@@ -20,7 +20,6 @@ jobs:
           git config --local user.email env.EMAIL
           git config --local user.name env.USERNAME
           git remote set-url origin git@github.com:jeeberhardt/mobius.git
-          git push origin master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
