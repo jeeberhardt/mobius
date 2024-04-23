@@ -217,7 +217,7 @@ class ProteinEmbedding:
     @property
     def vocab(self):
         """Returns the tokens vocabulary."""
-        return self._vocab
+        return self._standard_amino_acids
 
     @property
     def model(self):
@@ -353,7 +353,9 @@ class ProteinEmbedding:
             sequence. Returns a list of torch.Tensors if the sequences have different lengths.
         probabilities : torch.Tensor of shape (n_sequences, n_residues, n_amino_acids) or list of torch.Tensors of shape (n_residues, n_amino_acids)
             Probabilities of amino acids at each position per sequence. If return_probabilities is 
-            True. Returns a list of torch.Tensors if the sequences have different lengths.
+            True. Returns a list of torch.Tensors if the sequences have different lengths. The 
+            probabilities for each residue follows this order: 'A', 'C', 'D', 'E', 'F', 'G', 'H', 
+            'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'.
 
         """
         # Mask for selecting sequence and not the BOS, EOS and PAD tokens
