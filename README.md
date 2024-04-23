@@ -1,12 +1,26 @@
 # Mobius
 
-A python package for optimizing peptide sequences using Bayesian optimization (BO) for single/multiple objectives.
+A python package for optimizing peptide sequences using Bayesian optimization (BO).
+
+## Features
+
+- Single or multi-objectives optimization, with constraints
+- Supports linear and non-linear peptide sequences (macrocyclic, lasso, branched, etc, ...)
+- Supports any non-standard amino-acid residues and modifications
+- Use design protocols to customize the sequence optimization
+- Integrate protein or chemical Language Models, and fine-tune them on existing data (classical or LoRA).
+- Easily extensible to add your own molecular representations or other ML models
+- Can be seamlessly integrated with other tools (docking, pyRosetta, AlphaFold, etc..)
+
+## Documentation
+
+The installation instructions, documentation and tutorials can be found at [mobius.readthedocs.io](https://mobius.readthedocs.io/en/latest/about.html).
 
 ## Installation
 
 First, you need to download the python package:
 ```bash
-git clone https://git.scicore.unibas.ch/schwede/mobius.git@v0.5
+git clone https://git.scicore.unibas.ch/schwede/mobius.git
 ```
 
 Now you can set up the environment using `mamba`. For more instructions on how to install `mamba`, see: https://github.com/conda-forge/miniforge#miniforge3 
@@ -24,10 +38,6 @@ pip install -e .
 ## Quick tutorial
 
 ```python
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-
 import numpy as np
 from mobius import Map4Fingerprint
 from mobius import GPModel, ExpectedImprovement, TanimotoSimilarityKernel
@@ -42,8 +52,7 @@ Simple linear peptide emulator/oracle for MHC class I A*0201. The Position Speci
 matrices of SMM and SMMPMBEC` section). WARNING: This is for benchmarking purpose only. This step should be an 
 actual lab experiment.
 ```python
-lpe_one = LinearPeptideEmulator('IEDB_MHC/smmpmbec_matrix/HLA-A-02:16-9.txt')
-lpe_two = LinearPeptideEmulator('IEDB_MHC/smmpmbec_matrix/HLA-A-02:11-9.txt')
+lpe = LinearPeptideEmulator('IEDB_MHC/smmpmbec_matrix/HLA-A-02:01-9.txt',)
 ```
 
 Now we define a peptide sequence we want to optimize:
@@ -66,21 +75,16 @@ for seq in homolog_scanning(lead_peptide):
 The seed library is then virtually tested (Make/Test) using the linear peptide emulator we defined earlier.
 WARNING: This is for benchmarking purpose only. This step is supposed to be an actual lab experiment.
 ```python
-pic50_one_seed_library = lpe_one.score(seed_library)
-pic50_two_seed_library = lpe_two.score(seed_library)
-pic50_scores = np.column_stack((pic50_one_seed_library, pic50_two_seed_library))
+pic50_seed_library = lpe.score(seed_library)
 ```
 
 Once we have the results from our first lab experiment we can now start the Bayesian Optimization (BO). First, 
-we define the molecular fingerprint we want to use as well as the surrogate models for each objective (Gaussian Processes) 
+we define the molecular fingerprint we want to use as well as the surrogate model (Gaussian Process) 
 and the acquisition function (Expected Improvement).
 ```python
 map4 = Map4Fingerprint(input_type='helm', dimensions=4096, radius=1)
-
-gpmodel_one = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
-gpmodel_two = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
-
-acq_fun = ExpectedImprovement([gpmodel_one, gpmodel_two], maximize=[False, False])
+gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
+acq_fun = ExpectedImprovement(gpmodel, maximize=False)
 ```
 
 ... and now let's define the search protocol in a YAML configuration file (`design_protocol.yaml`) that will be used 
@@ -104,19 +108,13 @@ design:
           1: [AROMATIC, NEG_CHARGED]
           4: POLAR
           9: [A, V, I, L, M, T]
-filters:
-  - class_path: mobius.PeptideSelfAggregationFilter
-  - class_path: mobius.PeptideSolubilityFilter
-    init_args:
-      hydrophobe_ratio: 0.5
-      charged_per_amino_acids: 5
 
 ```
 
 Once the acquisition function is defined and the parameters set in the YAML configuration file, we can initiate 
-the multi-objective problem we are optimising for and the planner method.
+the single-objective problem we are optimising for and the planner method.
 ```python
-optimizer = SequenceGA(algorithm='SMSEMOA', period=15, design_protocol_filename='design_protocol.yaml')
+optimizer = SequenceGA(algorithm='GA', period=15, design_protocol_filename='design_protocol.yaml')
 planner = Planner(acq_fun, optimizer)
 ```
 
@@ -128,26 +126,30 @@ pic50_scores = pic50_seed_library.copy()
 # Here we are going to do 3 DMT cycles
 for i in range(3):
     # Run optimization, recommand 96 new peptides based on existing data
-    suggested_peptides, _ = ps.recommand(peptides, pic50_scores, batch_size=96)
+    suggested_peptides, _ = ps.recommand(peptides, pic50_scores.reshape(-1, 1), batch_size=96)
 
     # Here you can add whatever methods you want to further filter out peptides
     
     # Get the pIC50 (Make/Test) of all the suggested peptides using the MHC emulator
     # WARNING: This is for benchmarking purpose only. This 
     # step is supposed to be an actual lab experiment.
-    pic50_1_suggested_peptides = lpe_one.score(suggested_peptides)
-    pic50_2_suggested_peptides = lpe_two.score(suggested_peptides)
-    pic50_suggested_peptides = np.column_stack((pic50_1_suggested_peptides, pic50_2_suggested_peptides))
+    pic50_suggested_peptides = lpe.score(suggested_peptides)
     
     # Add all the new data
     peptides = np.concatenate([peptides, suggested_peptides])
     pic50_scores = np.concatenate((pic50_scores, pic50_suggested_peptides), axis=0)
 ```
 
-## Documentation
-
-The installation instructions, documentation and tutorials can be found on [readthedocs.org](https://mobius.readthedocs.io/en/latest/).
-
 ## Citation
 
-* [J. Eberhardt, M. Lill, T. Schwede. (2023). Combining Bayesian optimization with sequence- or structure-based strategies for optimization of peptide-binding protein.](https://doi.org/10.26434/chemrxiv-2023-b7l81)
+If mobius is useful for your work please cite the following [paper](https://doi.org/10.26434/chemrxiv-2023-b7l81-v2):
+
+```bibtex
+@misc{eberhardt2024combining,
+  title={Combining Bayesian optimization with sequence-or structure-based strategies for optimization of protein-peptide binding},
+  author={Eberhardt, Jerome and Lees, Aidan and Lill, Markus and Schwede, Torsten},
+  url={https://doi.org/10.26434/chemrxiv-2023-b7l81-v2},
+  doi={10.26434/chemrxiv-2023-b7l81-v2},
+  year={2024}
+}
+```
