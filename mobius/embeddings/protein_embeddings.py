@@ -92,8 +92,8 @@ class ProteinEmbedding:
         pretrained_model_name : str
             Name of the encoder model. The model will be downloaded from the huggingface repository, 
             except for ESM models. Suggestions for pretrained_model_name are:
-            - ESM models: esm1b_t33_650M_UR50S, esm2_t36_3B_UR50D
-            - ProtT5: Rostlab/prot_t5_xl_uniref50, Rostlab/ProstT5, Rostlab/prot_bert
+            - ESM models: esm1b_t33_650M_UR50S, esm1v_t33_650M_UR90S_1, esm2_t36_3B_UR50D
+            - ProtT5: Rostlab/prot_t5_xl_uniref50, Rostlab/prot_bert
             - Others: TianlaiChen/PepMLM-650M
         embedding_type : str
             Type of embedding to use, either 'residue' or 'avg' (average). The number of output features 
@@ -132,8 +132,7 @@ class ProteinEmbedding:
 
         Notes
         -----
-        - Prot_t5_xl_uniref50: Use the `T5EncoderModel` model and `T5Tokenizer` tokenizer.
-        - ProstT5: Use the `T5EncoderModel` model and `T5Tokenizer` tokenizer.
+        - Prot_t5_xl_uniref50: Use the `T5EncoderModel` (embeddings only) or `T5ForConditionalGeneration` (embedding and logits) model and `T5Tokenizer` tokenizer.
 
         Raises
         ------
@@ -158,12 +157,18 @@ class ProteinEmbedding:
         self._padding_length = padding_length
         self._add_extra_space = add_extra_space
 
+        # https://github.com/google/sentencepiece?tab=readme-ov-file#whitespace-is-treated-as-a-basic-symbol
+        meta_symbol = u"\u2581"
+
         if 'esm' in pretrained_model_name:
             self._model_type = 'esm'
             self._model, alphabet = esm.pretrained.load_model_and_alphabet(pretrained_model_name)
             self._tokenizer = BatchConverter(alphabet)
+            # Get BOS, EOS and PAD tokens
+            self._bos_token = self._tokenizer.alphabet.cls_idx
+            self._eos_token = self._tokenizer.alphabet.eos_idx
             self._padding_token = self._tokenizer.alphabet.padding_idx
-            self._vocabulary_mask  = np.array([True if token in self._standard_amino_acids else False for token in alphabet.all_toks])
+            self._vocab = alphabet.all_toks
         else:
             self._model_type = 'other'
 
@@ -181,8 +186,16 @@ class ProteinEmbedding:
             else:
                 self._tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name, legacy=False)
 
+            # Get BOS, EOS and PAD tokens
+            self._bos_token = self._tokenizer.bos_token_id
+            self._eos_token = self._tokenizer.eos_token_id
             self._padding_token = self._tokenizer.pad_token_id
-            self._vocabulary_mask = None
+            # Remove the meta symbol from tokens used in sentencepiece
+            self._vocab = [token.replace(meta_symbol, "") for token in self._tokenizer.get_vocab()]
+
+        # Get idx of the natural amino acids in the pLM vocab, so we select only these
+        # And we keep the same amino acid order for each pLM
+        self._vocabulary_idx = np.array([self._vocab.index(aa) for aa in self._standard_amino_acids if aa in self._vocab])
 
         # Freeze all parameters
         self.freeze()
@@ -200,6 +213,11 @@ class ProteinEmbedding:
         self._model.to(self._device)
 
         self.eval()
+
+    @property
+    def vocab(self):
+        """Returns the tokens vocabulary."""
+        return self._standard_amino_acids
 
     @property
     def model(self):
@@ -283,7 +301,6 @@ class ProteinEmbedding:
 
         msg_error = f'Only FASTA format is supported. Got {sequence_formats}.'
         assert sequence_formats[0] == 'FASTA' and sequence_formats.size == 1, msg_error
-        #assert np.unique([len(s) for s in sequences]).size == 1, f'All sequences must have the same length.'
 
         if not isinstance(sequences, (list, tuple, np.ndarray, torch.Tensor)):
             sequences = [sequences]
@@ -328,43 +345,84 @@ class ProteinEmbedding:
 
         Returns
         -------
-        embeddings : torch.Tensor of shape (n_sequences, n_features)
+        embeddings : torch.Tensor of shape (n_sequence, n_residues, n_features) or list of torch.Tensors of shape (n_residues, n_features)
             Embedding vectors for each sequence. The number of features depends on the requested 
             embedding type. With the 'avg' embedding type, the number of features is equal to the 
             out_features size of the model, while for the 'residue' embedding type, the number 
             of features will be equal to the out_features size times the number of tokens in the 
-            sequence.
-        probabilities : torch.Tensor of shape (n_sequences, n_tokens, n_amino_acids)
-            Probabilities of amino acids at each position per sequence. If return_probabilities is True.
+            sequence. Returns a list of torch.Tensors if the sequences have different lengths.
+        probabilities : torch.Tensor of shape (n_sequences, n_residues, n_amino_acids) or list of torch.Tensors of shape (n_residues, n_amino_acids)
+            Probabilities of amino acids at each position per sequence. If return_probabilities is 
+            True. Returns a list of torch.Tensors if the sequences have different lengths. The 
+            probabilities for each residue follows this order: 'A', 'C', 'D', 'E', 'F', 'G', 'H', 
+            'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'.
 
         """
+        # Mask for selecting sequence and not the BOS, EOS and PAD tokens
+        sequence_mask = (tokenized_sequences != self._padding_token) \
+                      & (tokenized_sequences != self._eos_token) \
+                      & (tokenized_sequences != self._bos_token)
+        # Check if the sequence have all the same length, compare first sequence to the rest
+        are_sequences_all_same_length = bool((sequence_mask == sequence_mask[0]).all())
+
         if self._model_type == 'esm':
             results = self._model(tokenized_sequences, repr_layers=[33])
             embeddings = results['representations'][33]
         else:
-            results = self._model(input_ids=tokenized_sequences)
-            embeddings = results.last_hidden_state
+            # Make it compatible with T5EncoderModel and T5ForConditionalGeneration models
+            results = self._model(input_ids=tokenized_sequences, **{'decoder_input_ids': tokenized_sequences})
+            if 'last_hidden_state' in results:
+                embeddings = results.last_hidden_state
+            elif 'encoder_last_hidden_state' in results:
+                embeddings = results.encoder_last_hidden_state
+            else:
+                raise RuntimeError(f'Cannot find last hidden state (embedding) from model\'s output ({results.keys()}).')
 
         # Either flatten the embeddings or average it
         if self._embedding_type == 'residue':
-            new_shape = (embeddings.shape[0], embeddings.shape[1] * embeddings.shape[2])
-            features = embeddings.reshape(new_shape)
+            if are_sequences_all_same_length:
+                # if all the same length, we can use some array-tricks
+                selected_elements = embeddings[sequence_mask.unsqueeze(-1).expand_as(embeddings)]
+                num_trues = sequence_mask.sum(dim=1).max().item()  # This assumes all batches have the same number of Trues
+                embeddings = selected_elements.reshape(embeddings.shape[0], num_trues, embeddings.shape[2])
+                # Flatten the embeddings, so one feature vector for each sequence
+                new_shape = (embeddings.shape[0], embeddings.shape[1] * embeddings.shape[2])
+                features = embeddings.reshape(new_shape)
+            else:
+                # If not all the same length, then we need to iterate through all..
+                features = [e[m] for e, m in zip(embeddings, sequence_mask)]
         else:
+            # If we use average embeddings, no need to worry about sequence lengths
             # Source: https://stackoverflow.com/a/69314298
-            mask = tokenized_sequences != self._padding_token
-            denom = torch.sum(mask, -1, keepdim=True)
-            features = torch.sum(embeddings * mask.unsqueeze(-1), dim=1) / denom
+            denom = torch.sum(sequence_mask, -1, keepdim=True)
+            features = torch.sum(embeddings * sequence_mask.unsqueeze(-1), dim=1) / denom
 
-        if return_probabilities and self._vocabulary_mask is not None:
+        if return_probabilities:
             if 'logits' not in results:
                 msg_error = f'Cannot return probabilities with model {self._model_name}. Please set return_probabilities to False.'
                 raise ValueError(msg_error)
 
-            # We keep only the probabilities of the standard amino acids, not the special tokens
-            logits = results['logits'][:, 1:len(tokenized_sequences[0]) + 1, self._vocabulary_mask]
+            logits = results['logits']
+
+            if are_sequences_all_same_length:
+                selected_elements = logits[sequence_mask.unsqueeze(-1).expand_as(logits)]
+                num_trues = sequence_mask.sum(dim=1).max().item()  # This assumes all batches have the same number of Trues
+                logits = selected_elements.reshape(logits.shape[0], num_trues, logits.shape[2])
+                # We keep only the probabilities of the standard amino acids, not the special tokens
+                logits = logits[:, :, self._vocabulary_idx]
+            else:
+                # If not all the same length, then we need to iterate through all..
+                # We keep only the probabilities of the standard amino acids, not the special tokens
+                logits = [l[m][:, self._vocabulary_idx] for l, m in zip(logits, sequence_mask)]
+
             # We apply softmax to get probabilities from logits
             softmax = torch.nn.Softmax(dim=-1)
-            probabilities = torch.tensor([softmax(l) for l in logits])
+            probabilities = [softmax(l) for l in logits]
+
+            try:
+                probabilities = torch.stack(probabilities)
+            except:
+                pass
 
             return features, probabilities
 
