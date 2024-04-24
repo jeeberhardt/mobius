@@ -26,6 +26,4 @@ jobs:
       - name: Push changes to GitHub
         run: |
           cd /tmp/repo
-          git config pull.rebase false
-          git pull
           git push origin master
