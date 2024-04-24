@@ -22,4 +22,4 @@ your peptide optimization projects.
 
 The source code is available under the Apache license at `https://git.scicore.unibas.ch/schwede/mobius <https://git.scicore.unibas.ch/schwede/mobius>`_.
 
-The method is described in the following paper: `J. Eberhardt, A. Lees, M. Lill, T. Schwede. (2023). Combining Bayesian optimization with sequence- or structure-based strategies for optimization of peptide-binding protein. <https://doi.org/10.26434/chemrxiv-2023-b7l81-v2>`_
+The method is described in the following paper: `J. Eberhardt, A. Lees, M. Lill, T. Schwede. (2024). Combining Bayesian optimization with sequence- or structure-based strategies for optimization of peptide-binding protein. <https://doi.org/10.26434/chemrxiv-2023-b7l81-v2>`_
