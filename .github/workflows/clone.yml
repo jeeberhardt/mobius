@@ -2,7 +2,7 @@ name: Mirror GitLab Repository
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Triggers the workflow every 30 minutes
+    - cron: '0 0 * * *'  # Triggers at midnight every day
   workflow_dispatch:
 
 jobs:
