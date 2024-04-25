@@ -14,7 +14,7 @@ A python package for optimizing peptide sequences using Bayesian optimization (B
 
 ## Documentation
 
-The installation instructions, documentation and tutorials can be found at [mobius.readthedocs.io](https://mobius.readthedocs.io/en/latest/about.html).
+The installation instructions, documentation and tutorials can be found at [mobius.readthedocs.io](https://mobius.readthedocs.io/en/master/about.html).
 
 ## Installation
 

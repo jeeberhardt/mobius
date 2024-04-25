@@ -1,0 +1,29 @@
+name: Mirror GitLab Repository
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Triggers at midnight every day
+  workflow_dispatch:
+
+jobs:
+  mirror-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository from GitLab
+        run: |
+          git clone -b master https://git.scicore.unibas.ch/schwede/mobius.git /tmp/repo
+
+      - name: GitHub config
+        run: |
+          cd /tmp/repo
+          git config --local user.email env.EMAIL
+          git config --local user.name env.USERNAME
+          git remote set-url origin https://jeeberhardt:$TOKEN@github.com/jeeberhardt/mobius
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+
+      - name: Push changes to GitHub
+        run: |
+          cd /tmp/repo
+          git push origin master
