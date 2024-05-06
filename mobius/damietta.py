@@ -19,7 +19,6 @@ from openmm.app import PDBFile, ForceField, NoCutoff, HBonds, Simulation, OBC2
 from openmm import VerletIntegrator, unit, Platform
 from prody import parsePDB, writePDB
 
-
 @contextlib.contextmanager
 def temporary_directory(suffix=None, prefix=None, dir=None, clean=True):
     """Create and enter a temporary directory; used as context manager."""
@@ -53,45 +52,62 @@ def run_sinai_cs_f2m2f(spec_input_filename, damietta_path):
         raise RuntimeError(f'Command: {command_line} failed with error message: {outputs}')
 
 
-def remove_ot2_atom(input_pdb_filename, output_pdb_filename):
-    new_pdb = ''
-
-    with open(input_pdb_filename) as f:
-        lines = f.readlines()
-
-        for line in lines:
-            if not 'OT2' in line:
-                new_pdb += line
-
-    with open(output_pdb_filename, 'w') as w:
-        w.write(new_pdb)
-
-
 def format_pdb_for_damietta(input_pdb_filename, output_pdb_filename):
     i = 1
     new_pdb = ''
     atom_str = "{:6s}{:5d} {:^4s}{:1s}{:3s} {:1s}{:4d}{:1s}   {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}		  {:>2s}{:2s}\n"
 
+    # Mapping between Amber atom names and CHARMM atom names
+    amber_to_charmm_atom_types = {
+        'ALA': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN'},
+        'ARG': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1', 'HD3': 'HD1', 'HG3': 'HG1'},
+        'ASN': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1'},
+        'ASP': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1'},
+        'CYS': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1', 'HG': 'HG1'},
+        'GLN': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1', 'HG3': 'HG1'},
+        'GLU': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1', 'HG3': 'HG1'},
+        'GLY': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HA3': 'HA1'},
+        'HIS': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1'},
+        'ILE': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HG13': 'HG11', 'CD1': 'CD', 'HD11': 'HD1', 'HD12': 'HD2', 'HD13': 'HD3'},
+        'LEU': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1'},
+        'LYS': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1', 'HG3': 'HG1', 'HD3': 'HD1', 'HE3': 'HE1'},
+        'MET': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1', 'HG3': 'HG1'},
+        'PHE': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1'},
+        'PRO': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1', 'HD3': 'HD1', 'HG3': 'HG1'},
+        'SER': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1', 'HG': 'HG1'},
+        'THR': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN'},
+        'TRP': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1'},
+        'TYR': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', 'HB3': 'HB1'},
+        'VAL': {'H1': 'HT1', 'H2': 'HT2', 'H3': 'HT3', 'OXT': 'OT2', 'H': 'HN', },
+        }
+
     pdb = parsePDB(input_pdb_filename)
-    
+
     for atom in pdb.iterAtoms():
         atom_name = atom.getName()
+        resname = atom.getResname()
+        x, y, z = atom.getCoords()
+
+        if resname == 'HSD' or resname == 'HSE' or resname == 'HSP':
+            resname = 'HIS'
+        
+        # Convert Amber atom names to CHARMM atom names, if needed
+        if atom_name in amber_to_charmm_atom_types[resname]:
+            try:
+                atom_name = amber_to_charmm_atom_types[resname][atom_name]
+            except KeyError:
+                pass
 
         if atom_name == 'OT1':
             atom_name = 'O'
         elif atom_name == 'OT2':
+            # Damietta does not like OT2 atom type, so we skip it
             continue
-        
-        x, y, z = atom.getCoords()
-        resname = atom.getResname()
-            
-        if resname == 'HSD' or resname == 'HSE' or resname == 'HSP':
-            resname = 'HIS'
-            
+
         new_pdb += atom_str.format('ATOM', i, atom_name, ' ', resname, atom.getChid(), atom.getResnum(), ' ', x, y, z, 1.0, 0.0, ' ', ' ')
-    
+
         i += 1
-    
+
     with open(output_pdb_filename, 'w') as w:
         w.write(new_pdb)
 
@@ -143,27 +159,27 @@ class DamiettaScorer:
 
         """
         input_pdb_filename = 'protein.pdb'
-        #minimized_pdb_filename = 'minimized.pdb'
+        minimized_pdb_filename = 'minimized.pdb'
 
         with temporary_directory(prefix='dm_min_', dir='.', clean=clean) as tmp_dir:
             writePDB(input_pdb_filename, self._pdb, renumber=False)
             pdb = PDBFixer(filename=input_pdb_filename)
 
             # PDB is going to be fixed only if we already mutated residues with damietta
-            #pdb.findMissingResidues()
-            #pdb.findMissingAtoms()
-            #pdb.addMissingAtoms()
-        
+            pdb.findMissingResidues()
+            pdb.findMissingAtoms()
+            pdb.addMissingAtoms()
+
             forcefield = ForceField('amber14-all.xml')
-    
+
             system = forcefield.createSystem(pdb.topology, nonbondedMethod=NoCutoff, constraints=HBonds)
             integrator = VerletIntegrator(0.001*unit.picoseconds)
-    
+
             if platform != 'CPU':
                 properties = {"Precision": "mixed"}
             else:
                 properties = {}
-            
+
             platform = Platform.getPlatformByName(platform)
             simulation = Simulation(pdb.topology, system, integrator, platform, properties)
             simulation.context.setPositions(pdb.positions)
@@ -171,9 +187,12 @@ class DamiettaScorer:
 
             # Get new coordinates, and replace ones in prody structure
             state = simulation.context.getState(getEnergy=True, getPositions=True)
-            #new_pdb = pmd.openmm.load_topology(pdb.topology, system, xyz=state.getPositions())
-            #new_pdb.save(minimized_pdb_filename, overwrite=True)
-            self._pdb.setCoords(state.getPositions(asNumpy=True).value_in_unit(unit.angstrom))
+            new_pdb = pmd.openmm.load_topology(pdb.topology, system, xyz=state.getPositions())
+            new_pdb.save(minimized_pdb_filename, overwrite=True)
+
+            # Replace the pdb with the minimized one
+            self._pdb = parsePDB(minimized_pdb_filename)
+            #self._pdb.setCoords(state.getPositions(asNumpy=True).value_in_unit(unit.angstrom))
 
     def mutate_score(self, mutations, repack_neighbor_residues=False, neighbor_cutoff=4.0, load_memory=True, clean=True):
         """
@@ -290,13 +309,14 @@ class DamiettaScorer:
                         sl = line.split()
                         energies = np.array([float(sl[6]), float(sl[8]), float(sl[10]), float(sl[12]), float(sl[14]), float(sl[16])])
                         break
-
-            self._mutated_pdb = parsePDB('run/init.pdb')
+            
+            # Replace the pdb with the mutated one
+            self._pdb = parsePDB('run/init.pdb')
 
         return energies
 
     def export_pdb(self, output_pdb_filename):
-                """
+        """
         Writes the mutated pdb to a file.
 
         Parameters
