@@ -13,6 +13,10 @@ import subprocess
 import tempfile
 
 import numpy as np
+import parmed as pmd
+from pdbfixer.pdbfixer import PDBFixer
+from openmm.app import PDBFile, ForceField, NoCutoff, HBonds, Simulation, OBC2
+from openmm import VerletIntegrator, unit, Platform
 from prody import parsePDB, writePDB
 
 
@@ -49,6 +53,49 @@ def run_sinai_cs_f2m2f(spec_input_filename, damietta_path):
         raise RuntimeError(f'Command: {command_line} failed with error message: {outputs}')
 
 
+def remove_ot2_atom(input_pdb_filename, output_pdb_filename):
+    new_pdb = ''
+
+    with open(input_pdb_filename) as f:
+        lines = f.readlines()
+
+        for line in lines:
+            if not 'OT2' in line:
+                new_pdb += line
+
+    with open(output_pdb_filename, 'w') as w:
+        w.write(new_pdb)
+
+
+def format_pdb_for_damietta(input_pdb_filename, output_pdb_filename):
+    i = 1
+    new_pdb = ''
+    atom_str = "{:6s}{:5d} {:^4s}{:1s}{:3s} {:1s}{:4d}{:1s}   {:8.3f}{:8.3f}{:8.3f}{:6.2f}{:6.2f}		  {:>2s}{:2s}\n"
+
+    pdb = parsePDB(input_pdb_filename)
+    
+    for atom in pdb.iterAtoms():
+        atom_name = atom.getName()
+
+        if atom_name == 'OT1':
+            atom_name = 'O'
+        elif atom_name == 'OT2':
+            continue
+        
+        x, y, z = atom.getCoords()
+        resname = atom.getResname()
+            
+        if resname == 'HSD' or resname == 'HSE' or resname == 'HSP':
+            resname = 'HIS'
+            
+        new_pdb += atom_str.format('ATOM', i, atom_name, ' ', resname, atom.getChid(), atom.getResnum(), ' ', x, y, z, 1.0, 0.0, ' ', ' ')
+    
+        i += 1
+    
+    with open(output_pdb_filename, 'w') as w:
+        w.write(new_pdb)
+
+
 class DamiettaScorer:
 
     def __init__(self, pdb_filename, damietta_path):
@@ -78,9 +125,57 @@ class DamiettaScorer:
             raise RuntimeError('Could not locate Damietta library in {self._damietta_path} directory.')
 
         self._pdb = parsePDB(self._pdb_filename)
+        self._mutated_pdb = None
         self._residue_to_indices = {f'{r.getChid()}:{r.getResnum()}': i + 1 for i, r in enumerate(self._pdb.iterResidues())}
 
-    def mutate_and_score(self, mutations, repack_neighbor_residues=False, neighbor_cutoff=4.0, load_memory=True, clean=True):
+    def minimize(self, max_iterations=100, platform='CPU', clean=True):
+        """
+        Minimizes the protein/peptide.
+
+        Parameters
+        ----------
+        max_iterations : int, default: 100
+            The maximum number of iterations for the minimization.
+        platform : str, default: 'CPU'
+            The platform to use for running the minimization ('CPU', 'CUDA' or 'OpenCL').
+        clean : bool, default: True
+            Whether to clean the temporary files. Default is True.
+
+        """
+        input_pdb_filename = 'protein.pdb'
+        #minimized_pdb_filename = 'minimized.pdb'
+
+        with temporary_directory(prefix='dm_min_', dir='.', clean=clean) as tmp_dir:
+            writePDB(input_pdb_filename, self._pdb, renumber=False)
+            pdb = PDBFixer(filename=input_pdb_filename)
+
+            # PDB is going to be fixed only if we already mutated residues with damietta
+            #pdb.findMissingResidues()
+            #pdb.findMissingAtoms()
+            #pdb.addMissingAtoms()
+        
+            forcefield = ForceField('amber14-all.xml')
+    
+            system = forcefield.createSystem(pdb.topology, nonbondedMethod=NoCutoff, constraints=HBonds)
+            integrator = VerletIntegrator(0.001*unit.picoseconds)
+    
+            if platform != 'CPU':
+                properties = {"Precision": "mixed"}
+            else:
+                properties = {}
+            
+            platform = Platform.getPlatformByName(platform)
+            simulation = Simulation(pdb.topology, system, integrator, platform, properties)
+            simulation.context.setPositions(pdb.positions)
+            simulation.minimizeEnergy(maxIterations=max_iterations)
+
+            # Get new coordinates, and replace ones in prody structure
+            state = simulation.context.getState(getEnergy=True, getPositions=True)
+            #new_pdb = pmd.openmm.load_topology(pdb.topology, system, xyz=state.getPositions())
+            #new_pdb.save(minimized_pdb_filename, overwrite=True)
+            self._pdb.setCoords(state.getPositions(asNumpy=True).value_in_unit(unit.angstrom))
+
+    def mutate_score(self, mutations, repack_neighbor_residues=False, neighbor_cutoff=4.0, load_memory=True, clean=True):
         """
         Mutates the protein/peptide with the given mutations list.
 
@@ -88,15 +183,14 @@ class DamiettaScorer:
         ----------
         mutations : list of str
             The list of mutations in the format chainid:resid:resname.
-        repack_neighbor_residues : bool, optional
+        repack_neighbor_residues : bool, default: False
             Whether to repack the residues within the given cutoff distance of the mutated residues.
-            Default is False.
-        neighbor_cutoff : float, optional
-            The cutoff distance to consider the neighboring residues. Default is 4.0 Angstrom.
-        load_memory : bool, optional
-            Whether to load the memory. Default is True.
-        clean : bool, optional
-            Whether to clean the temporary files. Default is True.
+        neighbor_cutoff : float, default: 4.0
+            The cutoff distance to consider the neighboring residues.
+        load_memory : bool, default: True
+            Whether to load the memory.
+        clean : bool, default: True
+            Whether to clean the temporary files.
 
         Returns
         -------
@@ -171,13 +265,16 @@ class DamiettaScorer:
             spec_input_str += f"load_memory\t0\n"
 
         # Run Damietta
-        with temporary_directory(prefix='dm_', dir='.', clean=clean) as tmp_dir:
+        with temporary_directory(prefix='dm_mut_', dir='.', clean=clean) as tmp_dir:
             # Renumbers the residues in the pdb file, starting from 1
             residue_indices = pdb.getResindices()
             pdb.setResnums(residue_indices + 1)
 
             # Writes the pdb file
             writePDB(input_pdb_filename, pdb, renumber=False)
+
+            # Modify PDB file, because Damietta is a special kid
+            format_pdb_for_damietta(input_pdb_filename, input_pdb_filename)
 
             with open(f'input.spec', 'w') as spec_input_file:
                 spec_input_file.write(spec_input_str)
@@ -194,5 +291,20 @@ class DamiettaScorer:
                         energies = np.array([float(sl[6]), float(sl[8]), float(sl[10]), float(sl[12]), float(sl[14]), float(sl[16])])
                         break
 
+            self._mutated_pdb = parsePDB('run/init.pdb')
+
         return energies
+
+    def export_pdb(self, output_pdb_filename):
+                """
+        Writes the mutated pdb to a file.
+
+        Parameters
+        ----------
+        output_pdb_filename : str
+            The filename of the output pdb file.
+
+        """
+        if self._mutated_pdb is not None:
+            writePDB(output_pdb_filename, self._mutated_pdb)
 
