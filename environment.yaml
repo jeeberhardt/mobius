@@ -12,7 +12,10 @@ dependencies:
   - numpy
   - numpydoc
   - pandas
+  - parmed
+  - pdbfixer
   - pip
+  - openmm
   - rdkit
   - seaborn
   - sentencepiece
@@ -26,3 +29,4 @@ dependencies:
     - mhfp
     - ray
     - pymoo
+    - prody
