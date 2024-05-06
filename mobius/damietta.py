@@ -317,7 +317,7 @@ class DamiettaScorer:
 
     def export_pdb(self, output_pdb_filename):
         """
-        Writes the mutated pdb to a file.
+        Writes the pdb file.
 
         Parameters
         ----------
@@ -325,6 +325,5 @@ class DamiettaScorer:
             The filename of the output pdb file.
 
         """
-        if self._mutated_pdb is not None:
-            writePDB(output_pdb_filename, self._mutated_pdb)
+        writePDB(output_pdb_filename, self._pdb)
 
