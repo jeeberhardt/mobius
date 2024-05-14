@@ -19,6 +19,7 @@ from openmm.app import PDBFile, ForceField, NoCutoff, HBonds, Simulation, OBC2
 from openmm import VerletIntegrator, unit, Platform
 from prody import parsePDB, writePDB
 
+
 @contextlib.contextmanager
 def temporary_directory(suffix=None, prefix=None, dir=None, clean=True):
     """Create and enter a temporary directory; used as context manager."""
