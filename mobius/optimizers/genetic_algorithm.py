@@ -83,13 +83,13 @@ def _load_polymer_design_from_config(config):
         default_monomers = design['monomers']['default']
     except:
         pass
-    
+
     try:
         polymer_designs = design['polymers']
     except KeyError:
         msg_error = 'The `polymers` key is missing in the input design protocol.'
         raise KeyError(msg_error)
-    
+
     assert len(polymer_designs) > 0, 'No polymer design provided. You need to define at least one.'
 
     for polymer_design in polymer_designs:
@@ -156,8 +156,6 @@ def _load_biopolymer_design_from_config(config):
     """
     designs = {}
     monomers_collections = {}
-    default_monomers = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
-                        'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
 
     if isinstance(config, dict):
         design = config
@@ -182,7 +180,8 @@ def _load_biopolymer_design_from_config(config):
         # composed of the 20 natural amino acids.
         default_monomers = design['monomers']['default']
     except:
-        pass
+        default_monomers = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
+                            'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
 
     try:
         biopolymer_designs = design['biopolymers']
@@ -210,15 +209,35 @@ def _load_biopolymer_design_from_config(config):
         # Generate the default design. if a position is later defined, None will be replaced.
         design = {position : None for position in range(starting_residue, length + 1)}
 
-        for position in positions:
-            user_defined_monomers = positions[position]
+        for position, instructions in positions.items():
+            probabilities = None
 
-            if user_defined_monomers is None:
+            if isinstance(instructions, dict):
+                try:
+                    user_defined_monomers = instructions['monomers']
+                except KeyError:
+                    msg_error = f'A `monomers` key is missing for position {position}.'
+                    raise KeyError(msg_error)
+
+                if 'probabilities' in instructions:
+                    probabilities = instructions['probabilities']
+            elif isinstance(instructions, (list, str)):
+                user_defined_monomers = instructions
+            elif instructions is None:
                 # Use natural amino acids set for positions that are not defined.
                 user_defined_monomers = default_monomers
+            else:
+                msg_error = f'Cannot recognize instructions ({instructions}) for position {position}'
+                raise RuntimeError(msg_error)
 
             if not isinstance(user_defined_monomers, list):
                 user_defined_monomers = [user_defined_monomers]
+
+            if probabilities is not None:
+                probabilities = np.array(probabilities).flatten()
+
+            probabilities = probabilities / np.sum(probabilities)
+            #assert np.sum(probabilities) == 1., f'Probabilities do not sum to 1 ({np.sum(probabilities)})'
 
             # if one the monomer is monomers collection, replace it by the monomers collection
             # The monomers collection must be defined in the YAML config file, otherwise it will be
@@ -227,6 +246,9 @@ def _load_biopolymer_design_from_config(config):
                 for j, m in enumerate(user_defined_monomers):
                      if m in monomers_collections:
                         user_defined_monomers[j:j + 1] = monomers_collections[m]
+
+            msg_error = f'The number of monomers and probabilities must be equal for position {position}  ({len(user_defined_monomers)} != {probabilities.size})'
+            assert probabilities.size == len(user_defined_monomers), msg_error
 
             if isinstance(position, int):
                 start = end = position - starting_residue + 1
@@ -241,7 +263,7 @@ def _load_biopolymer_design_from_config(config):
             else:
                 msg_error = f'Position {position} not recognized. It must be a number (XX) or a range (XX-XX).'
                 raise ValueError(msg_error)
-            
+
             # Check that the position is greater or equal to the starting residue
             if any(np.array([start, end]) < 0):
                 msg_error = f'Position {position} is not valid.'
@@ -249,7 +271,7 @@ def _load_biopolymer_design_from_config(config):
                 raise ValueError(msg_error)
 
             for i in range(int(start), int(end) + 1):
-                design[i] = user_defined_monomers
+                design[i] = {'monomers': user_defined_monomers, 'probabilities': probabilities}
 
         designs[biopolymer_name] = design
 
@@ -437,7 +459,9 @@ class SequenceGA():
                         positions:
                             1: [AROMATIC, NEG_CHARGED]
                             4: POLAR
-                            9-12: [A, V, I, L, M, T]
+                            9-12: 
+                                monomers: [A, V, I, L, M, T]
+                                probabilities: [0.1, 0.2, 0.3, 0.2, 0.1, 0.1]
 
         """
         self._single = {'GA': GA}
