@@ -237,9 +237,7 @@ def _load_biopolymer_design_from_config(config):
                 probabilities = np.array(probabilities).flatten()
 
             # Make sure that the probabilities sums up to 1
-            # Trick: https://stackoverflow.com/a/71400320
             probabilities = probabilities / np.sum(probabilities)
-            probabilities[-1] = 1 - np.sum(probabilities[0:-1])
 
             # if one the monomer is monomers collection, replace it by the monomers collection
             # The monomers collection must be defined in the YAML config file, otherwise it will be
@@ -458,6 +456,7 @@ class SequenceGA():
                 biopolymers:
                     - name: PROTEIN1
                         starting_residue: 1
+                        length: 12
                         positions:
                             1: [AROMATIC, NEG_CHARGED]
                             4: POLAR
