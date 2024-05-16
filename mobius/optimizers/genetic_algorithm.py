@@ -236,8 +236,10 @@ def _load_biopolymer_design_from_config(config):
             if probabilities is not None:
                 probabilities = np.array(probabilities).flatten()
 
+            # Make sure that the probabilities sums up to 1
+            # Trick: https://stackoverflow.com/a/71400320
             probabilities = probabilities / np.sum(probabilities)
-            #assert np.sum(probabilities) == 1., f'Probabilities do not sum to 1 ({np.sum(probabilities)})'
+            probabilities[-1] = 1 - np.sum(probabilities[0:-1])
 
             # if one the monomer is monomers collection, replace it by the monomers collection
             # The monomers collection must be defined in the YAML config file, otherwise it will be
