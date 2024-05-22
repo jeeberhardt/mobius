@@ -73,9 +73,9 @@ def homolog_scanning(polymer, substitution_matrix=None, input_type='helm', posit
     # Get allowed positions based on the input positions
     for pid, simple_polymer in complex_polymer.items():
         try:
-            allowed_positions[pid] = positions[pid]
+            allowed_positions[pid] = np.array(positions[pid]) - 1
         except:
-            allowed_positions[pid] = list(range(0, len(simple_polymer)))
+            allowed_positions[pid] = np.arange(0, len(simple_polymer))
 
         # Ignore positions involved into connections
         if connections is not None:
@@ -175,11 +175,9 @@ def monomers_scanning(polymer, monomers=None, input_type='helm', positions=None)
 
     for pid, simple_polymer in complex_polymer.items():
         try:
-            # Use the provided positions, if any
-            allowed_positions[pid] = positions[pid]
+            allowed_positions[pid] = np.array(positions[pid]) - 1
         except:
-            # Otherwise, allow all positions
-            allowed_positions[pid] = list(range(0, len(simple_polymer)))
+            allowed_positions[pid] = np.arange(0, len(simple_polymer))
 
         if connections is not None:
             # Ignore positions involved into connections
@@ -255,9 +253,9 @@ def alanine_scanning(polymer, repeats=None, input_type='helm', positions=None):
 
     for pid, simple_polymer in complex_polymer.items():
         try:
-            allowed_positions[pid] = positions[pid]
+            allowed_positions[pid] = np.array(positions[pid]) - 1
         except:
-            allowed_positions[pid] = list(range(0, len(simple_polymer)))
+            allowed_positions[pid] = np.arange(0, len(simple_polymer))
 
         if connections is not None:
             # Ignore positions involved into connections
@@ -344,9 +342,9 @@ def random_monomers_scanning(polymer, monomers=None, input_type='helm', position
 
     for pid, simple_polymer in complex_polymer.items():
         try:
-            allowed_positions[pid] = positions[pid]
+            allowed_positions[pid] = np.array(positions[pid]) - 1
         except:
-            allowed_positions[pid] = list(range(0, len(simple_polymer)))
+            allowed_positions[pid] = np.arange(0, len(simple_polymer))
 
         if connections is not None:
             # Ignore positions involved into connections
@@ -436,9 +434,9 @@ def properties_scanning(polymer, properties=None, input_type='helm', positions=N
 
     for pid, simple_polymer in complex_polymer.items():
         try:
-            allowed_positions[pid] = positions[pid]
+            allowed_positions[pid] = np.array(positions[pid]) - 1
         except:
-            allowed_positions[pid] = list(range(0, len(simple_polymer)))
+            allowed_positions[pid] = np.arange(0, len(simple_polymer))
 
         if connections is not None:
             # Ignore positions involved into connections
@@ -502,9 +500,9 @@ def scrumbled_scanning(polymer, input_type='helm', positions=None):
     # For each polymer, get allowed positions or use all positions
     for pid, simple_polymer in complex_polymer.items():
         try:
-            allowed_positions[pid] = positions[pid]
+            allowed_positions[pid] = np.array(positions[pid]) - 1
         except:
-            allowed_positions[pid] = list(range(0, len(simple_polymer)))
+            allowed_positions[pid] = np.arange(0, len(simple_polymer))
 
         if connections is not None:
             # Ignore positions involved into connections
