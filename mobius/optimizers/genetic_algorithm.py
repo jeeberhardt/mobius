@@ -30,7 +30,7 @@ from ..utils import generate_design_protocol_from_polymers
 
 
 @ray.remote
-def parallel_ga(gao, polymers, scores, acquisition_function, design, filters):
+def parallel_ga_cpu(gao, polymers, scores, acquisition_function, design, filters):
     return gao.run(polymers, scores, acquisition_function, design, filters)
 
 
@@ -611,7 +611,8 @@ class SequenceGA():
                 # If there are GPUs available, use the gpu version of parallel_ga
                 parallel_ga = parallel_ga_gpu
             else:
-                parallel_ga = parallel_ga
+                # Otherwise, use the cpu version of parallel_ga
+                parallel_ga = parallel_ga_cpu
 
             # Dispatch all the sequences accross different independent Sequence GA opt.
             refs = [parallel_ga.remote(seq_gao, sequences[seq_ids], scores[seq_ids], acquisition_function, designs[name], filters) 
