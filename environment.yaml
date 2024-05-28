@@ -6,6 +6,7 @@ dependencies:
   - python <=3.10
   - botorch
   - fair-esm
+  - grakel
   - gpytorch
   - matplotlib
   - numba 
@@ -26,6 +27,7 @@ dependencies:
   - transformers
   - pytorch=*=*cuda*
   - pip:
+    - graphein
     - mhfp
     - ray
     - pymoo

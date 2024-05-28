@@ -6,6 +6,7 @@
 
 import torch
 import gpytorch
+from grakel.kernels import Kernel
 
 
 class TanimotoSimilarityKernel(gpytorch.kernels.Kernel):
@@ -116,3 +117,62 @@ class CosineSimilarityKernel(gpytorch.kernels.Kernel):
         sim_mt = torch.mm(x1_norm, x2_norm.transpose(0, 1))
 
         return sim_mt
+
+
+class GraphKernel(gpytorch.Module):
+    """
+    Computes the graph distances between graphs.
+
+    """
+    def __init__(self, kernel):
+        """
+        Initializes the GraphKernel class.
+
+        Parameters
+        ----------
+        kernel : grakel.kernels.Kernel
+            The kernel to compute the graph distances.
+        
+        """
+        super().__init__()
+        self._outputscales = torch.nn.Parameter(torch.tensor([1.0], dtype=float))
+
+        if not isinstance(kernel, Kernel):
+            raise ValueError("The kernel must be an instance of grakel.kernels.Kernel.")
+
+        self._kernel = kernel
+
+    def forward(self, x, diag=False, eps=1e-6, **params):
+        """
+        Computes the graph distances between input graphs.
+
+        Parameters
+        ----------
+        x : list of graphs
+            Input graphs obtained using the `graph_from_network function` from grakel.
+        diag : bool, default : False
+            If True, return the diagonal of the kernel matrix.
+        eps : float, default : 1e-6
+            A small constant to add for numerical stability.
+
+        Returns
+        -------
+        torch.Tensor
+            A tensor of shape `(batch_size, batch_size)` representing the graph distances.
+        
+        """
+        self._kernel.fit(x)
+
+        if diag:
+            res = self._kernel.diagonal()
+        else:
+            res = self._kernel.transform(x)
+
+        # Scale the covariance matrix, replace the ScaleKernel
+        res = self._outputscales * torch.tensor(res).float()
+
+        # Add some jitter along the diagonal to make computations more stable
+        jitter = max(res.diag().mean() * eps, eps)
+        res += torch.eye(len(x)) * jitter
+
+        return res

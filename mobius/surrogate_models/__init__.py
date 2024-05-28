@@ -8,5 +8,6 @@ from .dummy_model import DummyModel
 from .gaussian_process import GPModel
 from .gaussian_process_llm import GPLLModel
 from .random_forest import RFModel
+from .gaussian_process_graph import GPGModel
 
-__all__ = ['DummyModel', 'GPModel', 'GPLLModel', 'RFModel']
+__all__ = ['DummyModel', 'GPModel', 'GPLLModel', 'RFModel', 'GPGModel']
