@@ -8,7 +8,7 @@ import botorch
 import gpytorch
 import numpy as np
 import torch
-from botorch.fit import fit_gpytorch_model
+from botorch.fit import fit_gpytorch_mll
 from sklearn.exceptions import NotFittedError
 
 from .surrogate_model import _SurrogateModel
@@ -51,7 +51,7 @@ class GPLLModel(_SurrogateModel):
             The kernel specifying the covariance function of the GPR model.
         transformer : transformer
             Language Model that transforms the input into data exploitable by the GP model.
-        fit_transformer : bool, default : False
+        finetune_transformer : bool, default : False
             Whether to finetune the Language Model during GP fitting.
         device : str or torch.device, default : None
             Device on which to run the GP model. Per default, the device is set to 
@@ -82,8 +82,8 @@ class GPLLModel(_SurrogateModel):
 
         Parameters
         ----------
-        X_train : array-like of shape (n_samples, n_features)
-            Input training dataset.
+        X_train : list of polymers (if transformer defined) or array-like of shape (n_samples, n_features)
+            Data to be used for training the GPR model.
         y_train : array-like of shape (n_samples,)
             Target values.
         y_noise : array-like of shape (n_samples,), default : None
@@ -142,7 +142,7 @@ class GPLLModel(_SurrogateModel):
         self._likelihood.train()
 
         # Train model!
-        fit_gpytorch_model(mll)
+        fit_gpytorch_mll(mll)
 
     def predict(self, X_test, y_noise=None):
         """
@@ -150,8 +150,8 @@ class GPLLModel(_SurrogateModel):
 
         Parameters
         ----------
-        X_test : array-like of shape (n_samples, n_features)
-            Query points where the GPR is evaluated.
+        X_test : list of polymers (if input_transformer defined) or array-like of shape (n_samples, n_features)
+            Data to be evaluated by the GPR model.
         y_noise : array-like of shape (n_samples,), default : None
             Noise value associated to each query point (X_test), and expressed as 
             standard deviation (sigma). Values are squared internally to obtain the variance.
