@@ -157,7 +157,12 @@ class BioPolymerMutation(Mutation):
 
                 # Do mutations
                 for mutation_position in mutation_positions:
-                    chosen_monomer = _rng.choice(self._design[mutation_position])
+                    monomers = self._design[mutation_position]['monomers']
+                    probabilities = self._design[mutation_position]['probabilities']
+
+                    # Choose a monomer based on the probabilities, provided by the user or None
+                    chosen_monomer = _rng.choice(monomers, p=probabilities)
+
                     # -1 , because specific positions are 1-based in the design protocol
                     mutant_biopolymer[mutation_position - 1] = chosen_monomer
 

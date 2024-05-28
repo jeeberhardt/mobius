@@ -591,7 +591,7 @@ def convert_HELM_to_FASTA(polymers, ignore_connections=False):
     for polymer in polymers:
         complex_polymer, connections, _, _ = parse_helm(polymer)
 
-        if ignore_connections is False and connections:
+        if ignore_connections is False and connections.size > 0:
             msg_error = 'Polymer %s cannot be converted to FASTA string. It contains connections.'
             raise ValueError(msg_error % polymer)
 

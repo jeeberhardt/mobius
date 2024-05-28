@@ -5,6 +5,7 @@
 #
 
 import importlib
+import inspect
 
 import esm
 import numpy as np
@@ -358,6 +359,8 @@ class ProteinEmbedding:
             'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'.
 
         """
+        extra_arguments = {}
+
         # Mask for selecting sequence and not the BOS, EOS and PAD tokens
         sequence_mask = (tokenized_sequences != self._padding_token) \
                       & (tokenized_sequences != self._eos_token) \
@@ -370,7 +373,13 @@ class ProteinEmbedding:
             embeddings = results['representations'][33]
         else:
             # Make it compatible with T5EncoderModel and T5ForConditionalGeneration models
-            results = self._model(input_ids=tokenized_sequences, **{'decoder_input_ids': tokenized_sequences})
+            model_arguments = inspect.getargspec(self._model)[0]
+
+            if 'decoder_input_ids' in model_arguments:
+                extra_arguments['decoder_input_ids'] = tokenized_sequences
+
+            results = self._model(input_ids=tokenized_sequences, **extra_arguments)
+
             if 'last_hidden_state' in results:
                 embeddings = results.last_hidden_state
             elif 'encoder_last_hidden_state' in results:
