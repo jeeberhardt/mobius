@@ -96,8 +96,8 @@ class ExactGPGraph(ExactGP):
                         input = input.expand(*batch_shape, *input.shape[-2:])
                     full_inputs.append(torch.cat([train_input, input], dim=-2))
             else:
-                full_inputs =copy.deepcopy(train_inputs)
-                full_inputs[0].append(inputs[0])
+                full_inputs = copy.deepcopy(train_inputs)
+                full_inputs[0] = np.concatenate((full_inputs[0], inputs[0]))
 
             # Get the joint distribution for training/test data
             full_output = super(ExactGP, self).__call__(*full_inputs, **kwargs)
@@ -204,7 +204,10 @@ class GPGModel(_SurrogateModel):
             X_train = self._X_train
 
         # X_train cannot be transformed into a tensor
-        y_train = torch.from_numpy(self._y_train).float()
+        # Convert to double, otherwise we get an error.
+        # return torch.cholesky_solve(rhs, self.to_dense(), upper=upper)
+        # RuntimeError: Expected b and A to have the same dtype, but found b of type Float and A of type Double instead.
+        y_train = torch.from_numpy(self._y_train).double()
         if y_noise is not None:
             y_noise = torch.from_numpy(self._y_noise).float()
 
@@ -283,7 +286,7 @@ class GPGModel(_SurrogateModel):
             else:
                 predictions = self._likelihood(self._model(X_test), noise=y_noise)
 
-        mu = predictions.mean.detach().numpy()
-        sigma = predictions.stddev.detach().numpy()
+        mu = predictions.mean.detach().cpu().numpy()
+        sigma = predictions.stddev.detach().cpu().numpy()
 
         return mu, sigma
