@@ -142,7 +142,7 @@ class GraphKernel(gpytorch.Module):
 
         self._kernel = kernel
 
-    def forward(self, x, diag=False, eps=1e-6, **params):
+    def forward(self, x, diag=False, eps=1e-4, **params):
         """
         Computes the graph distances between input graphs.
 
@@ -152,7 +152,7 @@ class GraphKernel(gpytorch.Module):
             Input graphs obtained using the `graph_from_network function` from grakel.
         diag : bool, default : False
             If True, return the diagonal of the kernel matrix.
-        eps : float, default : 1e-6
+        eps : float, default : 1e-4
             A small constant to add for numerical stability.
 
         Returns
