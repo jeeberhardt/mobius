@@ -17,6 +17,7 @@ from gpytorch.models import ExactGP
 from gpytorch.models.exact_prediction_strategies import prediction_strategy
 from gpytorch.utils.generic import length_safe_zip
 from sklearn.exceptions import NotFittedError
+from torch_geometric.data import Batch
 
 from .surrogate_model import _SurrogateModel
 from ..kernels import GraphKernel
@@ -97,7 +98,16 @@ class ExactGPGraph(ExactGP):
                     full_inputs.append(torch.cat([train_input, input], dim=-2))
             else:
                 full_inputs = copy.deepcopy(train_inputs)
-                full_inputs[0] = np.concatenate((full_inputs[0], inputs[0]))
+
+                if isinstance(full_inputs[0], np.ndarray) and isinstance(inputs[0], np.ndarray):
+                    full_inputs[0] = np.concatenate((full_inputs[0], inputs[0]))
+                elif isinstance(full_inputs[0], list) and isinstance(inputs[0], list):
+                    full_inputs[0] = full_inputs[0] + inputs[0]
+                elif isinstance(full_inputs[0], Batch) and isinstance(inputs[0], Batch):
+                    full_inputs[0] = full_inputs[0].to_data_list() + inputs[0].to_data_list()
+                    full_inputs[0] = Batch.from_data_list(full_inputs[0])
+                else:
+                    raise RuntimeError(f"Unsupported input types for ExactGPGraph: {type(full_inputs[0])} and {type(inputs[0])})")
 
             # Get the joint distribution for training/test data
             full_output = super(ExactGP, self).__call__(*full_inputs, **kwargs)
