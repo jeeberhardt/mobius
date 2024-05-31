@@ -16,6 +16,7 @@ dependencies:
   - parmed
   - pdbfixer
   - pip
+  - pyg
   - openmm
   - rdkit
   - seaborn
