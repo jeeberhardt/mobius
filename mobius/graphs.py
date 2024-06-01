@@ -199,9 +199,19 @@ class Graph:
             print(polymers)
 
         if self._output_type == 'graph':
+            if self._node_labels is not None:
+                node_labels = self._node_labels[0]
+            else:
+                node_labels = None
+
+            if self._edge_labels is not None:
+                edge_labels = self._edge_labels[0]
+            else:
+                edge_labels = None
+
             graphs = [gm.construct_graph(smiles=s, config=self._config) for s in smiles]
-            graphs = np.array(list(graph_from_networkx(graphs, node_labels_tag=self._node_labels,
-                                                       edge_labels_tag=self._edge_labels)))
+            graphs = np.array(list(graph_from_networkx(graphs, node_labels_tag=node_labels,
+                                                       edge_labels_tag=edge_labels)))
 
             """
             # Still not sure I need that part
