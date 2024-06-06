@@ -57,12 +57,12 @@ class Pool:
         # to be already evaluated (aka experimentally tested)
         candidates = np.asarray(list(self._candidates.difference(polymers)))
 
-        predicted_scores = acquisition_function.forward(candidates)
+        predicted_scores = acquisition_function.forward(candidates) * acquisition_function.scaling_factors
 
         if acquisition_function.number_of_objectives == 1:
             predicted_scores = predicted_scores.flatten()
             # Sort the candidates by the acquisition function
-            sorted_indices = np.argsort(acquisition_function.scaling_factor * predicted_scores)
+            sorted_indices = np.argsort(predicted_scores)
             candidates = candidates[sorted_indices]
             predicted_scores = predicted_scores[sorted_indices].reshape(-1, 1)
 
