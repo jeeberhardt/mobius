@@ -4,15 +4,131 @@
 # Graph
 #
 
-import graphein.molecule as gm
 import networkx as nx
 import numpy as np
 import torch
 from grakel.utils import graph_from_networkx
 from rdkit import Chem
 from torch_geometric.data import Batch, Data
+from rdkit.Chem.rdchem import HybridizationType, BondStereo
 
 from .utils import MolFromHELM
+
+
+def convert_element_to_one_hot(atom):
+    common_elements = ['C', 'N', 'O', 'F', 'P', 'S', 'Cl', 'Se', 'Br', 'I']
+
+    element = atom.GetSymbol()
+    one_hot = np.zeros(shape=len(common_elements) + 1)
+
+    try:
+        one_hot[common_elements.index(element)] = 1
+    except:
+        one_hot[-1] = 1
+
+    return one_hot
+
+
+def convert_degree_to_one_hot(atom, max_degree=6):
+    degree = atom.GetDegree()
+    one_hot = np.zeros(shape=max_degree)
+    one_hot[min(degree, max_degree)] = 1
+
+    return one_hot
+
+
+def convert_hydrogens_to_one_hot(atom, max_hydrogens=5):
+    num_hydrogens = atom.GetTotalNumHs()
+    one_hot = np.zeros(shape=max_hydrogens)
+    one_hot[min(num_hydrogens, max_hydrogens)] = 1
+
+    return one_hot
+
+
+def convert_hybridization_to_one_hot(atom):
+    hybridization_types = [HybridizationType.S, 
+                           HybridizationType.SP, 
+                           HybridizationType.SP2, 
+                           HybridizationType.SP3, HybridizationType.SP3D, HybridizationType.SP3D2,
+                           HybridizationType.OTHER, HybridizationType.UNSPECIFIED]
+    
+    hybridization = atom.GetHybridization()
+    one_hot = np.zeros(shape=len(hybridization_types))
+    one_hot[hybridization_types.index(hybridization)] = 1
+
+    return one_hot
+
+
+def convert_formal_charge_to_integer(atom):
+    return np.asarray([atom.GetFormalCharge()])
+
+
+def convert_radical_electrons_to_integer(atom):
+    return np.asarray([atom.GetNumRadicalElectrons()])
+
+
+def convert_aromatic_to_bit(atom):
+    return np.asarray([int(atom.GetIsAromatic())])
+
+
+def convert_chirality_to_one_hot(atom):
+    chirality_types = ["", "R", "S"]
+    
+    if atom.HasProp('_CIPCode'):
+        chirality_type = atom.GetProp('_CIPCode')
+    else:
+        chirality_type = ""
+        
+    one_hot = np.zeros(shape=len(chirality_types))
+    one_hot[chirality_types.index(chirality_type)] = 1
+
+    return one_hot
+
+
+def convert_bond_type_to_string(bond):
+    bond_types = {Chem.rdchem.BondType.SINGLE: 'single', 
+                  Chem.rdchem.BondType.DOUBLE: 'double',
+                  Chem.rdchem.BondType.TRIPLE: 'triple', 
+                  Chem.rdchem.BondType.AROMATIC: 'aromatic'}
+    
+    try:
+        return bond_types[bond.GetBondType()]
+    except:
+        return 'other'
+
+
+def convert_bond_type_to_one_hot(bond):
+    bond_types = [Chem.rdchem.BondType.SINGLE, 
+                  Chem.rdchem.BondType.DOUBLE,
+                  Chem.rdchem.BondType.TRIPLE, 
+                  Chem.rdchem.BondType.AROMATIC]
+    
+    bond_type = bond.GetBondType()
+    one_hot = np.zeros(shape=len(bond_types))
+    one_hot[bond_types.index(bond_type)] = 1
+
+    return one_hot
+
+
+def convert_conjugation_to_bit(bond):
+    return np.asarray([int(bond.GetIsConjugated())])
+
+
+def convert_ring_to_bit(bond):
+    return np.asarray([int(bond.IsInRing())])
+
+
+def convert_stereo_to_one_hot(bond):
+    stereo_types = [BondStereo.STEREONONE, 
+                    BondStereo.STEREOANY, 
+                    BondStereo.STEREOZ, 
+                    BondStereo.STEREOE]
+    
+    stereo = bond.GetStereo()
+    one_hot = np.zeros(shape=len(stereo_types))
+    one_hot[stereo_types.index(stereo)] = 1
+
+    return one_hot
 
 
 class Graph:
@@ -21,7 +137,7 @@ class Graph:
 
     """
 
-    def __init__(self, input_type='helm', output_type='graph', config=None, node_labels=None, edge_labels=None, HELM_parser='mobius', HELM_extra_library_filename=None):
+    def __init__(self, input_type='helm', output_type='graph', HELM_parser='mobius', HELM_extra_library_filename=None):
         """
         Constructs a new instance of the Graph class.
 
@@ -33,17 +149,6 @@ class Graph:
         output_type : str, default 'graph'
             Output graph format. The options are 'graph' or 'pyg'.
             Use `graph` when using `GPGModel` and `pyg` when using `GPGNNModel`.
-        config : graphein.molecule.MoleculeGraphConfig, optional (default=None)
-            The configuration of the molecule graph.
-        node_labels : str, optional (default=None)
-            The node labels to be used. The options are 'element','degree', 
-            'valence', 'hybridization', 'aromaticity', 'formal_charge',
-            'total_num_h', etc, ... (see the graphein documentation for more 
-            options).
-        edge_labels : str, optional (default=None)
-            The edge labels to be used. The options are 'bond_type', 
-            'conjugated', 'stereo', 'in_ring', 'ring_size', etc, ... 
-            (see the graphein documentation for more options).
         HELM_parser : str, optional (default='mobius')
             The HELM parser to be used. It can be 'mobius' or 'rdkit'. 
             When using 'rdkit' parser, only D or L standard amino acids
@@ -78,36 +183,11 @@ class Graph:
         self._HELM_parser = HELM_parser.lower()
         self._HELM_extra_library_filename = HELM_extra_library_filename
 
-        if config is not None:
-            self._config = config
-        else:
-            self._config = gm.MoleculeGraphConfig()
-
-        if not isinstance(node_labels, (list, tuple, np.ndarray)) and node_labels is not None:
-            self._node_labels = [node_labels]
-        else:
-            self._node_labels = node_labels
-
-        if not isinstance(edge_labels, (list, tuple, np.ndarray)) and edge_labels is not None:
-            self._edge_labels = [edge_labels]
-        else:
-            self._edge_labels = edge_labels
-
-        if self._output_type == 'graph' and isinstance(node_labels, (list, tuple, np.ndarray)):
-            msg_error = f'Only one node label ({self._node_labels}) is allowed when using the graph output type.'
-            assert len(self._node_labels) == 1, msg_error
-            self._node_labels = self._node_labels[0]
-
-        if self._output_type == 'graph' and isinstance(edge_labels, (list, tuple, np.ndarray)):
-            msg_error = f'Only one edge label ({self._edge_labels}) is allowed when using the graph output type.'
-            assert len(self._edge_labels) == 1, msg_error
-            self._edge_labels = self._edge_labels[0]
-
+        self._node_labels = 'node_attr'
+        self._edge_labels = 'edge_attr'
         self._graph_labels = None
 
     def _convert_nx_to_pyg(self, G):
-        edge_feature_types = {}
-
         # Initialise dict used to construct Data object & Assign node ids as a feature
         data = {"node_id": list(G.nodes())}
 
@@ -140,15 +220,7 @@ class Graph:
 
                 for key, value in feat_dict.items():
                     if str(key) in self._edge_labels:
-                        edge_feature_types.setdefault(key, [])
-
-                        try:
-                            i = edge_feature_types[key].index(value)
-                        except ValueError:
-                            edge_feature_types[key].append(value)
-                            i = len(edge_feature_types[key]) - 1
-
-                        tmp.append(i)
+                        tmp = np.concatenate((tmp,  np.atleast_1d(value)))
 
                 data['edge_attr'].append(tmp)
 
@@ -166,6 +238,68 @@ class Graph:
         data.num_nodes = G.number_of_nodes()
 
         return data
+
+    def _construct_features_graph(self, mol):
+        # Initialize an empty graph
+        G = nx.Graph()
+    
+        node_featurizers = [convert_element_to_one_hot,
+                            convert_degree_to_one_hot,
+                            convert_formal_charge_to_integer, 
+                            convert_radical_electrons_to_integer,
+                            convert_hybridization_to_one_hot,
+                            convert_aromatic_to_bit,
+                            convert_hydrogens_to_one_hot,
+                            convert_chirality_to_one_hot]
+    
+        # Add nodes with atom indices as node IDs
+        for atom in mol.GetAtoms():
+            node_id = f'{atom.GetSymbol()}:{atom.GetIdx()}'
+    
+            node_features = np.array([])
+            for node_featurizer in node_featurizers:
+                node_features = np.concatenate([node_features, node_featurizer(atom)])
+            
+            G.add_node(node_id, node_attr=node_features)
+
+        edge_featurizers = [convert_bond_type_to_one_hot,
+                            convert_conjugation_to_bit,
+                            convert_ring_to_bit,
+                            convert_stereo_to_one_hot]
+    
+        # Add edges with bond information
+        for bond in mol.GetBonds():
+            b_atom = bond.GetBeginAtom()
+            e_atom = bond.GetEndAtom()
+            edge_id = (f'{b_atom.GetSymbol()}:{b_atom.GetIdx()}', f'{e_atom.GetSymbol()}:{e_atom.GetIdx()}')
+    
+            edge_features = np.array([])
+            for edge_featurizer in edge_featurizers:
+                edge_features = np.concatenate([edge_features, edge_featurizer(bond)])
+    
+            G.add_edge(*edge_id, edge_attr=edge_features)
+    
+        return G
+
+    def _construct_simple_graph(self, mol):
+        # Initialize an empty graph
+        G = nx.Graph()
+
+        # Add nodes with atom indices as node IDs
+        for atom in mol.GetAtoms():
+            node_id = f'{atom.GetSymbol()}:{atom.GetIdx()}'
+
+            G.add_node(node_id, node_attr=atom.GetSymbol())
+
+        # Add edges with bond information
+        for bond in mol.GetBonds():
+            b_atom = bond.GetBeginAtom()
+            e_atom = bond.GetEndAtom()
+            edge_id = (f'{b_atom.GetSymbol()}:{b_atom.GetIdx()}', f'{e_atom.GetSymbol()}:{e_atom.GetIdx()}')
+
+            G.add_edge(*edge_id, edge_attr=convert_bond_type_to_string(bond))
+
+        return G
 
     def transform(self, polymers):
         """
@@ -199,39 +333,11 @@ class Graph:
             print(polymers)
 
         if self._output_type == 'graph':
-            if self._node_labels is not None:
-                node_labels = self._node_labels[0]
-            else:
-                node_labels = None
+            graphs = [self._construct_simple_graph(Chem.MolFromSmiles(s)) for s in smiles]
+            graphs = np.array(list(graph_from_networkx(graphs, node_labels_tag=self._node_labels, edge_labels_tag=self._edge_labels)))
 
-            if self._edge_labels is not None:
-                edge_labels = self._edge_labels[0]
-            else:
-                edge_labels = None
-
-            graphs = [gm.construct_graph(smiles=s, config=self._config) for s in smiles]
-            graphs = np.array(list(graph_from_networkx(graphs, node_labels_tag=node_labels,
-                                                       edge_labels_tag=edge_labels)))
-
-            """
-            # Still not sure I need that part
-            edge_types = {}
-
-            if self._edge_labels_tag is not None:
-                i = 0
-
-                for graph in graphs:
-                    edges = graph[2]
-
-                    for key, value in edges.items():
-                        if value not in edge_types:
-                            edge_types[value] = i
-                            i += 1
-                        edges[key] = edge_types[value]
-            """
         else:
-            graphs = [self._convert_nx_to_pyg(gm.construct_graph(smiles=s, config=self._config)) for s in smiles]
+            graphs = [self._convert_nx_to_pyg(self._construct_features_graph(Chem.MolFromSmiles(s))) for s in smiles]
             graphs = Batch.from_data_list(graphs)
 
         return graphs
-
