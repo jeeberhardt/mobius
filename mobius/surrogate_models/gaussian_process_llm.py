@@ -43,7 +43,7 @@ class GPLLModel(_SurrogateModel):
 
     def __init__(self, kernel, transformer, finetune_transformer=False, device=None):
         """
-        Initializes the Gaussian Process Regressor (GPR surrogate model with Language model.
+        Initializes the Gaussian Process Regressor (GPR) surrogate model with Language model.
 
         Parameters
         ----------
