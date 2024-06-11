@@ -14,7 +14,7 @@ from rdkit.Chem import rdmolops
 from rdkit.Chem import rdFingerprintGenerator
 from rdkit.Chem.rdmolops import GetDistanceMatrix
 
-from .utils import MolFromHELM
+from ..utils import MolFromHELM
 
 
 class MAP4Calculator:

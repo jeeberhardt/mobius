@@ -12,9 +12,9 @@ from .acquisition_functions import RandomImprovement, LowerUpperConfidenceBound,
 from .acquisition_functions import PosteriorMean, PosteriorStandardDeviation
 from .mobius import Mobius
 from .planner import Planner
-from .descriptors import SimplePolymerDescriptors
-from .fingerprints import MHFingerprint, Map4Fingerprint, MorganFingerprint
-from .graphs import Graph
+from .transforms import SimplePolymerDescriptors
+from .transforms import MHFingerprint, Map4Fingerprint, MorganFingerprint
+from .transforms import Graph
 from .optimizers import SequenceGA, RandomGA
 from .optimizers import Pool
 from .surrogate_models import GPModel, GPLLModel, DummyModel, RFModel, GPGModel, GPGNNModel

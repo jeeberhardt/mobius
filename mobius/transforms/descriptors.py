@@ -7,7 +7,7 @@
 
 import numpy as np
 
-from .utils import convert_HELM_to_FASTA
+from ..utils import convert_HELM_to_FASTA
 
 
 class SimplePolymerDescriptors:

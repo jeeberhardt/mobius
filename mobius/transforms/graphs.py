@@ -12,7 +12,7 @@ from rdkit import Chem
 from torch_geometric.data import Batch, Data
 from rdkit.Chem.rdchem import HybridizationType, BondStereo
 
-from .utils import MolFromHELM
+from ..utils import MolFromHELM
 
 
 def convert_element_to_one_hot(atom):
