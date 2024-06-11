@@ -148,7 +148,7 @@ model using the MolFeat class, employing a variety of fingerprint methods:
 
     for fp_method in fp_methods:
         mlfp = Molfeat(kind=fp_method, dimensions=4096)
-        gpmodel = GPModel(kernel=kernel, input_transformer=mlfp)
+        gpmodel = GPModel(kernel=kernel, transform=mlfp)
         gpmodel.fit(X_train, y_train)
         mu, _ = gpmodel.predict(X_test)
         print(f'{fp_method} -- '

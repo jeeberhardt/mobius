@@ -99,7 +99,7 @@ the acquisition function (Expected Improvement):
 .. code-block:: python
 
     map4 = Map4Fingerprint(input_type='helm', dimensions=4096, radius=1)
-    gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
+    gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), transform=map4)
     acq = ExpectedImprovement(gpmodel, maximize=False)
 
 Define the search protocol in a YAML configuration file (`design_protocol.yaml`) that 

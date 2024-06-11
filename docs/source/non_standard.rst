@@ -58,7 +58,7 @@ completely different sequence) to 1 (indicating an identical sequence).
     kernel = TanimotoSimilarityKernel()
 
     # Here we define the FindMe emulator
-    fm = FindMe(target, input_type='helm', kernel=kernel, input_transformer=mhfp)
+    fm = FindMe(target, input_type='helm', kernel=kernel, transform=mhfp)
 
 With the emulator now in place, our next step is to define our lead sequence, which 
 only consists of standard amino acids. The Tanimoto score between the target 
@@ -97,7 +97,7 @@ the Tanimoto score.
 
 .. code-block:: python
 
-    gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=mhfp)
+    gpmodel = GPModel(kernel=TanimotoSimilarityKernel(), transform=mhfp)
     acq = ExpectedImprovement(gpmodel, maximize=True)
 
 When it comes to the design protocol, we define all the non-standard amino acids that 

@@ -76,8 +76,8 @@ information about the `SMS-EMOA` algorithm, please refer to the
     map4 = Map4Fingerprint(input_type='helm', dimensions=4096, radius=1)
 
     # Create the Gaussian Process models
-    gpmodel_a32 = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
-    gpmodel_a26 = GPModel(kernel=TanimotoSimilarityKernel(), input_transformer=map4)
+    gpmodel_a32 = GPModel(kernel=TanimotoSimilarityKernel(), transform=map4)
+    gpmodel_a26 = GPModel(kernel=TanimotoSimilarityKernel(), transform=map4)
     
     # .. pass them to the acquisition function
     # Here we want to both minimize the pIC50 values for HLA-A*32:15 and HLA-A*26:02
