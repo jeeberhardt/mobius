@@ -38,7 +38,7 @@ class GPGNNModel(_SurrogateModel):
 
     """
 
-    def __init__(self, kernel, feature_extractor, transform=None, missing_values=False, device=None):
+    def __init__(self, kernel, model, transform=None, missing_values=False, device=None):
         """
         Initializes the Gaussian Process Regressor (GPR) surrogate model for Graphs.
 
@@ -46,9 +46,9 @@ class GPGNNModel(_SurrogateModel):
         ----------
         kernel : `grakel.kernels.Kernel`
             The kernel specifying the covariance function of the GPR model.
-        feature_extractor : `torch.nn.Module`
-            Graph Neural Network model that extract features from the graphs into data exploitable by the GP model.
-       transform : callable, default : None
+        model : `torch.nn.Module` 
+             Graph Neural Network model that transforms inputs into data exploitable by the GP model.
+        transform : callable, default : None
             Function that transforms the input into a graph features exploitable by the GP model.
         missing_values : bool, default : False
             Whether we support missing values in the input data.
@@ -60,7 +60,7 @@ class GPGNNModel(_SurrogateModel):
         self._kernel = kernel
         self._transform = transform
         self._missing_values = missing_values
-        self._feature_extractor = feature_extractor
+        self._feature_extractor = model
         self._model = None
         self._device = device
         self._likelihood = None

@@ -50,7 +50,7 @@ class GPLLModel(_SurrogateModel):
         kernel : `gpytorch.kernels.Kernel`
             The kernel specifying the covariance function of the GPR model.
         pretained_model : `PreTrainedModel`
-            Pretrained Language Model that transforms the input into data exploitable by the GP model.
+            Pretrained language model that transforms the input into data exploitable by the GP model.
         device : str or torch.device, default : None
             Device on which to run the GP model. Per default, the device is set to 
             'cuda' if available, otherwise to 'cpu'.
