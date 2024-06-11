@@ -42,6 +42,30 @@ class SimplePolymerDescriptors:
         self._descriptors = descriptors
         self._input_type = input_type
 
+    def __call__(self, polymers):
+        """
+        Calculates the descriptors for the given polymers.
+
+        Parameters
+        ----------
+        polymers : str or list of str
+            The amino acid polymers to calculate descriptors for. 
+            If a single polymer is provided as a string, it will
+            be converted to a list of length 1.
+
+        Returns
+        -------
+        descriptors : numpy.ndarray
+            A 2D numpy array of descriptor values for each amino acid 
+            in the given polymers. The shape of the array is 
+            (n_polymers, polymer_length * n_descriptors), where 
+            n_polymers is the number of polymers, polymer_length
+            is the length of the longest polymer, and n_descriptors 
+            is the number of descriptors.
+
+        """
+        return self.transform(polymers)
+
     def transform(self, polymers):
         """
         Calculates the descriptors for the given polymers.

@@ -137,7 +137,7 @@ class Graph:
 
     """
 
-    def __init__(self, input_type='helm', output_type='graph', HELM_parser='mobius', HELM_extra_library_filename=None):
+    def __init__(self, input_type='helm', output_type='grakel', HELM_parser='mobius', HELM_extra_library_filename=None):
         """
         Constructs a new instance of the Graph class.
 
@@ -146,9 +146,11 @@ class Graph:
         input_type : str, default 'helm_rdkit'
             Input format of the polymers. The options are 'fasta', 
             'helm_rdkit', 'helm', or 'smiles'.
-        output_type : str, default 'graph'
-            Output graph format. The options are 'graph' or 'pyg'.
-            Use `graph` when using `GPGModel` and `pyg` when using `GPGNNModel`.
+        output_type : str, default 'grakel'
+            Output graph format. The options are 'grakel' or 'pyg'.
+            Use `grakel` when using `GPGModel` in combination with a GraKel kernel,
+            and `pyg` when using `GPGNNModel` in combination with a PyTorch Geometric 
+            model and a kernel function (RBF, Matern, etc.).
         HELM_parser : str, optional (default='mobius')
             The HELM parser to be used. It can be 'mobius' or 'rdkit'. 
             When using 'rdkit' parser, only D or L standard amino acids
@@ -163,20 +165,12 @@ class Graph:
             Internal monomers can be overriden by providing a monomer with
             the same MonomerID.
 
-        Notes
-        -----
-        When using HELM format as input, the fingerprint of a same molecule 
-        can differ depending on the HELM parser used. The fingerprint of a 
-        molecule in FASTA format is guaranteed to be the same if the same 
-        molecule in HELM format uses `rdkit` for the parsing, but won't be 
-        necessarily with the internal HELM parser.
-
         """
         msg_error = f'Format {input_type.lower()} not handled. Please use FASTA, HELM or SMILES format.'
         assert input_type.lower() in ['fasta', 'helm', 'smiles'], msg_error
 
-        msg_error = f'Output type {output_type.lower()} not handled. Please use graph or pyg.'
-        assert output_type.lower() in ['graph', 'pyg'], msg_error
+        msg_error = f'Output type {output_type.lower()} not handled. Please use grakel or pyg.'
+        assert output_type.lower() in ['grakel', 'pyg'], msg_error
 
         self._input_type = input_type.lower()
         self._output_type = output_type.lower()
@@ -186,6 +180,22 @@ class Graph:
         self._node_labels = 'node_attr'
         self._edge_labels = 'edge_attr'
         self._graph_labels = None
+    
+    def __call__(self, polymers):
+        """
+
+        Parameters
+        ----------
+        polymers : str, list or numpy.ndarray
+            A list of polymers or a single polymer to be transformed.
+
+        Returns
+        -------
+        graphs : numpy.ndarray or `torch_geometric.data.Batch`
+            A numpy array or `Batch` of graphs.
+
+        """
+        return self.transform(polymers)
 
     def _convert_nx_to_pyg(self, G):
         # Initialise dict used to construct Data object & Assign node ids as a feature
@@ -312,8 +322,8 @@ class Graph:
 
         Returns
         -------
-        graphs : numpy.ndarray
-            A numpy array of graphs.
+        graphs : numpy.ndarray or `torch_geometric.data.Batch`
+            A numpy array or `Batch` of graphs.
 
         """
         if not isinstance(polymers, (list, tuple, np.ndarray)):
@@ -332,7 +342,7 @@ class Graph:
             print('Error: there are issues with the input molecules')
             print(polymers)
 
-        if self._output_type == 'graph':
+        if self._output_type == 'grakel':
             graphs = [self._construct_simple_graph(Chem.MolFromSmiles(s)) for s in smiles]
             graphs = np.array(list(graph_from_networkx(graphs, node_labels_tag=self._node_labels, edge_labels_tag=self._edge_labels)))
 

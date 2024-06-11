@@ -166,9 +166,26 @@ class Map4Fingerprint:
         self._HELM_parser = HELM_parser.lower()
         self._HELM_extra_library_filename = HELM_extra_library_filename
 
+    def __call__(self, polymers):
+        """
+        Transform input polymers into MAP4 fingerprints.
+        
+        Parameters
+        ----------
+        polymers : list, tuple, ndarray or str
+            A list of polymers or a single polymer to be transformed.
+
+        Returns
+        -------
+        fps : ndarray
+            The MAP4 fingerprints for the input polymers.
+
+        """
+        return self.transform(polymers)
+
     def transform(self, polymers):
         """
-        Compute the MAP4 fingerprints for the given polymers.
+        Transforms the input polymers into MAP4 fingerprints.
 
         Parameters
         ----------
@@ -264,6 +281,23 @@ class MHFingerprint:
         self._HELM_parser = HELM_parser.lower()
         self._HELM_extra_library_filename = HELM_extra_library_filename
 
+    def __call__(self, polymers):
+        """
+        Transform input polymers into MHFingerprints.
+        
+        Parameters
+        ----------
+        polymers : list, tuple, ndarray or str
+            A list of polymers or a single polymer to be transformed.
+
+        Returns
+        -------
+        fps : ndarray
+            The MHFingerprint for the input polymers.
+
+        """
+        return self.transform(polymers)
+
     def transform(self, polymers):
         """
         Transforms the input polymers into MHFingerprints.
@@ -351,6 +385,23 @@ class MorganFingerprint:
         self._input_type = input_type.lower()
         self._HELM_parser = HELM_parser.lower()
         self._HELM_extra_library_filename = HELM_extra_library_filename
+    
+    def __call__(self, polymers):
+        """
+        Transform input polymers into Morgan fingerprints.
+        
+        Parameters
+        ----------
+        polymers : list, tuple, ndarray or str
+            A list of polymers or a single polymer to be transformed.
+
+        Returns
+        -------
+        fps : ndarray
+            The Morgan fingerprints of the input polymers as a 2D numpy array.
+
+        """
+        return self.transform(polymers)
 
     def transform(self, polymers):
         """
