@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import torch
 
-from .fingerprints import Map4Fingerprint
+from .transforms import Map4Fingerprint
 from .kernels import TanimotoSimilarityKernel
 from .utils import build_helm_string
 from .utils import read_pssm_file
@@ -31,7 +31,7 @@ class FindMe(_Emulator):
 
     """
 
-    def __init__(self, target_polymer, input_type='helm', kernel=None, input_transformer=None):
+    def __init__(self, target_polymer, input_type='helm', kernel=None, transform=None):
         """
         Initialize the FindMe `Emulator`.
 
@@ -44,7 +44,7 @@ class FindMe(_Emulator):
         kernel : gpytorch.kernels.Kernel, default : None
             The kernel function used to calculate distance between polymers.
             If not defined, the Tanimoto kernel will be used.
-        input_transformer : input transformer, default : None
+        transform : callable, default : None
             Function that transforms the input into data for the `kernel`.
             If not defined, the MAP4 fingerprint method will be used.
 
@@ -53,7 +53,7 @@ class FindMe(_Emulator):
         AssertionError: If output format is not 'fasta' or 'helm'.
 
         """
-        if input_transformer != 'precomputed':
+        if transform != 'precomputed':
             msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
             assert input_type.lower() in ['fasta', 'helm'], msg_error % input_type
 
@@ -67,15 +67,15 @@ class FindMe(_Emulator):
         else:
             self._kernel = kernel
 
-        if input_transformer is None:
-            self._input_transformer = Map4Fingerprint()
-        elif input_transformer == 'precomputed':
-            self._input_transformer = 'precomputed'
+        if transform is None:
+            self._transform = Map4Fingerprint()
+        elif transform == 'precomputed':
+            self._transform = 'precomputed'
         else:
-            self._input_transformer = input_transformer
+            self._transform = transform
 
-        if self._input_transformer != 'precomputed':
-            target_polymer_transformed = self._input_transformer.transform(target_polymer)
+        if self._transform != 'precomputed':
+            target_polymer_transformed = self._transform.transform(target_polymer)
         else:
             target_polymer_transformed = self._target_polymer
 
@@ -84,7 +84,7 @@ class FindMe(_Emulator):
     def score(self, polymers, input_type='helm'):
         """
         Score the input polymers according to the unknown target polymers 
-        using the `kernel` and the `input_transformer`.
+        using the `kernel` and the `transform`.
         
         Parameters
         ----------
@@ -104,7 +104,7 @@ class FindMe(_Emulator):
 
         """
         # If the input polymers are precomputed, no need to check for the format
-        if self._input_transformer != 'precomputed':
+        if self._transform != 'precomputed':
             msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
             assert input_type.lower() in ['fasta', 'helm'], msg_error % input_type
 
@@ -114,8 +114,8 @@ class FindMe(_Emulator):
         if not isinstance(polymers, (list, tuple, np.ndarray)):
             polymers = [polymers]
 
-        if self._input_transformer != 'precomputed':
-            polymers_transformed = self._input_transformer.transform(polymers)
+        if self._transform != 'precomputed':
+            polymers_transformed = self._transform.transform(polymers)
 
         polymers_transformed = torch.from_numpy(np.asarray(polymers_transformed)).float()
 
