@@ -38,7 +38,7 @@ class GPGNNModel(_SurrogateModel):
 
     """
 
-    def __init__(self, kernel, gnn, input_transformer=None, missing_values=False, device=None):
+    def __init__(self, kernel, feature_extractor, transform=None, missing_values=False, device=None):
         """
         Initializes the Gaussian Process Regressor (GPR) surrogate model for Graphs.
 
@@ -46,10 +46,10 @@ class GPGNNModel(_SurrogateModel):
         ----------
         kernel : `grakel.kernels.Kernel`
             The kernel specifying the covariance function of the GPR model.
-        gnn : `torch.nn.Module`
-            Graph Neural Network model that transforms the graph into data exploitable by the GP model.
-        input_transformer : input transformer, default : None
-            Function that transforms the input into a graph.
+        feature_extractor : `torch.nn.Module`
+            Graph Neural Network model that extract features from the graphs into data exploitable by the GP model.
+       transform : callable, default : None
+            Function that transforms the input into a graph features exploitable by the GP model.
         missing_values : bool, default : False
             Whether we support missing values in the input data.
         device : str or torch.device, default : None
@@ -58,9 +58,9 @@ class GPGNNModel(_SurrogateModel):
 
         """
         self._kernel = kernel
-        self._transformer = input_transformer
+        self._transform = transform
         self._missing_values = missing_values
-        self._gnn = gnn
+        self._feature_extractor = feature_extractor
         self._model = None
         self._device = device
         self._likelihood = None
@@ -102,8 +102,8 @@ class GPGNNModel(_SurrogateModel):
             assert self._X_train.shape[0] == self._y_noise.shape[0], msg_error
 
          # Transform input data if necessary
-        if self._transformer is not None:
-            X_train = self._transformer.transform(self._X_train)
+        if self._transform is not None:
+            X_train = self._transform.transform(self._X_train)
         else:
             X_train = self._X_train
 
@@ -130,7 +130,7 @@ class GPGNNModel(_SurrogateModel):
         else:
             self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
 
-        self._model = _ExactGPGNNModel(X_train, y_train, self._likelihood, self._kernel, self._gnn)
+        self._model = _ExactGPGNNModel(X_train, y_train, self._likelihood, self._kernel, self._feature_extractor)
 
         # "Loss" for GPs - the marginal log likelihood
         mll = gpytorch.mlls.ExactMarginalLogLikelihood(self._likelihood, self._model)
@@ -183,8 +183,8 @@ class GPGNNModel(_SurrogateModel):
         self._likelihood.eval()
 
         # Transform input data if necessary
-        if self._transformer is not None:
-            X_test = self._transformer.transform(X_test)
+        if self._transform is not None:
+            X_test = self._transform.transform(X_test)
 
         # X_test cannot be transformed into a tensor
         if y_noise is not None:

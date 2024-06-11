@@ -36,7 +36,7 @@ class GPModel(_SurrogateModel):
 
     """
 
-    def __init__(self, kernel, input_transformer=None, device=None, missing_values=False):
+    def __init__(self, kernel, transform=None, device=None, missing_values=False):
         """
         Initializes the Gaussian Process Regressor (GPR) surrogate model.
 
@@ -44,7 +44,7 @@ class GPModel(_SurrogateModel):
         ----------
         kernel : `gpytorch.kernels.Kernel`
             The kernel specifying the covariance function of the GPR model.
-        input_transformer : input transformer, default : None
+        transform : callable, default : None
             Function that transforms the input into data exploitable by the GP model.
         device : str or torch.device, default : None
             Device on which to run the model. Per default, the device is set to 
@@ -57,7 +57,7 @@ class GPModel(_SurrogateModel):
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self._kernel = kernel
-        self._transformer = input_transformer
+        self._transform = transform
         self._device = device
         self._missing_values = missing_values
         self._likelihood = None
@@ -101,10 +101,10 @@ class GPModel(_SurrogateModel):
             assert self._X_train.shape[0] == self._y_noise.shape[0], msg_error
 
          # Transform input data if necessary
-        if self._transformer is not None:
+        if self._transform is not None:
             # No gradient computation needed, in case trasnformer is a neural network
             with torch.no_grad():
-                X_train = self._transformer.transform(self._X_train)
+                X_train = self._transform.transform(self._X_train)
         else:
             X_train = self._X_train
 
@@ -185,10 +185,10 @@ class GPModel(_SurrogateModel):
         self._likelihood.eval()
 
         # Transform input data if necessary
-        if self._transformer is not None:
+        if self._transform is not None:
             # No gradient computation needed, in case trasnformer is a neural network
             with torch.no_grad():
-                X_test = self._transformer.transform(X_test)
+                X_test = self._transform.transform(X_test)
 
         if not torch.is_tensor(X_test):
             # asarray because you never know if self._transformer.transform returns a ndarray or not

@@ -156,7 +156,7 @@ class GPGModel(_SurrogateModel):
 
     """
 
-    def __init__(self, kernel, input_transformer=None, missing_values=False):
+    def __init__(self, kernel, transform=None, missing_values=False):
         """
         Initializes the Gaussian Process Regressor (GPR) surrogate model for Graphs.
 
@@ -164,14 +164,14 @@ class GPGModel(_SurrogateModel):
         ----------
         kernel : `grakel.kernels.Kernel`
             The kernel specifying the covariance function of the GPR model.
-        input_transformer : input transformer, default : None
-            Function that transforms the input into a graph exploitable by the GP model.
+        transform : callable, default : None
+            Function that transforms the input into a graph features exploitable by the GP model.
         missing_values : bool, default : False
             Whether we support missing values in the input data.
 
         """
         self._kernel = GraphKernel(kernel=kernel)
-        self._transformer = input_transformer
+        self._transform = transform
         self._missing_values = missing_values
         self._model = None
         self._likelihood = None
@@ -208,8 +208,8 @@ class GPGModel(_SurrogateModel):
             assert self._X_train.shape[0] == self._y_noise.shape[0], msg_error
 
          # Transform input data if necessary
-        if self._transformer is not None:
-            X_train = self._transformer.transform(self._X_train)
+        if self._transform is not None:
+            X_train = self._transform.transform(self._X_train)
         else:
             X_train = self._X_train
 
@@ -281,8 +281,8 @@ class GPGModel(_SurrogateModel):
         self._likelihood.eval()
 
         # Transform input data if necessary
-        if self._transformer is not None:
-            X_test = self._transformer.transform(X_test)
+        if self._transform is not None:
+            X_test = self._transform.transform(X_test)
 
         # X_test cannot be transformed into a tensor
         if y_noise is not None:
