@@ -26,7 +26,7 @@ class _ExactGPGNNModel(ExactGPGraph):
         self.feature_extractor = feature_extractor
 
     def forward(self, x):
-        x = self.feature_extractor.forward(x.node_attr, x.edge_index, x.edge_attr, x.batch)
+        x = self.feature_extractor.forward(x)
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
