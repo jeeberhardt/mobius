@@ -156,7 +156,7 @@ class GPGKModel(_SurrogateModel):
 
     """
 
-    def __init__(self, kernel, transform=None, missing_values=False):
+    def __init__(self, kernel, transform, missing_values=False):
         """
         Initializes the Gaussian Process Regressor (GPR) surrogate model for graph kernels.
 
@@ -207,11 +207,8 @@ class GPGKModel(_SurrogateModel):
             msg_error = "The number of sequences in X_train and values in y_noise must be the same."
             assert self._X_train.shape[0] == self._y_noise.shape[0], msg_error
 
-         # Transform input data if necessary
-        if self._transform is not None:
-            X_train = self._transform.transform(self._X_train)
-        else:
-            X_train = self._X_train
+         # Transform input data
+        X_train = self._transform.transform(self._X_train)
 
         # X_train cannot be transformed into a tensor
         # Convert to double, otherwise we get an error.
@@ -280,9 +277,8 @@ class GPGKModel(_SurrogateModel):
         self._model.eval()
         self._likelihood.eval()
 
-        # Transform input data if necessary
-        if self._transform is not None:
-            X_test = self._transform.transform(X_test)
+        # Transform input data
+        X_test = self._transform.transform(X_test)
 
         # X_test cannot be transformed into a tensor
         if y_noise is not None:
