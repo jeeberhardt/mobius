@@ -48,7 +48,7 @@ class GPGNNModel(_SurrogateModel):
             The kernel function used by the GPR model.
         model : `torch.nn.Module` 
             Graph Neural Network (GNN) model that transforms graphs into data exploitable by the GP model.
-        transform : callable, default : None
+        transform : callable
             Function that transforms the inputs into graphs.
         missing_values : bool, default : False
             Whether we support missing values in the input data.

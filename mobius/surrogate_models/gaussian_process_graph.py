@@ -164,7 +164,7 @@ class GPGKModel(_SurrogateModel):
         ----------
         kernel : `grakel.kernels.Kernel`
             The graph kernel function used by the GPR model.
-        transform : callable, default : None
+        transform : callable
             Function that transforms the inputs into graphs exploitable by the GP model.
         missing_values : bool, default : False
             Whether we support missing values in the input data.
