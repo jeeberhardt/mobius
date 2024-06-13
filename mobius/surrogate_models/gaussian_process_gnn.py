@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Mobius - Gaussian Process Regressor with GNN
+# Mobius - Gaussian Process Regressor with Grahp Neural Network (GNN) models
 #
 
 import gpytorch

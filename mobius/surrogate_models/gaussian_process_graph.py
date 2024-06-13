@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Mobius - Gaussian Process Regressor with Graphs
+# Mobius - Gaussian Process Regressor with graph kernels
 #
 
 import copy

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Mobius - Gaussian Process Regressor with Large Language model
+# Mobius - Gaussian Process Regressor with pretrained protein Language Models (pLM)
 #
 
 import botorch
