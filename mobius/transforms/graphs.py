@@ -137,7 +137,8 @@ class Graph:
 
     """
 
-    def __init__(self, input_type='helm', output_type='grakel', HELM_parser='mobius', HELM_extra_library_filename=None):
+    def __init__(self, input_type='helm', output_type='grakel', node_features=None, edge_features=None, 
+                 HELM_parser='mobius', HELM_extra_library_filename=None):
         """
         Constructs a new instance of the Graph class.
 
@@ -151,6 +152,15 @@ class Graph:
             Use `grakel` when using `GPGModel` in combination with a GraKel kernel,
             and `pyg` when using `GPGNNModel` in combination with a PyTorch Geometric 
             model and a kernel function (RBF, Matern, etc.).
+        node_features : list, optional (default=None)
+            List of node features to be used. The options are 'element_one_hot', 
+            'degree_one_hot','formal_charge_integer', 'radical_electrons_integer', 
+            'hybridization_one_hot', 'aromatic_bit', 'hydrogens_one_hot', 
+            and 'chirality_one_hot'. If None, all node features are used.
+        edge_features : list, optional (default=None)
+            List of edge features to be used. The options are 'bond_type_one_hot', 
+            'conjugation_bit', 'ring_bit', and 'stereo_one_hot'. If None, all edge 
+            features are used.
         HELM_parser : str, optional (default='mobius')
             The HELM parser to be used. It can be 'mobius' or 'rdkit'. 
             When using 'rdkit' parser, only D or L standard amino acids
@@ -177,10 +187,26 @@ class Graph:
         self._HELM_parser = HELM_parser.lower()
         self._HELM_extra_library_filename = HELM_extra_library_filename
 
+        self._node_features_to_use = node_features
+        self._edge_features_to_use = edge_features
         self._node_labels = 'node_attr'
         self._edge_labels = 'edge_attr'
         self._graph_labels = None
-    
+
+        self._available_node_features = {'element_one_hot': convert_element_to_one_hot, 
+                                         'degree_one_hot': convert_degree_to_one_hot,
+                                         'formal_charge_integer': convert_formal_charge_to_integer, 
+                                         'radical_electrons_integer': convert_radical_electrons_to_integer,
+                                         'hybridization_one_hot': convert_hybridization_to_one_hot,
+                                         'aromatic_bit': convert_aromatic_to_bit,
+                                         'hydrogens_one_hot': convert_hydrogens_to_one_hot,
+                                         'chirality_one_hot': convert_chirality_to_one_hot}
+
+        self._available_edge_features = {'bond_type_one_hot': convert_bond_type_to_one_hot,
+                                         'conjugation_bit': convert_conjugation_to_bit,
+                                         'ring_bit': convert_ring_to_bit,
+                                         'stereo_one_hot': convert_stereo_to_one_hot}
+
     def __call__(self, polymers):
         """
 
@@ -196,6 +222,66 @@ class Graph:
 
         """
         return self.transform(polymers)
+
+    def _get_node_featurizers(self):
+        if self._node_features_to_use is None:
+            return self._available_node_features.values()
+        else:
+            node_featurizers = []
+
+            for node_feature in self._node_features_to_use:
+                if node_feature not in self._available_node_features:
+                    raise ValueError(f'Node featurizer {node_feature} not available.')
+
+                node_featurizers.append(self._available_node_features[node_feature])
+
+            return node_featurizers
+
+    def _get_edge_featurizers(self):
+        if self._edge_features_to_use is None:
+            return self._available_edge_features.values()
+        else:
+            edge_featurizers = []
+
+            for edge_feature in self._edge_features_to_use:
+                if edge_feature not in self._available_edge_features:
+                    raise ValueError(f'Edge featurizer {edge_feature} not available.')
+
+                edge_featurizers.append(self._available_edge_features[edge_feature])
+
+            return edge_featurizers
+        
+    def add_node_featurizer(self, name, function):
+        """
+        Add a new node featurizer to the Graph class.
+
+        Parameters
+        ----------
+        name : str
+            Name of the node featurizer.
+        function : callable
+            Function that computes the node feature. The function must take
+            a single argument, an RDKit atom object, and return a numpy array.
+
+        """
+        self._available_node_features[name] = function
+        self._node_features_to_use.append(name)
+
+    def add_edge_featurizer(self, name, function):
+        """
+        Add a new edge featurizer to the Graph class.
+
+        Parameters
+        ----------
+        name : str
+            Name of the edge featurizer.
+        function : callable
+            Function that computes the edge feature. The function must take
+            a single argument, an RDKit bond object, and return a numpy array.
+
+        """
+        self._available_edge_features[name] = function
+        self._edge_features_to_use.append(name)
 
     def _convert_nx_to_pyg(self, G):
         # Initialise dict used to construct Data object & Assign node ids as a feature
@@ -252,15 +338,10 @@ class Graph:
     def _construct_features_graph(self, mol):
         # Initialize an empty graph
         G = nx.Graph()
-    
-        node_featurizers = [convert_element_to_one_hot,
-                            convert_degree_to_one_hot,
-                            convert_formal_charge_to_integer, 
-                            convert_radical_electrons_to_integer,
-                            convert_hybridization_to_one_hot,
-                            convert_aromatic_to_bit,
-                            convert_hydrogens_to_one_hot,
-                            convert_chirality_to_one_hot]
+
+        # Get all the node and edge featurizers
+        node_featurizers = self._get_node_featurizers()
+        edge_featurizers = self._get_edge_featurizers()
     
         # Add nodes with atom indices as node IDs
         for atom in mol.GetAtoms():
@@ -271,11 +352,6 @@ class Graph:
                 node_features = np.concatenate([node_features, node_featurizer(atom)])
             
             G.add_node(node_id, node_attr=node_features)
-
-        edge_featurizers = [convert_bond_type_to_one_hot,
-                            convert_conjugation_to_bit,
-                            convert_ring_to_bit,
-                            convert_stereo_to_one_hot]
     
         # Add edges with bond information
         for bond in mol.GetBonds():
