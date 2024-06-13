@@ -230,7 +230,7 @@ class Graph:
         return self.transform(polymers)
 
     def _get_node_featurizers(self):
-        if self._node_features_to_use is None:
+        if self._node_features_to_use[0] is None and len(self._node_features_to_use) == 1:
             return self._available_node_features.values()
         else:
             node_featurizers = []
@@ -244,7 +244,7 @@ class Graph:
             return node_featurizers
 
     def _get_edge_featurizers(self):
-        if self._edge_features_to_use is None:
+        if self._edge_features_to_use[0] is None and len(self._edge_features_to_use) == 1:
             return self._available_edge_features.values()
         else:
             edge_featurizers = []
