@@ -187,6 +187,12 @@ class Graph:
         self._HELM_parser = HELM_parser.lower()
         self._HELM_extra_library_filename = HELM_extra_library_filename
 
+        if not isinstance(node_features, (list, tuple, np.ndarray)):
+            node_features = [node_features]
+
+        if not isinstance(edge_features, (list, tuple, np.ndarray)):
+            edge_features = [edge_features]
+
         self._node_features_to_use = node_features
         self._edge_features_to_use = edge_features
         self._node_labels = 'node_attr'
