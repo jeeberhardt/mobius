@@ -37,20 +37,20 @@ class _ExactGPLLModel(gpytorch.models.ExactGP, botorch.models.gpytorch.GPyTorchM
 
 class GPLLModel(_SurrogateModel):
     """
-    Class for the Gaussian Process Regressor (GPR) surrogate model with Language model.
+    Class for the Gaussian Process Regressor (GPR) surrogate model for pretrained protein Language Models (pLM).
 
     """
 
     def __init__(self, kernel, pretained_model, device=None):
         """
-        Initializes the Gaussian Process Regressor (GPR) surrogate model with Language model.
+        Initializes the Gaussian Process Regressor (GPR) surrogate model for pretrained protein Language Models (pLM).
 
         Parameters
         ----------
         kernel : `gpytorch.kernels.Kernel`
-            The kernel specifying the covariance function of the GPR model.
+            The kernel function used by the GPR model.
         pretained_model : `PreTrainedModel`
-            Pretrained language model that transforms the input into data exploitable by the GP model.
+            Pretrained protein Language Model (pLM) that transforms the input into data exploitable by the GP model.
         device : str or torch.device, default : None
             Device on which to run the GP model. Per default, the device is set to 
             'cuda' if available, otherwise to 'cpu'.

@@ -34,22 +34,22 @@ class _ExactGPGNNModel(ExactGPGraph):
 
 class GPGNNModel(_SurrogateModel):
     """
-    Class for the Gaussian Process Regressor (GPR) surrogate model for Graphs.
+    Class for the Gaussian Process Regressor (GPR) surrogate model for Graph Neural Network (GNN) models.
 
     """
 
     def __init__(self, kernel, model, transform=None, missing_values=False, device=None):
         """
-        Initializes the Gaussian Process Regressor (GPR) surrogate model for Graphs.
+        Initializes the Gaussian Process Regressor (GPR) surrogate model for Graph Neural Network (GNN) models.
 
         Parameters
         ----------
         kernel : `grakel.kernels.Kernel`
-            The kernel specifying the covariance function of the GPR model.
+            The kernel function used by the GPR model.
         model : `torch.nn.Module` 
-             Graph Neural Network model that transforms inputs into data exploitable by the GP model.
+            Graph Neural Network (GNN) model that transforms graphs into data exploitable by the GP model.
         transform : callable, default : None
-            Function that transforms the input into a graph features exploitable by the GP model.
+            Function that transforms the inputs into graphs.
         missing_values : bool, default : False
             Whether we support missing values in the input data.
         device : str or torch.device, default : None

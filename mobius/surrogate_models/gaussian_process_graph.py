@@ -150,22 +150,22 @@ class _ExactGPModel(ExactGPGraph):
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
 
-class GPGModel(_SurrogateModel):
+class GPGKModel(_SurrogateModel):
     """
-    Class for the Gaussian Process Regressor (GPR) surrogate model for Graphs.
+    Class for the Gaussian Process Regressor (GPR) surrogate model for graph kernels.
 
     """
 
     def __init__(self, kernel, transform=None, missing_values=False):
         """
-        Initializes the Gaussian Process Regressor (GPR) surrogate model for Graphs.
+        Initializes the Gaussian Process Regressor (GPR) surrogate model for graph kernels.
 
         Parameters
         ----------
         kernel : `grakel.kernels.Kernel`
-            The kernel specifying the covariance function of the GPR model.
+            The graph kernel function used by the GPR model.
         transform : callable, default : None
-            Function that transforms the input into a graph features exploitable by the GP model.
+            Function that transforms the inputs into graphs exploitable by the GP model.
         missing_values : bool, default : False
             Whether we support missing values in the input data.
 
