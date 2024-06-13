@@ -187,18 +187,6 @@ class Graph:
         self._HELM_parser = HELM_parser.lower()
         self._HELM_extra_library_filename = HELM_extra_library_filename
 
-        if not isinstance(node_features, (list, tuple, np.ndarray)):
-            node_features = [node_features]
-
-        if not isinstance(edge_features, (list, tuple, np.ndarray)):
-            edge_features = [edge_features]
-
-        self._node_features_to_use = node_features
-        self._edge_features_to_use = edge_features
-        self._node_labels = 'node_attr'
-        self._edge_labels = 'edge_attr'
-        self._graph_labels = None
-
         self._available_node_features = {'element_one_hot': convert_element_to_one_hot, 
                                          'degree_one_hot': convert_degree_to_one_hot,
                                          'formal_charge_integer': convert_formal_charge_to_integer, 
@@ -212,6 +200,26 @@ class Graph:
                                          'conjugation_bit': convert_conjugation_to_bit,
                                          'ring_bit': convert_ring_to_bit,
                                          'stereo_one_hot': convert_stereo_to_one_hot}
+
+        if node_features is None:
+            node_features = list(self._available_node_features.keys())
+        else:
+            if not isinstance(node_features, (list, tuple, np.ndarray)):
+                node_features = [node_features]
+
+        if edge_features is None:
+            edge_features = list(self._available_edge_features.keys())
+        else:
+            if not isinstance(edge_features, (list, tuple, np.ndarray)):
+                edge_features = [edge_features]
+
+        self._node_features_to_use = node_features
+        self._edge_features_to_use = edge_features
+
+        # Where we are going to store the node and edge labels
+        self._node_labels = 'node_attr'
+        self._edge_labels = 'edge_attr'
+        self._graph_labels = None
 
     def __call__(self, polymers):
         """
@@ -230,32 +238,26 @@ class Graph:
         return self.transform(polymers)
 
     def _get_node_featurizers(self):
-        if self._node_features_to_use[0] is None and len(self._node_features_to_use) == 1:
-            return self._available_node_features.values()
-        else:
-            node_featurizers = []
+        node_featurizers = []
 
-            for node_feature in self._node_features_to_use:
-                if node_feature not in self._available_node_features:
-                    raise ValueError(f'Node featurizer {node_feature} not available.')
+        for node_feature in self._node_features_to_use:
+            if node_feature not in self._available_node_features:
+                raise ValueError(f'Node featurizer {node_feature} not available.')
 
-                node_featurizers.append(self._available_node_features[node_feature])
+            node_featurizers.append(self._available_node_features[node_feature])
 
-            return node_featurizers
+        return node_featurizers
 
     def _get_edge_featurizers(self):
-        if self._edge_features_to_use[0] is None and len(self._edge_features_to_use) == 1:
-            return self._available_edge_features.values()
-        else:
-            edge_featurizers = []
+        edge_featurizers = []
 
-            for edge_feature in self._edge_features_to_use:
-                if edge_feature not in self._available_edge_features:
-                    raise ValueError(f'Edge featurizer {edge_feature} not available.')
+        for edge_feature in self._edge_features_to_use:
+            if edge_feature not in self._available_edge_features:
+                raise ValueError(f'Edge featurizer {edge_feature} not available.')
 
-                edge_featurizers.append(self._available_edge_features[edge_feature])
+            edge_featurizers.append(self._available_edge_features[edge_feature])
 
-            return edge_featurizers
+        return edge_featurizers
         
     def add_node_featurizer(self, name, function):
         """
