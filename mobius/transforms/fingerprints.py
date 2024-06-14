@@ -8,6 +8,7 @@ import itertools
 from collections import defaultdict
 
 import numpy as np
+from mapchiral.mapchiral import encode_many
 from mhfp.encoder import MHFPEncoder
 from rdkit import Chem
 from rdkit.Chem import rdmolops
@@ -115,8 +116,7 @@ class Map4Fingerprint:
 
     """
 
-    def __init__(self, input_type='helm', dimensions=4096, radius=1, is_counted=False, 
-                 HELM_parser='mobius', HELM_extra_library_filename=None):
+    def __init__(self, input_type='helm', dimensions=4096, radius=1, chiral=True, HELM_parser='mobius', HELM_extra_library_filename=None):
         """
         Constructs a new instance of the MAP4 fingerprint class.
 
@@ -130,9 +130,8 @@ class Map4Fingerprint:
         radius : int, optional (default=1)
             The maximum radius of the subgraphs used for computing 
             the fingerprints.
-        is_counted : bool, optional (default=False)
-            If True, the function will return the number of atoms in 
-            the subgraph instead of a binary vector.
+        chiral : bool, optional (default=True)
+            If True, use the chiral version of the MAP4 fingerprint (MAPC).
         is_folded : bool, optional (default=True)
             If True, the fingerprint will be folded.
         HELM_parser : str, optional (default='mobius')
@@ -157,18 +156,29 @@ class Map4Fingerprint:
         molecule in HELM format uses `rdkit` for the parsing, but won't be 
         necessarily with the internal HELM parser.
 
+        Citations
+        ---------
+        * One chiral fingerprint to find them all. 
+        Markus Orsi and Jean-Louis Reymond. 2024.
+        https://jcheminf.biomedcentral.com/articles/10.1186/s13321-024-00849-6
+        * One molecular fingerprint to rule them all: drugs, biomolecules, and the metabolome.
+        Alice Capecchi, Daniel Probst, and Jean-Louis Reymond. 2020. 
+        https://jcheminf.biomedcentral.com/articles/10.1186/s13321-020-00445-4
+
         """
         msg_error = 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
         assert input_type.lower() in ['fasta', 'helm', 'smiles'], msg_error
 
-        self._map4calc = MAP4Calculator(dimensions=dimensions, radius=radius, is_counted=is_counted)
         self._input_type = input_type.lower()
         self._HELM_parser = HELM_parser.lower()
         self._HELM_extra_library_filename = HELM_extra_library_filename
+        self._radius = radius
+        self._dimensions = dimensions
+        self._chiral = chiral
 
     def __call__(self, polymers):
         """
-        Transform input polymers into MAP4 fingerprints.
+        Transform input polymers into MAP4 or MAP4C (if chiral set to True) fingerprints.
         
         Parameters
         ----------
@@ -178,14 +188,14 @@ class Map4Fingerprint:
         Returns
         -------
         fps : ndarray
-            The MAP4 fingerprints for the input polymers.
+            The MAP4 or MAP4C fingerprints of the input polymers.
 
         """
         return self.transform(polymers)
 
     def transform(self, polymers):
         """
-        Transforms the input polymers into MAP4 fingerprints.
+        Transforms the input polymers into MAP4 or MAP4C (if chiral set to True) fingerprints.
 
         Parameters
         ----------
@@ -195,7 +205,7 @@ class Map4Fingerprint:
         Returns
         -------
         fingerprint : numpy.ndarray
-            The MAP4 fingerprints for the input polymers.
+            The MAP4 or MAP4C fingerprints of the input polymers.
 
         """
         if not isinstance(polymers, (list, tuple, np.ndarray)):
@@ -214,7 +224,12 @@ class Map4Fingerprint:
             print('Error: there are issues with the input polymers')
             print(polymers)
 
-        fps = self._map4calc.calculate_many(mols)
+        if self._chiral:
+            fps = encode_many(mols, max_radius=self._radius, n_permutations=self._dimensions, mapping=False)
+        else:
+            map4calc = MAP4Calculator(dimensions=self._dimensions, radius=self._radius, is_counted=False)
+            fps = map4calc.calculate_many(mols)
+
         fps = np.asarray(fps)
 
         return fps

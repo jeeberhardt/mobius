@@ -33,3 +33,4 @@ dependencies:
     - ray
     - pymoo
     - prody
+    - mapchiral
