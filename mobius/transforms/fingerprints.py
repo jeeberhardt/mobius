@@ -8,10 +8,10 @@ import itertools
 from collections import defaultdict
 
 import numpy as np
-from mapchiral.mapchiral import encode_many
+from mapchiral.mapchiral import get_shingles
 from mhfp.encoder import MHFPEncoder
 from rdkit import Chem
-from rdkit.Chem import rdmolops
+from rdkit.Chem import rdmolops, rdMHFPFingerprint
 from rdkit.Chem import rdFingerprintGenerator
 from rdkit.Chem.rdmolops import GetDistanceMatrix
 
@@ -110,6 +110,43 @@ class MAP4Calculator:
         return list(set(atom_pairs))
 
 
+class MAP4CCalculator:
+
+    def __init__(self, dimensions=1024, radius=2):
+        """
+        MAP4C calculator class
+        """
+        self.dimensions = dimensions
+        self.radius = radius
+        self._encoder = rdMHFPFingerprint.MHFPEncoder()
+
+    def _fold(self, hash_values, length):
+        folded = np.zeros(length, dtype=np.uint8)
+
+        if len(hash_values) == 0:
+            return folded
+
+        folded[hash_values % length] = 1
+
+        return folded
+
+    def calculate(self, mol):
+        shingles = get_shingles(mol, self.radius)
+        fingerprint = np.asarray(self._encoder.FromStringArray(shingles), dtype=np.uint32)
+        folded_fingerprint = self._fold(fingerprint, self.dimensions)
+
+        return folded_fingerprint
+
+    def calculate_many(self, mols):
+        """ Calculates the atom pair minhashed fingerprint
+        Arguments:
+            mols -- list of mols
+        Returns:
+            list of tmap VectorUint -- minhashed fingerprints list
+        """
+        return np.asarray([self.calculate(mol) for mol in mols])
+
+
 class Map4Fingerprint:
     """
     A class for computing the MAP4 fingerprints.
@@ -172,9 +209,11 @@ class Map4Fingerprint:
         self._input_type = input_type.lower()
         self._HELM_parser = HELM_parser.lower()
         self._HELM_extra_library_filename = HELM_extra_library_filename
-        self._radius = radius
-        self._dimensions = dimensions
-        self._chiral = chiral
+
+        if chiral:
+            self._map4calc = MAP4CCalculator(dimensions=dimensions, radius=radius)
+        else:
+            self._map4calc = MAP4Calculator(dimensions=dimensions, radius=radius)
 
     def __call__(self, polymers):
         """
@@ -224,11 +263,7 @@ class Map4Fingerprint:
             print('Error: there are issues with the input polymers')
             print(polymers)
 
-        if self._chiral:
-            fps = encode_many(mols, max_radius=self._radius, n_permutations=self._dimensions, mapping=False)
-        else:
-            map4calc = MAP4Calculator(dimensions=self._dimensions, radius=self._radius, is_counted=False)
-            fps = map4calc.calculate_many(mols)
+        fps =self._map4calc.calculate_many(mols)
 
         fps = np.asarray(fps)
 
