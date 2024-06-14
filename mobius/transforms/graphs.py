@@ -51,7 +51,7 @@ def convert_hybridization_to_one_hot(atom):
                            HybridizationType.SP2, 
                            HybridizationType.SP3, HybridizationType.SP3D, HybridizationType.SP3D2,
                            HybridizationType.OTHER, HybridizationType.UNSPECIFIED]
-    
+
     hybridization = atom.GetHybridization()
     one_hot = np.zeros(shape=len(hybridization_types))
     one_hot[hybridization_types.index(hybridization)] = 1
@@ -73,12 +73,12 @@ def convert_aromatic_to_bit(atom):
 
 def convert_chirality_to_one_hot(atom):
     chirality_types = ["", "R", "S"]
-    
+
     if atom.HasProp('_CIPCode'):
         chirality_type = atom.GetProp('_CIPCode')
     else:
         chirality_type = ""
-        
+
     one_hot = np.zeros(shape=len(chirality_types))
     one_hot[chirality_types.index(chirality_type)] = 1
 
@@ -90,7 +90,7 @@ def convert_bond_type_to_string(bond):
                   Chem.rdchem.BondType.DOUBLE: 'double',
                   Chem.rdchem.BondType.TRIPLE: 'triple', 
                   Chem.rdchem.BondType.AROMATIC: 'aromatic'}
-    
+
     try:
         return bond_types[bond.GetBondType()]
     except:
@@ -102,7 +102,7 @@ def convert_bond_type_to_one_hot(bond):
                   Chem.rdchem.BondType.DOUBLE,
                   Chem.rdchem.BondType.TRIPLE, 
                   Chem.rdchem.BondType.AROMATIC]
-    
+
     bond_type = bond.GetBondType()
     one_hot = np.zeros(shape=len(bond_types))
     one_hot[bond_types.index(bond_type)] = 1
@@ -123,7 +123,7 @@ def convert_stereo_to_one_hot(bond):
                     BondStereo.STEREOANY, 
                     BondStereo.STEREOZ, 
                     BondStereo.STEREOE]
-    
+
     stereo = bond.GetStereo()
     one_hot = np.zeros(shape=len(stereo_types))
     one_hot[stereo_types.index(stereo)] = 1
@@ -187,6 +187,9 @@ class Graph:
         self._HELM_parser = HELM_parser.lower()
         self._HELM_extra_library_filename = HELM_extra_library_filename
 
+        # Use node and edges features from here:
+        # Pushing the Boundaries of Molecular Representation for Drug Discovery with the Graph Attention Mechanism
+        # Zhaoping Xiong et al., 2020, https://pubs.acs.org/doi/10.1021/acs.jmedchem.9b00959
         self._available_node_features = {'element_one_hot': convert_element_to_one_hot, 
                                          'degree_one_hot': convert_degree_to_one_hot,
                                          'formal_charge_integer': convert_formal_charge_to_integer, 
@@ -258,7 +261,7 @@ class Graph:
             edge_featurizers.append(self._available_edge_features[edge_feature])
 
         return edge_featurizers
-        
+
     def add_node_featurizer(self, name, function):
         """
         Add a new node featurizer to the Graph class.
@@ -350,29 +353,29 @@ class Graph:
         # Get all the node and edge featurizers
         node_featurizers = self._get_node_featurizers()
         edge_featurizers = self._get_edge_featurizers()
-    
+
         # Add nodes with atom indices as node IDs
         for atom in mol.GetAtoms():
             node_id = f'{atom.GetSymbol()}:{atom.GetIdx()}'
-    
+
             node_features = np.array([])
             for node_featurizer in node_featurizers:
                 node_features = np.concatenate([node_features, node_featurizer(atom)])
-            
+
             G.add_node(node_id, node_attr=node_features)
-    
+
         # Add edges with bond information
         for bond in mol.GetBonds():
             b_atom = bond.GetBeginAtom()
             e_atom = bond.GetEndAtom()
             edge_id = (f'{b_atom.GetSymbol()}:{b_atom.GetIdx()}', f'{e_atom.GetSymbol()}:{e_atom.GetIdx()}')
-    
+
             edge_features = np.array([])
             for edge_featurizer in edge_featurizers:
                 edge_features = np.concatenate([edge_features, edge_featurizer(bond)])
-    
+
             G.add_edge(*edge_id, edge_attr=edge_features)
-    
+
         return G
 
     def _construct_simple_graph(self, mol):
