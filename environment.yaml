@@ -16,7 +16,7 @@ dependencies:
   - parmed
   - pdbfixer
   - pip
-  - pyg
+  - pytorch_geometric
   - openmm
   - rdkit
   - seaborn
