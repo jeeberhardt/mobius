@@ -95,7 +95,7 @@ information about the `SMS-EMOA` algorithm, please refer to the
     pic50_scores = pic50_seed_library.copy()
 
     for i in range(5):
-        suggested_peptides, _ = ps.recommand(peptides, pic50_scores, batch_size=96)
+        suggested_peptides, _ = ps.recommend(peptides, pic50_scores, batch_size=96)
 
         # Virtually test the suggested peptides using the MHC emulators
         # This is for benchmarking or demonstration purposes only and 

@@ -154,7 +154,7 @@ Run three Design-Make-Test cycles, iterating through the following steps:
     pic50_scores = pic50_seed_library.copy()
 
     for i in range(3):
-        suggested_peptides, _ = ps.recommand(peptides, pic50_scores.reshape(-1, 1), batch_size=96)
+        suggested_peptides, _ = ps.recommend(peptides, pic50_scores.reshape(-1, 1), batch_size=96)
 
         # Here you can add whatever methods you want to further filter out peptides
 

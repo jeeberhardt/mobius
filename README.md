@@ -125,8 +125,8 @@ pic50_scores = pic50_seed_library.copy()
 
 # Here we are going to do 3 DMT cycles
 for i in range(3):
-    # Run optimization, recommand 96 new peptides based on existing data
-    suggested_peptides, _ = ps.recommand(peptides, pic50_scores.reshape(-1, 1), batch_size=96)
+    # Run optimization, recommend 96 new peptides based on existing data
+    suggested_peptides, _ = ps.recommend(peptides, pic50_scores.reshape(-1, 1), batch_size=96)
 
     # Here you can add whatever methods you want to further filter out peptides
     

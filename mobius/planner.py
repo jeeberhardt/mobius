@@ -266,7 +266,7 @@ class Planner(_Planner):
         if fitting:
             self._acq_fun.fit(self._sequences, self._values, self._noises)
 
-    def recommand(self, sequences, values, noises=None, batch_size=None, fitting=True):
+    def recommend(self, sequences, values, noises=None, batch_size=None, fitting=True):
         """
         Function to suggest new sequences based on existing/previous data.
 
@@ -300,3 +300,39 @@ class Planner(_Planner):
         suggested_sequences, predicted_values = self.ask(batch_size)
 
         return suggested_sequences, predicted_values
+
+    def recommand(self, sequences, values, noises=None, batch_size=None, fitting=True):
+        """
+        Function to suggest new sequences based on existing/previous data.
+
+        Parameters
+        ----------
+        sequences : array-like of shape (n_sequences,)
+            Sequences in HELM format (for polymers) or FASTA format (for bipolymers) (training data).
+        values : array-like of shape (n_sequences, n_targets)
+            Values associated to each sequence (target values).
+        noises : array-like of shape (n_samples,), default: None
+            Noise value associated to each sequence, and expressed as
+            standard deviation (sigma). Values are squared internally to 
+            obtain the variance.
+        batch_size : int, default: None
+            Total number of new sequences that will be returned. If not 
+            provided, it will return all the sequences found during the optimization.
+        fitting : bool, default: True
+            Whether to fit the surrogate model or not.
+
+        Returns
+        -------
+        sequences : ndarray of shape (batch_size,)
+            Suggested sequencess. The returned number of 
+            sequences will be equal to `batch_size`.
+        values : ndarray of shape (batch_size, n_scores)
+            Predicted values for each suggested sequences. The 
+            returned number will be equal to `batch_size`.
+
+        Note
+        ----
+        This function is a typo and is kept in honor of Aidan Lees.
+
+        """
+        return self.recommend(sequences, values, noises, batch_size, fitting)

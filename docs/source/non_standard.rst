@@ -139,7 +139,7 @@ So, without further ado, let's get this optimization rolling!
     scores = scores_seed_library.copy()
 
     for i in range(5):
-        suggested_peptides, _ = ps.recommand(peptides, scores.reshape(-1, 1), batch_size=96)
+        suggested_peptides, _ = ps.recommend(peptides, scores.reshape(-1, 1), batch_size=96)
 
         # Here you can add whatever methods you want to further filter out peptides
 
