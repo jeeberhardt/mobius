@@ -4,15 +4,14 @@ Design Protocol
 ================
 
 In this tutorial, our focus will be the design protocol. In essence, the design protocol provides 
-a set of guidelines that govern the optimization process. It delineates the sequence space by 
-establishing constraints and implementing filters, thus enabling you to seamlessly integrate 
-any pre-existing knowledge about a specific system.
+a set of guidelines that govern the optimization process. It is used to delineate the sequence space 
+by establishing constraints, thus enabling you to seamlessly integrate any pre-existing knowledge 
+about a specific system.
 
 The design protocol is formatted as a YAML document and consists of two primary components: `designs`
 and `filters`. The `design` component delineates the sequence space that can be accessed during the 
 optimization process. On the other hand, the `filters` component allows you to exclude peptides with 
-undesirable properties (such as low solubility or permeability), which will be enforced at the 
-end of the optimization process.
+undesirable properties (such as low solubility or permeability), during the optimization process.
 
 Here is an example of a design protocol:
 

@@ -4,11 +4,11 @@ Add custom fingerprints
 =======================
 
 Navigating the world of cheminformatics and computational chemistry, you'll often 
-bump into the topic of choosing just the right molecular representation. It's a 
-bit like choosing the right tool for a job - the best pick can depend heavily on 
+bump into the topic of choosing the right molecular representation. It's a 
+bit like choosing the right tool for a job - which heavily depends on 
 the task you're tackling! One straightforward strategy is to play around with 
-different representations, trying them on for size to see which one fits your task 
-the best and yields optimal performance.
+different representations, trying them on and see which one fits your task 
+the best and yields the most optimal performance.
 
 In the next part of our journey, we're going to roll up our sleeves and dive into 
 how you can blend your own features and fingerprints with a Gaussian Process Regression 

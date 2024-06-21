@@ -32,7 +32,7 @@ and try to find it back starting from a peptide containing only standard amino a
     target = 'PEPTIDE1{[ac].P.[Me_dL].T.[d1-Nal].[Nva].[dL].[Me_dA].L.P}$PEPTIDE1,PEPTIDE1,4:R3-10:R2$$$V2.0'
 
 In our quest to rediscover the target sequence from just standard amino acids, we'll 
-have to keep in mind that while mobius is able to do a lot of things, but it doesn't possess 
+have to keep in mind that while mobius is able to do a lot of things, it doesn't possess 
 magical abilities (at least not yet!). So, we're proceeding with a couple of assumptions:
 
 #. We're already informed about the peptide scaffold (10-mer, link between monomers 4 and 10).
