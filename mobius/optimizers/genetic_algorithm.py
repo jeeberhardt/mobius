@@ -233,12 +233,6 @@ def _load_biopolymer_design_from_config(config):
             if not isinstance(user_defined_monomers, list):
                 user_defined_monomers = [user_defined_monomers]
 
-            if probabilities is not None:
-                probabilities = np.array(probabilities).flatten()
-
-            # Make sure that the probabilities sums up to 1
-            probabilities = probabilities / np.sum(probabilities)
-
             # if one the monomer is monomers collection, replace it by the monomers collection
             # The monomers collection must be defined in the YAML config file, otherwise it will be
             # considered as a monomer. 
@@ -246,6 +240,15 @@ def _load_biopolymer_design_from_config(config):
                 for j, m in enumerate(user_defined_monomers):
                      if m in monomers_collections:
                         user_defined_monomers[j:j + 1] = monomers_collections[m]
+
+            if probabilities is not None:
+                probabilities = np.array(probabilities).flatten()
+            else:
+                # If no probabilities are defined, we set them to be equal
+                probabilities = np.ones(len(user_defined_monomers)) / len(user_defined_monomers)
+
+            # Make sure that the probabilities sums up to 1
+            probabilities = probabilities / np.sum(probabilities)
 
             msg_error = f'The number of monomers and probabilities must be equal for position {position}  ({len(user_defined_monomers)} != {probabilities.size})'
             assert probabilities.size == len(user_defined_monomers), msg_error
