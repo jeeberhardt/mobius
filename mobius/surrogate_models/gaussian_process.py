@@ -12,6 +12,7 @@ from botorch.fit import fit_gpytorch_mll
 from sklearn.exceptions import NotFittedError
 
 from .surrogate_model import _SurrogateModel
+from ..utils import ProgressBar
 
 
 # We will use the simplest form of GP model, exact inference
@@ -36,7 +37,7 @@ class GPModel(_SurrogateModel):
 
     """
 
-    def __init__(self, kernel, transform=None, device=None, missing_values=False):
+    def __init__(self, kernel, transform=None, noise_prior=None, missing_values=False, device=None, show_progression=True):
         """
         Initializes the Gaussian Process Regressor (GPR) surrogate model.
 
@@ -46,20 +47,30 @@ class GPModel(_SurrogateModel):
             The kernel specifying the covariance function of the GPR model.
         transform : callable, default : None
             Function that transforms the input into data exploitable by the GP model.
+        noise_prior : `gpytorch.priors.Prior`, default : None
+            Prior distribution for the noise term in the likelihood function.
+        missing_values : bool, default : False
+            Whether we support missing values in the input data.
         device : str or torch.device, default : None
             Device on which to run the model. Per default, the device is set to 
             'cuda' if available, otherwise to 'cpu'.
-        missing_values : bool, default : False
-            Whether we support missing values in the input data.
+        show_progression : bool, default : True
+            Whether to show the progression of the optimization.
 
         """
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
+        if noise_prior is not None:
+            if not isinstance(noise_prior, gpytorch.priors.Prior):
+                raise ValueError("The noise prior must be an instance of gpytorch.priors.Prior.")
 
         self._kernel = kernel
         self._transform = transform
-        self._device = device
+        self._noise_prior = noise_prior
         self._missing_values = missing_values
+        self._device = device
+        self._show_progression = show_progression
         self._likelihood = None
         self._model = None
         self._X_train = None
@@ -82,8 +93,9 @@ class GPModel(_SurrogateModel):
         y_train : array-like of shape (n_samples,)
             Target values.
         y_noise : array-like of shape (n_samples,), default : None
-            Noise value associated to each target value (y_train), and expressed as 
-            standard deviation (sigma). Values are squared internally to obtain the variance.
+            Known observation noise (variance) for each training example (y_train). If your noise 
+            is expressed as standard deviation (sigma), you need to square the values to obtain 
+            the variance (variance = sigma**2).
 
         """
         # Make sure that inputs are numpy arrays, keep a persistant copy
@@ -91,7 +103,7 @@ class GPModel(_SurrogateModel):
         self._y_train = np.asarray(y_train).copy()
         if y_noise is not None:
             self._y_noise = np.asarray(y_noise).copy()
-            self._y_noise = self._y_noise**2
+            self._y_noise = self._y_noise
 
         # Check that the number of polymers in X_train, y_train and y_noise are the same
         msg_error = "The number of sequences in X_train and values in y_train must be the same."
@@ -121,18 +133,16 @@ class GPModel(_SurrogateModel):
         if y_noise is not None:
             y_noise = y_noise.to(self._device)
 
-        noise_prior = gpytorch.priors.NormalPrior(loc=0, scale=1)
-
         if self._missing_values:
-            self._likelihood = gpytorch.likelihoods.GaussianLikelihoodWithMissingObs(noise_prior=noise_prior)
+            self._likelihood = gpytorch.likelihoods.GaussianLikelihoodWithMissingObs(noise_prior=self._noise_prior)
         elif y_noise is not None:
             self._likelihood = gpytorch.likelihoods.FixedNoiseGaussianLikelihood(noise=y_noise, learn_additional_noise=True)
         else:
-            self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=noise_prior)
+            self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=self._noise_prior)
 
         self._model = _ExactGPModel(X_train, y_train, self._likelihood, self._kernel)
 
-        # Move model and likelihood to device
+        # Move GP and likelihood to device
         self._model.to(self._device)
         self._likelihood.to(self._device)
 
@@ -144,7 +154,12 @@ class GPModel(_SurrogateModel):
         self._likelihood.train()
 
         # Train model!
-        fit_gpytorch_mll(mll)
+        if self._show_progression:
+            optimizer_kwargs={'callback': ProgressBar()}
+        else:
+            optimizer_kwargs=None
+
+        fit_gpytorch_mll(mll, optimizer_kwargs=optimizer_kwargs)
 
     def predict(self, X_test, y_noise=None):
         """

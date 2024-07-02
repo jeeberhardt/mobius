@@ -8,6 +8,7 @@ import json
 import os
 import random
 import re
+import tqdm
 import yaml
 from collections import defaultdict
 from importlib import util
@@ -1109,3 +1110,11 @@ def optimisation_tracker(n, df_old, polymers,scores):
         df = pd.concat([df_old,df_new], ignore_index=True)
 
         return df
+
+class ProgressBar:
+    def __init__(self, desc="Fitting GPR model", unit="step"):
+        self._pbar = tqdm.tqdm(desc=desc, unit=unit)
+
+    def __call__(self, parameters, OptimizationResult):
+        self._pbar.set_postfix(loss=OptimizationResult.fval)
+        self._pbar.update(1)

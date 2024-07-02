@@ -25,6 +25,7 @@ dependencies:
   - scipy
   - sphinx == 6.2.1
   - sphinx_rtd_theme
+  - tqdm
   - transformers
   - pytorch=*=*cuda*
   - pip:
