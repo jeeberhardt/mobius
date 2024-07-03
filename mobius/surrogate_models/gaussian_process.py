@@ -155,7 +155,7 @@ class GPModel(_SurrogateModel):
 
         # Train model!
         if self._show_progression:
-            optimizer_kwargs={'callback': ProgressBar()}
+            optimizer_kwargs={'callback': ProgressBar(desc="Fitting GP model")}
         else:
             optimizer_kwargs=None
 
