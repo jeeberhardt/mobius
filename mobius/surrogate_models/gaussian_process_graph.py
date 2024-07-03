@@ -211,7 +211,6 @@ class GPGKModel(_SurrogateModel):
         self._y_train = np.asarray(y_train).copy()
         if y_noise is not None:
             self._y_noise = np.asarray(y_noise).copy()
-            self._y_noise = self._y_noise
 
         # Check that the number of polymers in X_train, y_train and y_noise are the same
         msg_error = "The number of sequences in X_train and values in y_train must be the same."
@@ -284,7 +283,6 @@ class GPGKModel(_SurrogateModel):
         X_test = np.asarray(X_test)
         if y_noise is not None:
             y_noise = np.asarray(y_noise)
-            y_noise = y_noise
 
         if self._model is None:
             msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
