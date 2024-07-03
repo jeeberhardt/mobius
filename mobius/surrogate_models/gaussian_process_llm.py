@@ -159,7 +159,7 @@ class GPLLModel(_SurrogateModel):
 
         # Train model!
         if self._show_progression:
-            optimizer_kwargs={'callback': ProgressBar(desc="Fitting GPLLM model")}
+            optimizer_kwargs={'callback': ProgressBar(desc=f"Fitting GPLLM model ({self.device})")}
         else:
             optimizer_kwargs=None
 

@@ -248,7 +248,7 @@ class GPGKModel(_SurrogateModel):
 
         # Train model!
         if self._show_progression:
-            optimizer_kwargs={'callback': ProgressBar(desc="Fitting GPGK model")}
+            optimizer_kwargs={'callback': ProgressBar(desc=f"Fitting GPGK model (cpu)")}
         else:
             optimizer_kwargs=None
 

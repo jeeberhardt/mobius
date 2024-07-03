@@ -157,7 +157,7 @@ class GPGNNModel(_SurrogateModel):
 
         # Train model!
         if self._show_progression:
-            optimizer_kwargs={'callback': ProgressBar(desc="Fitting GPGNN model")}
+            optimizer_kwargs={'callback': ProgressBar(desc=f"Fitting GPGNN model ({self.device})")}
         else:
             optimizer_kwargs=None
 
