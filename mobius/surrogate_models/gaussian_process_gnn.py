@@ -173,8 +173,9 @@ class GPGNNModel(_SurrogateModel):
         X_test : list of polymers (if input_transformer defined) or array-like of shape (n_samples, n_features)
             Data to be evaluated by the GPR model.
         y_noise : array-like of shape (n_samples,), default : None
-            Noise value associated to each query point (X_test), and expressed as 
-            standard deviation (sigma). Values are squared internally to obtain the variance.
+            Known observation noise (variance) for each training example (y_train). If your noise 
+            is expressed as standard deviation (sigma), you need to square the values to obtain 
+            the variance (variance = sigma**2).
 
         Returns
         -------
@@ -192,7 +193,7 @@ class GPGNNModel(_SurrogateModel):
         X_test = np.asarray(X_test)
         if y_noise is not None:
             y_noise = np.asarray(y_noise)
-            y_noise = y_noise**2
+            y_noise = y_noise
 
         if self._model is None:
             msg = 'This model instance is not fitted yet. Call \'fit\' with appropriate arguments before using this estimator.'
