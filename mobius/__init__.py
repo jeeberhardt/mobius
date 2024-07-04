@@ -22,7 +22,7 @@ from .embeddings import ProteinEmbedding, ChemicalEmbedding
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning
 from .kernels import TanimotoSimilarityKernel, CosineSimilarityKernel
 from .emulators import LinearPeptideEmulator, FindMe
-from .rosetta import ProteinPeptideScorer
+from .rosetta import RosettaScorer
 from .damietta import DamiettaScorer
 from .plotting import plot_results, visualise_2d, visualise_3d_scatter
 from .filters import PeptideSelfAggregationFilter, PeptideSolubilityFilter
@@ -50,7 +50,7 @@ __all__ = ['VirtualTarget', 'ForceField',
            'SequenceGA', 'RandomGA', 'Pool',
            'monomers_scanning', 'alanine_scanning', 'random_monomers_scanning', 'properties_scanning', 
            'scrumbled_scanning', 'homolog_scanning',
-           'ProteinPeptideScorer', 'DamiettaScorer',
+           'RosettaScorer', 'DamiettaScorer',
            'plot_results',
            'parse_helm', 'build_helm_string', 'get_scaffold_from_helm_string', 'read_pssm_file', 
            'affinity_binding_to_energy', 'energy_to_affinity_binding', 
