@@ -80,7 +80,7 @@ def _get_interface(pose, residues, distance=6.):
 
     binder_chain = np.unique([m.split(':')[0] for m in residues])[0]
 
-    v = _get_neighbour_vector(chain=chain, distance=distance)
+    v = _get_neighbour_vector(pose, chain=binder_chain, distance=distance)
     residue_indices = np.argwhere(list(v)).flatten()
 
     for idx in residue_indices:
@@ -261,6 +261,8 @@ class RosettaScorer:
         -------
         scores : dict
             The scores of the peptide/protein binder with the following keys:
+            - binder_energy: the energy of the peptide/protein binder
+            - complex_energy: the energy of the complex
             - dG_separated: the energy difference between the complex and the separated chains
             - dSASA: the change in SASA upon complex formation
             - dG_separated/dSASAx100: the ratio between the energy and the change in SASA
@@ -281,7 +283,13 @@ class RosettaScorer:
         ia.add_score_info_to_pose(self.pose)
         data = ia.get_all_data()
 
-        results = {'dG_separated': np.around(ia.get_separated_interface_energy(), decimals=3),
+        # Get peptide/protein binder energy score
+        binder_chain = np.unique([m.split(':')[0] for m in self._current_mutations])[0]
+        binder_energy = scorefxn.get_sub_score(self.pose, ChainSelector(binder_chain).apply(self.pose))
+
+        results = {'binder_energy': np.around(binder_energy, decimals=3),
+                   'complex_energy': np.around(ia.get_complex_energy(), decimals=3),
+                   'dG_separated': np.around(ia.get_separated_interface_energy(), decimals=3),
                    'dSASA': np.around(ia.get_interface_delta_sasa(), decimals=3),
                    'dG_separated/dSASAx100': np.around(data.dG_dSASA_ratio * 100., decimals=3),
                    'complementary_shape': np.around(data.sc_value, decimals=3),
