@@ -15,7 +15,7 @@ import tempfile
 import numpy as np
 import parmed as pmd
 from pdbfixer.pdbfixer import PDBFixer
-from openmm.app import PDBFile, ForceField, NoCutoff, HBonds, Simulation, OBC2
+from openmm.app import ForceField, NoCutoff, HBonds, Simulation
 from openmm import VerletIntegrator, unit, Platform
 from prody import parsePDB, writePDB
 
@@ -114,6 +114,10 @@ def format_pdb_for_damietta(input_pdb_filename, output_pdb_filename):
 
 
 class DamiettaScorer:
+    """
+    A class to score mutations in peptide/protein binders using Damietta.
+
+    """
 
     def __init__(self, pdb_filename, damietta_path):
         """
@@ -162,16 +166,18 @@ class DamiettaScorer:
         input_pdb_filename = 'protein.pdb'
         minimized_pdb_filename = 'minimized.pdb'
 
+        assert platform in ['CPU', 'CUDA', 'OpenCL'], 'Platform must be either CPU, CUDA or OpenCL.'
+
         with temporary_directory(prefix='dm_min_', dir='.', clean=clean) as tmp_dir:
             writePDB(input_pdb_filename, self._pdb, renumber=False)
-            pdb = PDBFixer(filename=input_pdb_filename)
 
             # PDB is going to be fixed only if we already mutated residues with damietta
+            pdb = PDBFixer(filename=input_pdb_filename)
             pdb.findMissingResidues()
             pdb.findMissingAtoms()
             pdb.addMissingAtoms()
 
-            forcefield = ForceField('amber14-all.xml')
+            forcefield = ForceField('amber14-all.xml', 'implicit/gbn2.xml')
 
             system = forcefield.createSystem(pdb.topology, nonbondedMethod=NoCutoff, constraints=HBonds)
             integrator = VerletIntegrator(0.001*unit.picoseconds)
@@ -310,7 +316,7 @@ class DamiettaScorer:
                         sl = line.split()
                         energies = np.array([float(sl[6]), float(sl[8]), float(sl[10]), float(sl[12]), float(sl[14]), float(sl[16])])
                         break
-            
+
             # Replace the pdb with the mutated one
             self._pdb = parsePDB('run/init.pdb')
 
@@ -327,4 +333,3 @@ class DamiettaScorer:
 
         """
         writePDB(output_pdb_filename, self._pdb)
-

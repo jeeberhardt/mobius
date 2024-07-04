@@ -4,11 +4,7 @@
 # PyRosetta
 #
 
-import joblib
-
 import numpy as np
-import pandas as pd
-import ray
 
 try:
     import pyrosetta
@@ -21,14 +17,88 @@ except ImportError:
 else:
     _has_pyrosetta = True
 
-from . import utils
 
-
-class ProteinPeptideComplex:
+def _get_neighbour_vector(pose, residues=None, chain=None, distance=6., include_focus_in_subset=True):
     """
-    A class to handle protein-peptide complexes.
+    Returns a vector of booleans indicating whether a residue is within a given distance from the given residues.
 
-    Original source: https://raw.githubusercontent.com/matteoferla/MEF2C_analysis/main/variant.py
+    Parameters
+    ----------
+    residues : list of str, default: None
+        The list of residues in the format chainid:resid:resname.
+    chain : str, default: None
+            The chain id.
+    distance : float, default: 6.
+        The distance cutoff.
+    include_focus_in_subset : bool, default: True
+        Whether to include the residues or chain in the vector.
+
+    Returns
+    -------
+    v : pyrosetta.rosetta.utility.vector1_bool
+        The vector of booleans.
+
+    """
+    pdb2pose = pose.pdb_info().pdb2pose
+
+    if residues is not None:
+        selector = ResidueIndexSelector()
+
+        for residue in residues:
+            chainid, resid, _ = residue.split(':')
+            selector.set_index(pdb2pose(chain=chainid, res=int(resid)))
+    elif chain is not None:
+        selector = ChainSelector(chain)
+    else:
+        raise RuntimeError('A list of residues or a chain must be specified')
+
+    neighborhood_selector = NeighborhoodResidueSelector(selector, distance=distance, include_focus_in_subset=include_focus_in_subset)
+    v = neighborhood_selector.apply(pose)
+
+    return v
+
+
+def _get_interface(pose, residues, distance=6.):
+    """
+    Returns the interface between the peptide/protein binder and the protein(s) target.
+
+    Parameters
+    ----------
+    residues : list of str, default: None
+        The list of residues in the format chainid:resid:resname.
+    distance : float, default: 6.
+        The distance cutoff.
+
+    Returns
+    -------
+    interface : str
+        The interface between the peptide/protein binder and the protein(s) target.
+
+    """ 
+    target_chains = []
+    pose2pdb = pose.pdb_info().pose2pdb
+
+    binder_chain = np.unique([m.split(':')[0] for m in residues])[0]
+
+    v = _get_neighbour_vector(chain=chain, distance=distance)
+    residue_indices = np.argwhere(list(v)).flatten()
+
+    for idx in residue_indices:
+        _, chain = pose2pdb(idx).split()
+        if chain != binder_chain:
+            target_chains.append(chain)
+
+    target_chains = np.unique(target_chains)
+    interface = f'{"".join(target_chains)}_{binder_chain}'
+
+    return interface
+
+
+class RosettaScorer:
+    """
+    A class to score mutations in peptide/protein binders using Rosetta.
+
+    Inspiration: https://raw.githubusercontent.com/matteoferla/MEF2C_analysis/main/variant.py
     """
 
     _name3 = {'A': 'ALA', 'C': 'CYS', 'D': 'ASP', 'E': 'GLU', 'F': 'PHE', 
@@ -41,7 +111,7 @@ class ProteinPeptideComplex:
               'dQ': 'DGLN', 'dR': 'DARG', 'dS': 'DSER', 'dT': 'DTHR', 
               'dV': 'DVAL', 'dW': 'DTRP', 'dY': 'DTYR'}
 
-    def __init__(self, filename, chain, params_filenames=None):
+    def __init__(self, filename, params_filenames=None):
         """
         Loads a pose from filename with the params in the params_folder
 
@@ -62,10 +132,10 @@ class ProteinPeptideComplex:
         options += '-ignore_unrecognized_res true -load_PDB_components false '
         options += '-use_terminal_residues true'
         pyrosetta.init(extra_options=options)
-        
+
         self.pose = pyrosetta.Pose()
-        self._peptide_chain = chain
         self._scorefxn = None
+        self._current_mutations = None
 
         if params_filenames:
             params_paths = pyrosetta.rosetta.utility.vector1_string()
@@ -74,50 +144,40 @@ class ProteinPeptideComplex:
 
         pyrosetta.rosetta.core.import_pose.pose_from_file(self.pose, filename)
 
-    def _get_neighbour_vector(self, residues=None, chain=None, distance=6., include_focus_in_subset=True):
+    def mutate(self, mutations):
         """
-        Returns a vector of booleans indicating whether a residue is within a given distance from the residues or chain.
-
-        A list of residues or a chain must be specified.
+        Mutate the peptide/protein binder with the given mutations list.
 
         Parameters
         ----------
-        residues : list of str, default: None
-            The list of residues in the format chainid:resid.
-        chain : str, default: None
-            The chain id.
-        distance : float, default: 6.
-            The distance cutoff.
-        include_focus_in_subset : bool, default: True
-            Whether to include the residues or chain in the vector.
-
-        Returns
-        -------
-        v : pyrosetta.rosetta.utility.vector1_bool
-            The vector of booleans.
+        mutations : list of str
+            The list of mutations in the format chainid:resid:resname.
 
         """
         pdb2pose = self.pose.pdb_info().pdb2pose
 
-        if residues is not None:
-            selector = ResidueIndexSelector()
+        unique_chains = np.unique([m.split(':')[0] for m in mutations])
+        assert unique_chains.size == 1, f"All mutations must be within the same chain (chains: {unique_chains})."
 
-            for residue in residues:
-                chainid, resid = residue.split(':')[:2]
-                selector.set_index(pdb2pose(chain=chainid, res=int(resid)))
-        elif chain is not None:
-            selector = ChainSelector(chain)
-        else:
-            raise RuntimeError('Either residues or chain must be specified')
+        for mutation in mutations:
+            chain, resid, new_resname = mutation.split(':')
+            target_residue_idx = pdb2pose(chain=chain, res=int(resid))
+            # The N and C ter residues have these extra :NtermProteinFull, blablabla suffixes
+            target_residue_name = self.pose.residue(target_residue_idx).name().split(':')[0]
 
-        neighborhood_selector = NeighborhoodResidueSelector(selector, distance=distance, include_focus_in_subset=include_focus_in_subset)
-        v = neighborhood_selector.apply(self.pose)
+            assert target_residue_name in self._name3.values(), f"Residue {target_residue_name} is not a D/L standard amino acid."
 
-        return v
+            # Skip residue if it is already the same
+            if target_residue_name != self._name3[new_resname]:
+                residue_mutator = MutateResidue(target=target_residue_idx, new_res=self._name3[new_resname])
+                residue_mutator.apply(self.pose)
 
-    def relax_peptide(self, distance=9., cycles=5, scorefxn="beta_relax"):
+        # Store mutations
+        self._current_mutations = mutations
+
+    def relax(self, distance=9., cycles=5, scorefxn="beta_relax"):
         """
-        Relaxes the peptide chain.
+        Relax the peptide/protein binder around the mutations.
 
         Parameters
         ----------
@@ -166,7 +226,7 @@ class ProteinPeptideComplex:
             else:
                 scorefxn = pyrosetta.create_score_function(scorefxn)
 
-        v = self._get_neighbour_vector(chain=self._peptide_chain, distance=distance)
+        v = _get_neighbour_vector(self.pose, residues=self._current_mutations, distance=distance)
 
         movemap = pyrosetta.MoveMap()
         movemap.set_bb(False)
@@ -183,67 +243,12 @@ class ProteinPeptideComplex:
             relax.minimize_bond_angles(True)
             relax.minimize_bond_lengths(True)
         relax.min_type('dfpmin_armijo_nonmonotone')
+
         relax.apply(self.pose)
-
-    def mutate(self, mutations):
-        """
-        Mutates the peptide with the given mutations list.
-
-        Parameters
-        ----------
-        mutations : list of str
-            The list of mutations in the format resid:resname.
-
-        """
-        pdb2pose = self.pose.pdb_info().pdb2pose
-
-        for mutation in mutations:
-            resid, new_resname = mutation.split(':')
-            target_residue_idx = pdb2pose(chain=self._peptide_chain, res=int(resid))
-            # The N and C ter residues have these extra :NtermProteinFull, blablabla suffixes
-            target_residue_name = self.pose.residue(target_residue_idx).name().split(':')[0]
-
-            assert target_residue_name in self._name3.values(), f"Residue {target_residue_name} is not a D/L standard amino acid."
-
-            # Skip residue if it is already the same
-            if target_residue_name != self._name3[new_resname]:
-                residue_mutator = MutateResidue(target=target_residue_idx, new_res=self._name3[new_resname])
-                residue_mutator.apply(self.pose)
-    
-    def _get_interface(self, peptide_chain):
-        """
-        Returns the interface between the peptide and the protein.
-
-        Parameters
-        ----------
-        peptide_chain : str
-            The chain id of the peptide.
-        
-        Returns
-        -------
-        interface : str
-            The interface between the peptide and the protein.
-
-        """ 
-        protein_chains = []
-        pose2pdb = self.pose.pdb_info().pose2pdb
-
-        v = self._get_neighbour_vector(chain=peptide_chain, distance=9.)
-        residue_indices = np.argwhere(list(v)).flatten()
-
-        for idx in residue_indices:
-            _, chain = pose2pdb(idx).split()
-            if chain != peptide_chain:
-                protein_chains.append(chain)
-        
-        protein_chains = np.unique(protein_chains)
-        interface = f'{"".join(protein_chains)}_{peptide_chain}'
-        
-        return interface
 
     def score(self, scorefxn="beta"):
         """
-        Scores peptide.
+        Score the peptide/protein binder.
 
         Parameters
         ----------
@@ -255,16 +260,16 @@ class ProteinPeptideComplex:
         Returns
         -------
         scores : dict
-            The scores of the peptide with the following keys:
+            The scores of the peptide/protein binder with the following keys:
             - dG_separated: the energy difference between the complex and the separated chains
             - dSASA: the change in SASA upon complex formation
             - dG_separated/dSASAx100: the ratio between the energy and the change in SASA
-            - complementary_shape: the shape complementarity (0: bad, 1: good)
+            - complementary_shape: the shape complementarity, from 0 (bad) to 1 (good)
             - hbond_unsatisfied: the number of unsatisfied hydrogen bonds
-            - packstat: the packing statistic (0: bad, 1: good)
+            - packstat: the packing statistic, from 0 (bad) to 1 (good)
 
         """
-        interface = self._get_interface(self._peptide_chain)
+        interface = _get_interface(self.pose, self._current_mutations)
 
         if not isinstance(scorefxn, pyrosetta.rosetta.core.scoring.ScoreFunction):
             scorefxn = pyrosetta.create_score_function(scorefxn)
@@ -283,6 +288,9 @@ class ProteinPeptideComplex:
                    'hbond_unsatisfied': np.around(ia.get_interface_delta_hbond_unsat(), decimals=3),
                    'packstat': np.around(data.packstat, decimals=3)}
 
+        # Reset mutations
+        self._current_mutations = None
+
         return results
 
     def export_pdb(self, output_filename):
@@ -296,200 +304,3 @@ class ProteinPeptideComplex:
 
         """
         self.pose.dump_pdb(output_filename)
-
-
-def _polymer_to_mutations(polymer):
-    """
-    Converts polymer in HELM format into a list of mutations.
-
-    Parameters
-    ----------
-    polymer : str
-        The polymer in HELM format.
-
-    Returns
-    -------
-    mutations : list of str
-        The list of mutations in the format resid:resname.
-
-    """
-    mutations = {}
-
-    complex_polymer, _, _, _ = utils.parse_helm(polymer)
-
-    for pid, residues in complex_polymer.items():
-        for i, resname in enumerate(residues, start=1):
-            mutation = f"{i}:{resname}"
-            mutations.setdefault(pid, []).append(mutation)
-
-    return mutations
-
-
-class ProteinPeptideScorer:
-    def __init__(self, pdb_filename, chain, params_filenames=None, n_process=-1):
-        """
-        A class to score peptides in parallel.
-        
-        Parameters
-        ----------
-        pdb_filename : str
-            The filename of the pdb file.
-        chain : str
-            The chain id of the peptide.
-        params_filenames : list of str, default: None
-            The filenames of the params files.
-        n_process : int, default: -1
-            The number of processes to use. If -1, use all available CPUs.
-        
-        """
-        if not _has_pyrosetta:
-            raise ImportError('PyRosetta is not installed.')
-
-        self._filename = pdb_filename
-        self._params_filenames = params_filenames
-        self._peptide_chain = chain
-        self._n_process = n_process
-    
-    @staticmethod
-    @ray.remote
-    def process_peptide(peptide, filename, peptide_chain, params_filenames, distance, cycles, relax_scorefxn, scorefxn):
-        """
-        Processes a peptide.
-        
-        Parameters
-        ----------
-        peptide : str
-            The peptide in HELM format.
-        filename : str
-            The filename of the pdb file.
-        peptide_chain : str
-            The chain id of the peptide.
-        params_filenames : list of str
-            The filenames of the params files.
-        distance : float
-            The distance cutoff. The distance is from the center of mass atom, not from every atom in the molecule
-        cycles : int
-            The number of relax cycles.
-        relax_scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`
-            The name of the score function. List of suggested scoring functions:
-            - beta_cart: beta_nov16_cart
-            - beta_soft: beta_nov16_soft
-            - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
-            - beta_design: beta_nov16_cart with the following weights:
-                - voids_penalty: 1.0
-                - hbnet: 1.0
-                - hbond_sr_bb: 10.0
-                - hbond_lr_bb: 10.0
-                - hbond_bb_sc: 5.0
-                - hbond_sc: 3.0
-                - buried_unsatisfied_penalty: 0.5
-            - beta_relax: beta_nov16 with the following weights:
-                - arg_cation_pi: 3.0
-                - approximate_buried_unsat_penalty: 5
-                - approximate_buried_unsat_penalty_burial_atomic_depth: 3.5
-                - approximate_buried_unsat_penalty_hbond_energy_threshold: -0.5
-        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`
-            The name of the score function. List of suggested scoring functions:
-            - beta: beta_nov16
-            - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
-            
-        Returns
-        -------
-        pdb_string : str
-            The PDB file of the protein-peptide complex as string.
-        peptide : str
-            The peptide in HELM format.
-        scores : dict
-            The scores of the peptide with the following keys:
-                
-        """
-        cplex = ProteinPeptideComplex(filename, peptide_chain, params_filenames)
-
-        # Transform HELM into a list of mutations
-        mutations = _polymer_to_mutations(peptide)
-
-        assert len(mutations) == 1, "Peptide with more than one polymer chain is not supported."
-
-        cplex.mutate(list(mutations.values())[0])
-        cplex.relax_peptide(distance=distance, cycles=cycles, scorefxn=relax_scorefxn)
-        scores = cplex.score(scorefxn)
-        
-        # Write PDB into a string
-        buffer = pyrosetta.rosetta.std.stringbuf()
-        cplex.pose.dump_pdb(pyrosetta.rosetta.std.ostream(buffer))
-        pdb_string = buffer.str()
-
-        return pdb_string, peptide, scores
-    
-    def score_peptides(self, peptides, distance=9., cycles=5, relax_scorefxn="beta_relax", scorefxn="beta"):
-        """
-        Scores peptides in parallel.
-
-        Parameters
-        ----------
-        peptides : list of str
-            The list of peptides in HELM format.
-        distance : float, default: 9.
-            The distance cutoff. The distance is from the center of mass atom, not from every atom in the molecule.
-        cycles : int, default: 5
-            The number of relax cycles.
-        relax_scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta_relax"
-            The name of the score function. List of suggested scoring functions:
-            - beta_cart: beta_nov16_cart
-            - beta_soft: beta_nov16_soft
-            - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
-            - beta_design: beta_nov16_cart with the following weights:
-                - voids_penalty: 1.0
-                - hbnet: 1.0
-                - hbond_sr_bb: 10.0
-                - hbond_lr_bb: 10.0
-                - hbond_bb_sc: 5.0
-                - hbond_sc: 3.0
-                - buried_unsatisfied_penalty: 0.5
-            - beta_relax: beta_nov16 with the following weights:
-                - arg_cation_pi: 3.0
-                - approximate_buried_unsat_penalty: 5
-                - approximate_buried_unsat_penalty_burial_atomic_depth: 3.5
-                - approximate_buried_unsat_penalty_hbond_energy_threshold: -0.5
-        scorefxn : str or `pyrosetta.rosetta.core.scoring.ScoreFunction`, default: "beta"
-            The name of the score function. List of suggested scoring functions:
-            - beta: beta_nov16
-            - franklin2019: ref2015 + dG_membrane (https://doi.org/10.1016/j.bpj.2020.03.006)
-
-        Returns
-        -------
-        pdbs : list of str
-            The list of PDB files of the protein-peptide complexes as strings.
-        df : pandas.DataFrame
-            The dataframe containing the scores of the peptides.
-
-        """
-        data = []
-        pdbs = []
-        
-        if self._n_process == -1:
-            # joblib.cpu_count() returns the exact number available that can be used on the cluster
-            # unlike os.cpu_count, ray.init() or multiprocessing.cpu_count()...
-            n_process = np.min([joblib.cpu_count(), len(peptides)])
-        else:
-            n_process = self._n_process
-        
-        ray.init(num_cpus=int(n_process), ignore_reinit_error=True)
-        
-        # Process peptides in parallel
-        refs = [self.process_peptide.remote(peptide, 
-                                            self._filename, self._peptide_chain, self._params_filenames, 
-                                            distance, cycles, relax_scorefxn, scorefxn) for peptide in peptides]
-        results = ray.get(refs)
-        
-        # Collect results
-        for r in results:
-            pdbs.append(r[0])
-            data.append([r[1]] + list(r[2].values()))
-
-        columns = ['peptide'] + list(results[0][2].keys())
-        df = pd.DataFrame(data=data, columns=columns)
-        
-        ray.shutdown()
-        
-        return pdbs, df

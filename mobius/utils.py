@@ -1111,6 +1111,7 @@ def optimisation_tracker(n, df_old, polymers,scores):
 
         return df
 
+
 class ProgressBar:
     def __init__(self, desc="Fitting GPR model", unit="step"):
         self._pbar = tqdm.tqdm(desc=desc, unit=unit)
@@ -1118,3 +1119,32 @@ class ProgressBar:
     def __call__(self, parameters, OptimizationResult):
         self._pbar.set_postfix(loss=OptimizationResult.fval)
         self._pbar.update(1)
+
+
+def polymer_to_mutations(polymer, chain):
+    """
+    Converts polymer in HELM format into a list of mutations.
+
+    Parameters
+    ----------
+    polymer : str
+        The polymer in HELM format.
+    chain : str
+        The chain id.
+
+    Returns
+    -------
+    mutations : list of str
+        The list of mutations in the format chainid:resid:resname.
+
+    """
+    mutations = {}
+
+    complex_polymer, _, _, _ = parse_helm(polymer)
+
+    for pid, residues in complex_polymer.items():
+        for i, resname in enumerate(residues, start=1):
+            mutation = f"{chain}:{i}:{resname}"
+            mutations.setdefault(pid, []).append(mutation)
+
+    return mutations
