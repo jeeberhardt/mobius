@@ -152,7 +152,14 @@ class DamiettaScorer:
 
         self._pdb = parsePDB(self._pdb_filename)
         self._mutated_pdb = None
+
+        # Stores the mapping between indices and resids
         self._residue_to_indices = {f'{r.getChid()}:{r.getResnum()}': i + 1 for i, r in enumerate(self._pdb.iterResidues())}
+        self._indices_to_residue = {v: k for k, v in self._residue_to_indices.items()}
+
+        # Renumbers the residues in the pdb file, starting from 1
+        for i, residue in enumerate(self._pdb.iterResidues()):
+            residue.setResnum(i + 1)
 
     def minimize(self, max_iterations=100, platform='CPU', clean=True):
         """
@@ -241,6 +248,9 @@ class DamiettaScorer:
 
         - The current version (v1.95) of the Damietta toolkit does not account for any interactions with 
         heteroatoms (e.g. ligands, cofactors, ions, solvent molecules).
+
+        - Histidine protonation states (HIE/HSE, HID/HSD or HIP/HSP) are not considered in Damietta as 
+        they need to rename to HIS.
 
         """
         mut_res_lines = ''
@@ -350,4 +360,10 @@ class DamiettaScorer:
             The filename of the output pdb file.
 
         """
-        writePDB(output_pdb_filename, self._pdb)
+        output_pdb = self._pdb.copy()
+
+        # Put back the original residue numbers
+        for i, residue in enumerate(output_pdb.iterResidues()):
+            residue.setResnum(self._indices_to_residue[i + 1].split(':')[1])
+
+        writePDB(output_pdb_filename, output_pdb)
