@@ -130,6 +130,11 @@ class DamiettaScorer:
         damietta_path : str
             The path of the Damietta directory.
 
+        Notes
+        -----
+        - The input pdb file must be fully protonated. Use REDUCE to add hydrogen atoms, as the energy 
+        minimization is performed using the Amber force field.
+
         """
         self._pdb_filename = pdb_filename
         self._damietta_path = os.path.abspath(damietta_path)
@@ -161,6 +166,12 @@ class DamiettaScorer:
             The platform to use for running the minimization ('CPU', 'CUDA' or 'OpenCL').
         clean : bool, default: True
             Whether to clean the temporary files. Default is True.
+
+        Notes
+        -----
+        - The minimization is performed using the Amber ff14SB force field and the GBn2 implicit solvent model,
+        instead of the CHARMM forcefield used by Damietta internally, for convenience.
+
 
         """
         input_pdb_filename = 'protein.pdb'
@@ -224,6 +235,14 @@ class DamiettaScorer:
             The energies (in kcal/mol) of the mutated protein. The energies returned
             are in the following order: (pp_dG, k_dG, lj, solv, elec, total).
 
+        Notes
+        -----
+        - The first (N-terminal) and the last (C-terminal) residues of the protein can not be mutated, 
+        since either phi or psi dihedral angle is not defined for them.
+
+        - The current version (v1.95) of the Damietta toolkit does not account for any interactions with 
+        heteroatoms (e.g. ligands, cofactors, ions, solvent molecules).
+
         """
         mut_res_lines = ''
         rpk_res_lines = ''
@@ -263,6 +282,7 @@ class DamiettaScorer:
                 residues_to_not_repack.append(self._residue_to_indices[residue])
 
             selection_str = ' or '.join(selection_str)
+            print(selection_str)
 
             residues = pdb.select(selection_str).copy()
             contacts = pdb.select(f'calpha and (same residue as within {neighbor_cutoff} of residues)', residues=residues)
