@@ -132,8 +132,8 @@ class DamiettaScorer:
 
         Notes
         -----
-        - The input pdb file must be fully protonated. Use REDUCE to add hydrogen atoms, as the energy 
-        minimization is performed using the Amber force field.
+        - The input pdb file must be fully protonated. Use `reduce` command from AmberTools to add 
+        hydrogen atoms, as the energy minimization is performed using the Amber force field.
 
         """
         self._pdb_filename = pdb_filename
@@ -169,9 +169,8 @@ class DamiettaScorer:
 
         Notes
         -----
-        - The minimization is performed using the Amber ff14SB force field and the GBn2 implicit solvent model,
-        instead of the CHARMM forcefield used by Damietta internally, for convenience.
-
+        - For convenience, the minimization is performed using the Amber ff14SB force field and the GBn2 
+        implicit solvent model, and not the CHARMM forcefield as used by Damietta internally.
 
         """
         input_pdb_filename = 'protein.pdb'
@@ -282,7 +281,6 @@ class DamiettaScorer:
                 residues_to_not_repack.append(self._residue_to_indices[residue])
 
             selection_str = ' or '.join(selection_str)
-            print(selection_str)
 
             residues = pdb.select(selection_str).copy()
             contacts = pdb.select(f'calpha and (same residue as within {neighbor_cutoff} of residues)', residues=residues)
