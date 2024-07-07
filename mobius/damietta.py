@@ -134,6 +134,7 @@ class DamiettaScorer:
         -----
         - The input pdb file must be fully protonated. Use `reduce` command from AmberTools to add 
         hydrogen atoms, as the energy minimization is performed using the Amber force field.
+        - User-defined protonation states will be ignored during minimization and mutation scoring.
 
         """
         self._pdb_filename = pdb_filename
@@ -148,7 +149,7 @@ class DamiettaScorer:
                 break
 
         if self._damietta_lib_path is None:
-            raise RuntimeError('Could not locate Damietta library in {self._damietta_path} directory.')
+            raise RuntimeError(f'Could not locate Damietta library in {self._damietta_path} directory.')
 
         self._pdb = parsePDB(self._pdb_filename)
         self._mutated_pdb = None
@@ -161,12 +162,14 @@ class DamiettaScorer:
         for i, residue in enumerate(self._pdb.iterResidues()):
             residue.setResnum(i + 1)
 
-    def minimize(self, max_iterations=100, platform='CPU', clean=True):
+    def minimize(self, pH=7.0,  max_iterations=100, platform='CPU', clean=True):
         """
         Minimizes the protein/peptide.
 
         Parameters
         ----------
+        pH : float, optional, default=7.0
+            The pH based on which to select hydrogens. Use PDBfixer to add hydrogens.
         max_iterations : int, default: 100
             The maximum number of iterations for the minimization.
         platform : str, default: 'CPU'
@@ -178,6 +181,8 @@ class DamiettaScorer:
         -----
         - For convenience, the minimization is performed using the Amber ff14SB force field and the GBn2 
         implicit solvent model, and not the CHARMM forcefield as used by Damietta internally.
+        - User-defined protonation states, such as histidines, will be ignored during minimization and mutation scoring.
+        - No extensive electrostatic analysis is performed; only default residue pKas are used.
 
         """
         input_pdb_filename = 'protein.pdb'
@@ -193,6 +198,7 @@ class DamiettaScorer:
             pdb.findMissingResidues()
             pdb.findMissingAtoms()
             pdb.addMissingAtoms()
+            pdb.addMissingHydrogens(pH)
 
             forcefield = ForceField('amber14-all.xml', 'implicit/gbn2.xml')
 
@@ -245,10 +251,8 @@ class DamiettaScorer:
         -----
         - The first (N-terminal) and the last (C-terminal) residues of the protein can not be mutated, 
         since either phi or psi dihedral angle is not defined for them.
-
         - The current version (v1.95) of the Damietta toolkit does not account for any interactions with 
         heteroatoms (e.g. ligands, cofactors, ions, solvent molecules).
-
         - Histidine protonation states (HIE/HSE, HID/HSD or HIP/HSP) are not considered in Damietta as 
         they need to rename to HIS.
 
