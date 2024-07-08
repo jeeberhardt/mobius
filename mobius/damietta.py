@@ -162,14 +162,12 @@ class DamiettaScorer:
         for i, residue in enumerate(self._pdb.iterResidues()):
             residue.setResnum(i + 1)
 
-    def minimize(self, pH=7.0,  max_iterations=100, platform='CPU', clean=True):
+    def minimize(self, max_iterations=100, platform='CPU', clean=True):
         """
         Minimizes the protein/peptide.
 
         Parameters
         ----------
-        pH : float, optional, default=7.0
-            The pH based on which to select hydrogens. Use PDBfixer to add hydrogens.
         max_iterations : int, default: 100
             The maximum number of iterations for the minimization.
         platform : str, default: 'CPU'
@@ -182,9 +180,11 @@ class DamiettaScorer:
         - For convenience, the minimization is performed using the Amber ff14SB force field and the GBn2 
         implicit solvent model, and not the CHARMM forcefield as used by Damietta internally.
         - User-defined protonation states, such as histidines, will be ignored during minimization and mutation scoring.
+        - Missing hydrogen atoms will be added using PDBFixer, assuming a pH of 7.
         - No extensive electrostatic analysis is performed; only default residue pKas are used.
 
         """
+        pH = 7.0
         input_pdb_filename = 'protein.pdb'
         minimized_pdb_filename = 'minimized.pdb'
 
