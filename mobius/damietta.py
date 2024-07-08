@@ -245,7 +245,13 @@ class DamiettaScorer:
         -------
         energies : ndarray of float
             The energies (in kcal/mol) of the mutated protein. The energies returned
-            are in the following order: (pp_dG, k_dG, lj, solv, elec, total).
+            are in the following order: (dG_total, dG_pp, dG_k, dG_lj, dG_solv, dG_elec).
+            - dG_total: average energy per residue
+            - dG_pp: backbone conformation
+            - dG_pp: side chain conformation
+            - dG_lj: Lennard-Jones interactions
+            - dG_solv: solvation energy
+            - dG_elec: electrostatic interactions
 
         Notes
         -----
@@ -346,7 +352,7 @@ class DamiettaScorer:
 
                     if line.startswith('REMARK AVERAGE ENERGY PER RESIDUE:'):
                         sl = line.split()
-                        energies = np.array([float(sl[6]), float(sl[8]), float(sl[10]), float(sl[12]), float(sl[14]), float(sl[16])])
+                        energies = np.array([float(sl[16]), float(sl[6]), float(sl[8]), float(sl[10]), float(sl[12]), float(sl[14])])
                         break
 
             # Replace the pdb with the mutated one
