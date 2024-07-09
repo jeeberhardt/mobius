@@ -47,13 +47,12 @@ def run_sinai_cs_f2m2f(spec_input_filename, damietta_path):
     command_line = f'{damietta_path}/bin/sinai_cs_f2m2f {spec_input_filename} '
     outputs, errors = execute_command(command_line)
 
-    print(outputs)
-    print(errors)
-
     if 'failed to parse combinatorial sampling (cs) specs file' in outputs:
         raise RuntimeError(f'Command: {command_line} failed with error message: {outputs}')
     elif 'internal/library input error' in outputs:
         raise RuntimeError(f'Command: {command_line} failed with error message: {outputs}')
+
+    return outputs, errors
 
 
 def format_pdb_for_damietta(input_pdb_filename, output_pdb_filename):
@@ -302,6 +301,8 @@ class DamiettaScorer:
             - dG_lj: Lennard-Jones interactions
             - dG_solv: solvation energy
             - dG_elec: electrostatic interactions
+            Returns nan for each energy term if one of the mutations is not sterrically possible 
+            (high LJ term).
 
         Notes
         -----
@@ -406,28 +407,32 @@ class DamiettaScorer:
             with open(f'input.spec', 'w') as spec_input_file:
                 spec_input_file.write(spec_input_str)
 
-            run_sinai_cs_f2m2f(f'input.spec', self._damietta_path)
+            outputs, errors = run_sinai_cs_f2m2f(f'input.spec', self._damietta_path)
 
-            # Read the output pdb file
-            with open(f'{out_dir}/init.pdb', 'r') as f:
-                energies = []
+            if 'skipping output on high LJ energy' in errors:
+                # This means that there is cleric clashes with one of the mutated positions
+                energies = np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
+            else:
+                # Read the output pdb file
+                with open(f'{out_dir}/init.pdb', 'r') as f:
+                    energies = []
+    
+                    for line in f.readlines():
+                        # We do not take the total energy (REMARK AVERAGE ENERGY PER RESIDUE), 
+                        # but only the individual energy of each mutation, and average them
+                        # In REMARK AVERAGE ENERGY PER RESIDUE, we have all the mutated residues + the
+                        # ones that were repacked. Here we just want the mutated ones.
+                        if line.startswith('REMARK resid'):
+                            sl = line.split()
+                            resid = int(sl[2])
+    
+                            if resid in mutation_resids:
+                                energies.append([float(sl[14]), float(sl[4]), float(sl[6]), float(sl[8]), float(sl[10]), float(sl[12])])
+    
+                energies = np.mean(energies, axis=0)
 
-                for line in f.readlines():
-                    # We do not take the total energy (REMARK AVERAGE ENERGY PER RESIDUE), 
-                    # but only the individual energy of each mutation, and average them
-                    # In REMARK AVERAGE ENERGY PER RESIDUE, we have all the mutated residues + the
-                    # ones that were repacked. Here we just want the mutated ones.
-                    if line.startswith('REMARK resid'):
-                        sl = line.split()
-                        resid = int(sl[2])
-
-                        if resid in mutation_resids:
-                            energies.append([float(sl[14]), float(sl[4]), float(sl[6]), float(sl[8]), float(sl[10]), float(sl[12])])
-
-            energies = np.mean(energies, axis=0)
-
-            # Replace the pdb with the mutated one
-            self._pdb = parsePDB('run/init.pdb')
+                # Replace the pdb with the mutated one
+                self._pdb = parsePDB('run/init.pdb')
 
         # Put back the original residue numbers
         for i, residue in enumerate(self._pdb.iterResidues()):
