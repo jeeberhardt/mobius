@@ -301,8 +301,7 @@ class DamiettaScorer:
             - dG_lj: Lennard-Jones interactions
             - dG_solv: solvation energy
             - dG_elec: electrostatic interactions
-            Returns nan for each energy term if one of the mutations is not sterrically possible 
-            (high LJ term).
+            Returns nan for each energy term if one of the mutations is not sterically feasible (LJ term).
 
         Notes
         -----
