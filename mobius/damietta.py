@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+ #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Damietta
@@ -47,10 +47,10 @@ def run_sinai_cs_f2m2f(spec_input_filename, damietta_path):
     command_line = f'{damietta_path}/bin/sinai_cs_f2m2f {spec_input_filename} '
     outputs, errors = execute_command(command_line)
 
-    if 'failed to parse combinatorial sampling (cs) specs file' in outputs:
-        raise RuntimeError(f'Command: {command_line} failed with error message: {outputs}')
-    elif 'internal/library input error' in outputs:
-        raise RuntimeError(f'Command: {command_line} failed with error message: {outputs}')
+    if 'failed to parse combinatorial sampling (cs) specs file' in outputs or 'internal/library input error' in outputs:
+        msg_error = f'Command: {command_line} failed with error message: \n'
+        msg_error += f'{outputs}\n'
+        msg_error += f'{errors}\n'
 
     return outputs, errors
 
@@ -115,6 +115,30 @@ def format_pdb_for_damietta(input_pdb_filename, output_pdb_filename):
         w.write(new_pdb)
 
 
+def get_energies_from_output_pdb_file(pdb_filename, mutation_resids):
+    energies = []
+
+    # Read the output pdb file
+    with open(pdb_filename, 'r') as f:
+        for line in f.readlines():
+            # We do not take the total energy (REMARK AVERAGE ENERGY PER RESIDUE), 
+            # but only the individual energy of each mutation, and average them
+            # In REMARK AVERAGE ENERGY PER RESIDUE, we have all the mutated residues + the
+            # ones that were repacked. Here we just want the mutated ones.
+            if line.startswith('REMARK resid'):
+                sl = line.split()
+                resid = int(sl[2])
+
+                if resid in mutation_resids:
+                    energies.append([float(sl[14]), float(sl[4]), float(sl[6]), float(sl[8]), float(sl[10]), float(sl[12])])
+            elif line.startswith('ATOM'):
+                break
+
+    energies = np.mean(energies, axis=0)
+
+    return energies
+
+
 class DamiettaScorer:
     """
     A class to score mutations in peptide/protein binders using Damietta.
@@ -154,7 +178,6 @@ class DamiettaScorer:
             raise RuntimeError(f'Could not locate Damietta library in {self._damietta_path} directory.')
 
         self._pdb = parsePDB(self._pdb_filename)
-        self._mutated_pdb = None
 
         # Stores the mapping between indices and resids
         self._residue_to_indices = {f'{r.getChid()}:{r.getResnum()}': i + 1 for i, r in enumerate(self._pdb.iterResidues())}
@@ -222,7 +245,7 @@ class DamiettaScorer:
             self._pdb = parsePDB(minimized_pdb_filename)
             #self._pdb.setCoords(state.getPositions(asNumpy=True).value_in_unit(unit.angstrom))
 
-    def _mutate_and_rebuild_sidechain(self, pdb, mutations):
+    def _mutate_and_rebuild_sidechains(self, pdb, mutations):
         pH = 7.0
         tmp_pdbfilename = 'tmp.pdb'
         selection_str = []
@@ -237,17 +260,20 @@ class DamiettaScorer:
         for residue in pdb.iterResidues():
             original_resnums.append(residue.getResnum())
             original_chainids.append(residue.getChids()[0])
-
-        writePDB(tmp_pdbfilename, pdb, renumber=False)
     
         for mutation in mutations:
             chainid, resid, new_resname = mutation.split(':')
             residue_str = f'{chainid}:{resid}'
             
             selection_str.append(f'(resid {self._residue_to_indices[residue_str]} and sidechain)')
-    
-            # Change resname to the new one
+
+            # Select residue
+            # Do not ask me why sometimes it works with segname, and sometimes it does not...
             residue = hv_pdb.getResidue(chainid, self._residue_to_indices[residue_str], segname=chainid)
+            if residue is None:
+                residue = hv_pdb.getResidue(chainid, self._residue_to_indices[residue_str])
+
+            # Change resname to the new one
             residue.setResname(new_resname)
     
         # Select all except sidechains of the mutated residues
@@ -256,6 +282,7 @@ class DamiettaScorer:
     
         writePDB(tmp_pdbfilename, pdb_no_sc, renumber=False)
 
+        # Rebuild the sidechains
         # This part is slow.
         fixer = PDBFixer(filename=tmp_pdbfilename)
         fixer.findMissingResidues()
@@ -293,14 +320,14 @@ class DamiettaScorer:
         Returns
         -------
         energies : ndarray of float
-            The energies (in kcal/mol) of the mutated protein. The energies returned
-            are in the following order: (dG_total, dG_pp, dG_k, dG_lj, dG_solv, dG_elec).
-            - dG_total: average energy per residue
-            - dG_pp: backbone conformation
-            - dG_pp: side chain conformation
-            - dG_lj: Lennard-Jones interactions
-            - dG_solv: solvation energy
-            - dG_elec: electrostatic interactions
+            Average energies (in kcal/mol) of the mutated positions. The energies returned
+            are in the following order: (total, pp, k, lj, solv, elec).
+            - total: average energy per residue
+            - pp: average backbone conformation energy
+            - pp: average side chain conformation energy
+            - lj: average Lennard-Jones interactions energy
+            - solv: average solvation energy
+            - elec: average electrostatic interactions energy
             Returns nan for each energy term if one of the mutations is not sterically feasible (LJ term).
 
         Notes
@@ -395,7 +422,7 @@ class DamiettaScorer:
             # Mutate PDB outside Damietta, because we are going to trick sinai_cs_f2m2f
             # to just score just the mutations we want, and nothing else.
             # This part is slow, should find something else then PDBFixer
-            pdb = self._mutate_and_rebuild_sidechain(pdb, mutations)
+            pdb = self._mutate_and_rebuild_sidechains(pdb, mutations)
 
             # Writes the pdb file
             writePDB(input_pdb_filename, pdb, renumber=False)
@@ -406,32 +433,18 @@ class DamiettaScorer:
             with open(f'input.spec', 'w') as spec_input_file:
                 spec_input_file.write(spec_input_str)
 
+            # Run Damietta
             outputs, errors = run_sinai_cs_f2m2f(f'input.spec', self._damietta_path)
 
+            # Get energies
             if 'skipping output on high LJ energy' in errors:
                 # This means that there is cleric clashes with one of the mutated positions
                 energies = np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
             else:
-                # Read the output pdb file
-                with open(f'{out_dir}/init.pdb', 'r') as f:
-                    energies = []
-    
-                    for line in f.readlines():
-                        # We do not take the total energy (REMARK AVERAGE ENERGY PER RESIDUE), 
-                        # but only the individual energy of each mutation, and average them
-                        # In REMARK AVERAGE ENERGY PER RESIDUE, we have all the mutated residues + the
-                        # ones that were repacked. Here we just want the mutated ones.
-                        if line.startswith('REMARK resid'):
-                            sl = line.split()
-                            resid = int(sl[2])
-    
-                            if resid in mutation_resids:
-                                energies.append([float(sl[14]), float(sl[4]), float(sl[6]), float(sl[8]), float(sl[10]), float(sl[12])])
-    
-                energies = np.mean(energies, axis=0)
+                energies = get_energies_from_output_pdb_file(f'{out_dir}/init.pdb', mutation_resids)
 
-                # Replace the pdb with the mutated one
-                self._pdb = parsePDB('run/init.pdb')
+            # Replace the pdb with the mutated one
+            self._pdb = parsePDB(f'{out_dir}/init.pdb')
 
         # Put back the original residue numbers
         for i, residue in enumerate(self._pdb.iterResidues()):
