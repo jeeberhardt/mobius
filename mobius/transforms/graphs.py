@@ -200,9 +200,11 @@ class Graph:
         self._HELM_parser = HELM_parser.lower()
         self._HELM_extra_library_filename = HELM_extra_library_filename
 
-        # Use node and edges features from here:
-        # Pushing the Boundaries of Molecular Representation for Drug Discovery with the Graph Attention Mechanism
-        # Zhaoping Xiong et al., 2020, https://pubs.acs.org/doi/10.1021/acs.jmedchem.9b00959
+        # Got inspiration of node and edges features from here:
+        # - Pushing the Boundaries of Molecular Representation for Drug Discovery with the Graph Attention Mechanism
+        #   Zhaoping Xiong et al., 2020, https://pubs.acs.org/doi/10.1021/acs.jmedchem.9b00959
+        # - Molecular set representation learning
+        #   Maria Boulougouri et al., 2024, https://doi.org/10.1038/s42256-024-00856-0
         self._available_node_features = {'element_one_hot': convert_element_to_one_hot, 
                                          'degree_one_hot': convert_degree_to_one_hot,
                                          'formal_charge_one_hot': convert_formal_charge_to_one_hot, 
