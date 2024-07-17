@@ -144,7 +144,8 @@ class GPGNNModel(_SurrogateModel):
 
         # Move GP, GNN (inside GP) and likelihood to device
         self._model.feature_extractor.to(self._device)
-        self._model.to(self._device)
+        self._model.mean_module.to(self._device)
+        self._model.covar_module.to(self._device)
         self._likelihood.to(self._device)
 
         # "Loss" for GPs - the marginal log likelihood
