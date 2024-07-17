@@ -205,7 +205,7 @@ class GPLLModel(_SurrogateModel):
         self._likelihood.eval()
 
         # Tokenize sequences
-        X_tokens = self._pretained_model.tokenize(X_test)
+        X_tokens = self._pretrained_model.tokenize(X_test)
 
         # Convert to torch tensors if necessary
         if not torch.is_tensor(X_tokens):
