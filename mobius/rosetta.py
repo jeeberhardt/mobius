@@ -175,7 +175,7 @@ class RosettaScorer:
         # Store mutations
         self._current_mutations = mutations
 
-    def relax(self, distance=9., cycles=5, scorefxn="beta_relax"):
+    def relax(self, distance=9., cycles=5, scorefxn="beta_relax", allow_backbone_to_move=True):
         """
         Relax the peptide/protein binder around the mutations.
 
@@ -230,7 +230,8 @@ class RosettaScorer:
 
         movemap = pyrosetta.MoveMap()
         movemap.set_bb(False)
-        movemap.set_bb(allow_bb=v)
+        if allow_backbone_to_move:
+            movemap.set_bb(allow_bb=v)
         movemap.set_chi(False)
         movemap.set_chi(allow_chi=v)
         movemap.set_jump(False)
