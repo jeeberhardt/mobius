@@ -46,7 +46,7 @@ class GPLLModel(_SurrogateModel):
 
     """
 
-    def __init__(self, kernel, pretained_model, noise_prior=None, missing_values=False, device=None, show_progression=True):
+    def __init__(self, kernel, pretrained_model, noise_prior=None, missing_values=False, device=None, show_progression=True):
         """
         Initializes the Gaussian Process Regressor (GPR) surrogate model for pretrained protein Language Models (pLM).
 
@@ -54,7 +54,7 @@ class GPLLModel(_SurrogateModel):
         ----------
         kernel : `gpytorch.kernels.Kernel`
             The kernel function used by the GPR model.
-        pretained_model : `PreTrainedModel`
+        pretrained_model : `PreTrainedModel`
             Pretrained protein Language Model (pLM) that transforms the input into data exploitable by the GP model.
         noise_prior : `gpytorch.priors.Prior`, default : None
             Prior distribution for the noise term in the likelihood function.
@@ -75,7 +75,7 @@ class GPLLModel(_SurrogateModel):
                 raise ValueError("The noise prior must be an instance of gpytorch.priors.Prior.")
 
         self._kernel = kernel
-        self._pretained_model = pretained_model
+        self._pretrained_model = pretrained_model
         self._noise_prior = noise_prior
         self._missing_values = missing_values
         self._device = device
@@ -121,7 +121,7 @@ class GPLLModel(_SurrogateModel):
             assert self._X_train.shape[0] == self._y_noise.shape[0], msg_error
 
         # Tokenize sequences
-        X_tokens = self._pretained_model.tokenize(self._X_train)
+        X_tokens = self._pretrained_model.tokenize(self._X_train)
 
         # Convert to torch tensors if necessary
         if not torch.is_tensor(X_tokens):
@@ -143,7 +143,7 @@ class GPLLModel(_SurrogateModel):
         else:
             self._likelihood = gpytorch.likelihoods.GaussianLikelihood(noise_prior=self._noise_prior)
 
-        self._model = _ExactGPLLModel(X_tokens, y_train, self._likelihood, self._kernel, self._pretained_model)
+        self._model = _ExactGPLLModel(X_tokens, y_train, self._likelihood, self._kernel, self._pretrained_model)
 
         # Move GP, pLM (inside GP) and likelihood to device
         self._model.to(self._device)
@@ -205,7 +205,7 @@ class GPLLModel(_SurrogateModel):
         self._likelihood.eval()
 
         # Tokenize sequences
-        X_tokens = self._pretained_model.tokenize(X_test)
+        X_tokens = self._pretrained_model.tokenize(X_test)
 
         # Convert to torch tensors if necessary
         if not torch.is_tensor(X_tokens):
