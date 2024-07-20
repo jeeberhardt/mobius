@@ -82,9 +82,9 @@ class BatchConverter(object):
 class ProteinEmbedding:
 
     def __init__(self, pretrained_model_name='esm1b_t33_650M_UR50S', embedding_type='avg', 
-                 device=None, model_name=None, tokenizer_name=None,
+                 model_name=None, tokenizer_name=None,
                  layers_to_finetune=None, lora=False, lora_rank=4, lora_alpha=8,
-                 padding_length=None, add_extra_space=True):
+                 padding_length=None, add_extra_space=True, device=None):
         """
         Initializes the ProteinEmbedding class.
 
@@ -102,11 +102,6 @@ class ProteinEmbedding:
             is equal to the out_features size of the model, while for the 'residue' embedding type, the 
             number of features will be equal to the out_features size times the number of tokens in the 
             sequence.
-        device : str
-            Device to use for embedding.
-        device : str or torch.device, default : None
-            Device on which to run the model. Per default, the device is set to 
-            'cuda' if available, otherwise to 'cpu'.
         encoder_name : str, default : None
             Name of the encoder model to use if `AutoModel` failed to load the model.
         tokenizer_name : str, default : None
@@ -130,10 +125,14 @@ class ProteinEmbedding:
             During tokenization, add an extra space between amino acid characters. This is required
             for some models, like T5Tokenizer. If False, the sequences will be tokenized without extra 
             spaces.
+        device : str or torch.device, default : None
+            Device on which to run the model. Per default, the device is set to 
+            'cuda' if available, otherwise to 'cpu'.
 
         Notes
         -----
-        - Prot_t5_xl_uniref50: Use the `T5EncoderModel` (embeddings only) or `T5ForConditionalGeneration` (embedding and logits) model and `T5Tokenizer` tokenizer.
+        - Prot_t5_xl_uniref50: Use the `T5EncoderModel` (embeddings only) or `T5ForConditionalGeneration` 
+          (embedding and logits) model and `T5Tokenizer` tokenizer.
 
         Raises
         ------
