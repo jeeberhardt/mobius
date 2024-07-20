@@ -167,13 +167,15 @@ class Graph:
             model and a kernel function (RBF, Matern, etc.).
         node_features : list, optional (default=None)
             List of node features to be used. The options are 'element_one_hot', 
-            'degree_one_hot','formal_charge_integer', 'radical_electrons_integer', 
-            'hybridization_one_hot', 'aromatic_bit', 'hydrogens_one_hot', 
-            and 'chirality_one_hot'. If None, all node features are used.
+            'degree_one_hot','formal_charge_one_hot', 'hybridization_one_hot', 
+            'aromatic_bit', 'hydrogens_one_hot' and 'chirality_one_hot'. If 
+            None, all node features are used. Used only if output is 'pyg'. 
+            If output is 'grakel', the node feature is the symbol of the atom only.
         edge_features : list, optional (default=None)
             List of edge features to be used. The options are 'bond_type_one_hot', 
             'conjugation_bit', 'ring_bit', and 'stereo_one_hot'. If None, all edge 
-            features are used.
+            features are used. Used only if output is 'pyg'. If output is 'grakel',
+            the edge feature is the bond type only.
         HELM_parser : str, optional (default='mobius')
             The HELM parser to be used. It can be 'mobius' or 'rdkit'. 
             When using 'rdkit' parser, only D or L standard amino acids
