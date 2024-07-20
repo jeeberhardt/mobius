@@ -18,7 +18,7 @@ from .transforms import Graph
 from .optimizers import SequenceGA, RandomGA
 from .optimizers import Pool
 from .surrogate_models import GPModel, GPLLModel, DummyModel, RFModel, GPGKModel, GPGNNModel
-from .embeddings import ProteinEmbedding, ChemicalEmbedding
+from .embeddings import ProteinEmbedding, ChemicalEmbedding, InverseFolding
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning
 from .kernels import TanimotoSimilarityKernel, CosineSimilarityKernel
 from .emulators import LinearPeptideEmulator, FindMe
