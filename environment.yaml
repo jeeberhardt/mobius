@@ -3,17 +3,18 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python <=3.10
+  - python 3.10|3.11
   - botorch
   - fair-esm
   - grakel
   - gpytorch
   - matplotlib
   - numba 
-  - numpy
+  - numpy == 1.26.4
   - numpydoc
   - pandas
   - parmed
+  - prody
   - pdbfixer
   - pip
   - pytorch_geometric
@@ -29,9 +30,8 @@ dependencies:
   - transformers
   - pytorch=*=*cuda*
   - pip:
-    - graphein
     - mhfp
     - ray
     - pymoo
-    - prody
     - mapchiral
+    - numpy == 1.26.4
