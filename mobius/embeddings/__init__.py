@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Mobius - optimizers
+# Mobius - embeddings
 #
 
 from .protein_embeddings import ProteinEmbedding
