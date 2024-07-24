@@ -18,11 +18,11 @@ from .transforms import Graph
 from .optimizers import SequenceGA, RandomGA
 from .optimizers import Pool
 from .surrogate_models import GPModel, GPLLModel, DummyModel, RFModel, GPGKModel, GPGNNModel
-from .embeddings import ProteinEmbedding, ChemicalEmbedding, InverseFolding
+from .embeddings import ProteinEmbedding, ChemicalEmbedding
 from .generators import monomers_scanning, alanine_scanning, random_monomers_scanning, properties_scanning, scrumbled_scanning, homolog_scanning
 from .kernels import TanimotoSimilarityKernel, CosineSimilarityKernel
 from .emulators import LinearPeptideEmulator, FindMe
-from .structure.rosetta import RosettaScorer, DamiettaScorer, InverseFolding
+from .structure import RosettaScorer, DamiettaScorer, InverseFolding
 from .plotting import plot_results, visualise_2d, visualise_3d_scatter
 from .filters import PeptideSelfAggregationFilter, PeptideSolubilityFilter
 from .utils import parse_helm, build_helm_string, get_scaffold_from_helm_string, read_pssm_file
