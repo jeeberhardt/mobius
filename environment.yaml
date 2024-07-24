@@ -1,6 +1,7 @@
 name: mobius
 channels:
   - conda-forge
+  - pyg
   - defaults
 dependencies:
   - python 3.10|3.11
@@ -18,6 +19,7 @@ dependencies:
   - pdbfixer
   - pip
   - pytorch_geometric
+  - pytorch-scatter
   - openmm
   - rdkit
   - seaborn
