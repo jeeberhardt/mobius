@@ -1148,3 +1148,55 @@ def polymer_to_mutations(polymer, chain):
             mutations.setdefault(pid, []).append(mutation)
 
     return mutations
+
+
+def generate_biopolymer_design_protocol_from_probabilities(probabilities, monomers, starting_residue=1, name='PROTEIN'):
+    """
+    Generate a design protocol from a list of probabilities and list of monomer.
+
+    Parameters
+    ----------
+    probabilities : ndarray or pytorch.Tensor
+        Array of probabilities for each position.
+    monomers : list
+        List of monomers to be used as default collection.
+    starting_residue : int, default=1
+        Starting residue number.
+    name : str, default='PROTEIN'
+        Name of the biopolymer.
+
+    Notes
+    -----
+    The order of monomers in the list must match the order of probabilities.
+
+    Returns
+    -------
+    dict
+        A dictionary representing the design protocol
+    """
+    i = 1
+
+    if isinstance(probabilities, torch.Tensor):
+        probabilities = np.squeeze(probabilities.detach().cpu().numpy())
+    
+    positions = {}
+
+    for p in probabilities:
+        positions[i] = {'monomers': 'default', 'probabilities': p.tolist()}
+        i += 1
+
+    design = {
+        'design' : {
+            'monomers' : {'default' : monomers},
+            'biopolymers' : [
+                {
+                    'name' : name,
+                    'starting_residue' : starting_residue,
+                    'length' : len(probabilities),
+                    'positions' : positions
+                },
+            ]
+        },
+    }
+
+    return design
