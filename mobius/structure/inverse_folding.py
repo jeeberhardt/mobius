@@ -109,6 +109,9 @@ class InverseFolding:
         logits /= temperature
         probabilities = F.softmax(logits, dim=-1)
 
+        # Remove unused dimension and transpose it
+        probabilities = torch.squeeze(probabilities).T
+
         return probabilities
 
     @staticmethod
