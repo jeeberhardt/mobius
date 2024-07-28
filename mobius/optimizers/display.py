@@ -64,4 +64,7 @@ class SingleObjectiveOutput(Output):
         else:
             self.f_min.set(None)
         
-        self.best.set(opt.x[0])
+        if len(opt.x[0]) > 40:
+            self.best.set(f'{opt.x[0][:18]}....{opt.x[0][-18:]}')
+        else:
+            self.best.set(opt.x[0])
