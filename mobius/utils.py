@@ -1150,7 +1150,7 @@ def polymer_to_mutations(polymer, chain):
     return mutations
 
 
-def generate_biopolymer_design_protocol_from_probabilities(probabilities, monomers, starting_residue=1, name='PROTEIN'):
+def generate_biopolymer_design_protocol_from_probabilities(probabilities, monomers, starting_residue=1, name='PROTEIN', fixed_positions=None):
     """
     Generate a design protocol from a list of probabilities and list of monomer.
 
@@ -1164,6 +1164,8 @@ def generate_biopolymer_design_protocol_from_probabilities(probabilities, monome
         Starting residue number.
     name : str, default='PROTEIN'
         Name of the biopolymer.
+    fixed_positions : dict, default=None
+        Dictionary of fixed positions and their monomers. Positions are 1-based.
 
     Notes
     -----
@@ -1182,7 +1184,13 @@ def generate_biopolymer_design_protocol_from_probabilities(probabilities, monome
     positions = {}
 
     for p in probabilities:
-        positions[i] = {'monomers': 'default', 'probabilities': p.tolist()}
+        p = p.tolist()
+
+        if fixed_positions and i in fixed_positions:
+            p = [0.] * len(p)
+            p[monomers.index(fixed_positions[i])] = 1.
+
+        positions[i] = {'monomers': 'default', 'probabilities': p}
         i += 1
 
     design = {
