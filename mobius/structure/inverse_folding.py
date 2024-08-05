@@ -103,14 +103,13 @@ class InverseFolding:
 
         logits = self._get_logits(coords, seq)
 
-        # We keep only the probabilities of the standard amino acids, not the special tokens
-        logits = logits[:, self._vocabulary_idx, :]
-
-        logits /= temperature
-        probabilities = F.softmax(logits, dim=-1)
-
         # Remove unused dimension and transpose it
-        probabilities = torch.squeeze(probabilities).T
+        logits = torch.squeeze(logits).T
+
+        # We keep only the probabilities of the standard amino acids, not the special tokens
+        logits = logits[:, self._vocabulary_idx]
+
+        probabilities = F.softmax(logits / temperature, dim=-1)
 
         return probabilities
 
