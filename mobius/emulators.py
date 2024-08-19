@@ -207,7 +207,7 @@ class LinearPeptideEmulator(_Emulator):
 
         return scores
 
-    def generate_random_peptides(self, n_peptides, peptide_lengths, low_score=None, high_score=None, monomer_symbols=None):
+    def generate_random_peptides(self, n_peptides, peptide_lengths, low_score=None, high_score=None, monomer_symbols=None, output_type='helm'):
         """
         Generate random linear peptides of a certain lengths with score comprised
         between `low_score` and `high_score` (if defined).
@@ -226,15 +226,20 @@ class LinearPeptideEmulator(_Emulator):
             Symbol (1 letter) of the monomers that are going to be used to 
             generate random peptides. Per default, only the 20 natural amino 
             acids will be used.
+        output_type : str, default : 'helm'
+            Format of the output peptides, either FASTA or HELM.
 
         Returns
         -------
         peptides : ndarray of shape (n_peptides, )
-            Randomly generated peptides.
+            Randomly generated peptides in the desired format (FASTA or HELM).
         scores : ndarray of shape (n_peptides, )
             Scores of the randomly generated peptides.
 
         """
+        msg_error = 'Format (%s) not handled as output. Please use FASTA or HELM format.'
+        assert output_type.lower() in ['fasta', 'helm'], msg_error % output_type
+
         random_peptides = []
         random_peptide_scores = []
 
@@ -266,7 +271,10 @@ class LinearPeptideEmulator(_Emulator):
             if len(random_peptides) == n_peptides:
                 break
 
-        random_peptides = [build_helm_string({'PEPTIDE1': p}, []) for p in random_peptides]
+        if output_type == 'helm':
+            random_peptides = [build_helm_string({'PEPTIDE1': p}, []) for p in random_peptides]
+        else:
+            random_peptides = random_peptides
 
         sorted_index = np.argsort(random_peptide_scores)
         random_peptides = np.asarray(random_peptides)[sorted_index]
