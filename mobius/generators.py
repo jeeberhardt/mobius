@@ -15,7 +15,7 @@ import pandas as pd
 from . import utils
 
 
-def homolog_scanning(polymer, substitution_matrix=None, input_type='helm', positions=None):
+def homolog_scanning(polymer, substitution_matrix=None, input_type='helm', output_type='helm', positions=None):
     """
     This function performs the homolog scanning method on a given polymer by mutating each 
     of its position by the chemically most similar monomers. 
@@ -30,8 +30,10 @@ def homolog_scanning(polymer, substitution_matrix=None, input_type='helm', posit
         to the monomer names (A, C, D, ... for standard amino acids). If not provided, it will 
         use the provided amino acid similarity matrix for the 20 standard amino acids (see 
         mobius/data/AA_similarity_matrix.csv).
-    input_type : str, optional, default : 'helm'
-        The format of the input polymer. Must be either 'fasta' or 'helm'. 
+    input_type : str, default : 'helm'
+        The format of the input polymer. Must be either 'fasta' or 'helm'.
+    output_type : str, default : 'helm'
+        The format of the output polymer. Must be either 'fasta' or 'helm'.
     positions : Dict[str, List of int], default : None
         The positions to be mutated, in the format {'polymer_id': [pos1, pos2, ...], ...}. 
         The positions are 1-based. If not provided, all positions in the input polymer will 
@@ -40,18 +42,21 @@ def homolog_scanning(polymer, substitution_matrix=None, input_type='helm', posit
     Yields
     ------
     str
-        The modified polymer in HELM format.
+        The modified polymer in HELM or FASTA format.
 
     Raises
     ------
     AssertionError
         If the input_type is not 'helm' or 'fasta'.
+        If the output_type is not 'helm' or 'fasta'.
     KeyError
         If the monomer symbol is not present in the substitution matrix.
 
     """
-    msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
+    msg_error = 'Format (%s) not handled as input. Please use FASTA or HELM format.'
     assert input_type.lower() in ['fasta', 'helm'], msg_error % input_type
+    msg_error = 'Format (%s) not handled as output. Please use FASTA or HELM format.'
+    assert output_type.lower() in ['fasta', 'helm'], msg_error % input_type
 
     i = 0
 
@@ -115,6 +120,9 @@ def homolog_scanning(polymer, substitution_matrix=None, input_type='helm', posit
             if position == allowed_positions[pid][-1]:
                 i += 1
 
+            if output_type.lower() == 'fasta':
+                new_polymer = utils.convert_HELM_to_FASTA(new_polymer)[0]
+
             yield new_polymer
         else:
             continue
@@ -122,7 +130,7 @@ def homolog_scanning(polymer, substitution_matrix=None, input_type='helm', posit
         break
 
 
-def monomers_scanning(polymer, monomers=None, input_type='helm', positions=None):
+def monomers_scanning(polymer, monomers=None, input_type='helm', output_type='helm', positions=None):
     """
     This function performs a monomer scanning on a given polymer 
     by going through all the possible combinations of monomers at 
@@ -136,7 +144,9 @@ def monomers_scanning(polymer, monomers=None, input_type='helm', positions=None)
         The list of allowed monomers. If not provided, the default list 
         of 20 amino acids is used.
     input_type : str, default : 'helm'
-        The format of the input polymer. Must be either 'fasta' or 'helm'. 
+        The format of the input polymer. Must be either 'fasta' or 'helm'.
+    output_type : str, default : 'helm'
+        The format of the output polymer. Must be either 'fasta' or 'helm'.
     positions : Dict[str, List of int], default : None
         The positions to be mutated, in the format {'polymer_id': [pos1, pos2, ...], ...}. 
         The positions are 1-based. If not provided, all positions in the input polymer will 
@@ -145,16 +155,20 @@ def monomers_scanning(polymer, monomers=None, input_type='helm', positions=None)
     Yields
     ------
     str
-        The modified polymer in HELM format.
+        The modified polymer in HELM or FASTA format.
 
     Raises
     ------
     AssertionError
         If the input_type is not 'helm' or 'fasta'.
+        If the output_type is not 'helm' or 'fasta'.
 
     """
-    msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
+    msg_error = 'Format (%s) not handled as input. Please use FASTA or HELM format.'
     assert input_type.lower() in ['fasta', 'helm'], msg_error % input_type
+    msg_error = 'Format (%s) not handled as output. Please use FASTA or HELM format.'
+    assert output_type.lower() in ['fasta', 'helm'], msg_error % input_type
+
 
     if monomers is None:
         # Default to the 20 natural amino acids
@@ -195,10 +209,13 @@ def monomers_scanning(polymer, monomers=None, input_type='helm', positions=None)
                     new_complex_polymer[pid][position] = monomer
                     new_polymer = utils.build_helm_string(new_complex_polymer, connections)
 
+                    if output_type.lower() == 'fasta':
+                        new_polymer = utils.convert_HELM_to_FASTA(new_polymer)[0]
+
                     yield new_polymer
 
 
-def alanine_scanning(polymer, repeats=None, input_type='helm', positions=None):
+def alanine_scanning(polymer, repeats=None, input_type='helm', output_type='helm', positions=None):
     """
     This function performs alanine scanning on a given polymer 
     by introducing alanine at each position, and optionally by introducing 
@@ -224,16 +241,19 @@ def alanine_scanning(polymer, repeats=None, input_type='helm', positions=None):
     Yields
     ------
     str
-        The modified polymer in HELM format.
+        The modified polymer in HELM or FASTA format.
 
     Raises
     ------
     AssertionError
-        If input_type is not 'fasta' or 'helm'.
+        If the input_type is not 'helm' or 'fasta'.
+        If the output_type is not 'helm' or 'fasta'.
 
     """
-    msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
+    msg_error = 'Format (%s) not handled as input. Please use FASTA or HELM format.'
     assert input_type.lower() in ['fasta', 'helm'], msg_error % input_type
+    msg_error = 'Format (%s) not handled as output. Please use FASTA or HELM format.'
+    assert output_type.lower() in ['fasta', 'helm'], msg_error % input_type
 
     monomer = 'A'
 
@@ -290,11 +310,14 @@ def alanine_scanning(polymer, repeats=None, input_type='helm', positions=None):
 
             new_polymer = utils.build_helm_string(new_complex_polymer, connections)
 
+            if output_type.lower() == 'fasta':
+                new_polymer = utils.convert_HELM_to_FASTA(new_polymer)[0]
+
             if new_polymer != polymer:
                 yield new_polymer
 
 
-def random_monomers_scanning(polymer, monomers=None, input_type='helm', positions=None):
+def random_monomers_scanning(polymer, monomers=None, input_type='helm', output_type='helm', positions=None):
     """
     This function performs random monomers scanning method on a given 
     polymer by introducing random mutations at each position.
@@ -316,16 +339,19 @@ def random_monomers_scanning(polymer, monomers=None, input_type='helm', position
     Yields
     ------
     str
-        The modified polymer in HELM format.
+        The modified polymer in HELM or FASTA format.
 
     Raises
     ------
     AssertionError
-        If the input type is not 'fasta' or 'helm'.
+        If the input_type is not 'helm' or 'fasta'.
+        If the output_type is not 'helm' or 'fasta'.
 
     """
-    msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
+    msg_error = 'Format (%s) not handled as input. Please use FASTA or HELM format.'
     assert input_type.lower() in ['fasta', 'helm'], msg_error % input_type
+    msg_error = 'Format (%s) not handled as output. Please use FASTA or HELM format.'
+    assert output_type.lower() in ['fasta', 'helm'], msg_error % input_type
 
     if monomers is None:
         monomers = ["A", "R", "N", "D", "C", "E", "Q", "G", 
@@ -363,10 +389,13 @@ def random_monomers_scanning(polymer, monomers=None, input_type='helm', position
                 new_complex_polymer[pid][position] = monomer
                 new_polymer = utils.build_helm_string(new_complex_polymer, connections)
 
+                if output_type.lower() == 'fasta':
+                    new_polymer = utils.convert_HELM_to_FASTA(new_polymer)[0]
+
                 yield new_polymer
 
 
-def properties_scanning(polymer, properties=None, input_type='helm', positions=None):
+def properties_scanning(polymer, properties=None, input_type='helm', output_type='helm', positions=None):
     """
     This function performs a propety scanning on a given polymer 
     by introducing random monomer mutations while also alternating between 
@@ -391,12 +420,13 @@ def properties_scanning(polymer, properties=None, input_type='helm', positions=N
     Returns
     -------
     str
-        The modified polymer in HELM format.
+        The modified polymer in HELM or FASTA format.
 
     Raises
     ------
     AssertionError
         If the input_type is not 'helm' or 'fasta'.
+        If the output_type is not 'helm' or 'fasta'.
 
     Examples
     --------
@@ -414,8 +444,10 @@ def properties_scanning(polymer, properties=None, input_type='helm', positions=N
     …    print(peptide)
 
     """
-    msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
+    msg_error = 'Format (%s) not handled as input. Please use FASTA or HELM format.'
     assert input_type.lower() in ['fasta', 'helm'], msg_error % input_type
+    msg_error = 'Format (%s) not handled as output. Please use FASTA or HELM format.'
+    assert output_type.lower() in ['fasta', 'helm'], msg_error % input_type
 
     if properties is None:
         properties = {'polar_pos': ['R', 'H', 'K'],
@@ -456,10 +488,13 @@ def properties_scanning(polymer, properties=None, input_type='helm', positions=N
                     new_complex_polymer[pid][position] = monomer
                     new_polymer = utils.build_helm_string(new_complex_polymer, connections)
 
+                    if output_type.lower() == 'fasta':
+                        new_polymer = utils.convert_HELM_to_FASTA(new_polymer)[0]
+
                     yield new_polymer
 
 
-def scrumbled_scanning(polymer, input_type='helm', positions=None):
+def scrumbled_scanning(polymer, input_type='helm', output_type='helm', positions=None):
     """
     This function performs a scrumbled scanning on a given polymer.
     Monomers in the input polymer are simply randomly shuffled.
@@ -478,16 +513,19 @@ def scrumbled_scanning(polymer, input_type='helm', positions=None):
     Yields
     ------
     str
-        The modified polymer in HELM format.
+        The modified polymer in HELM or FASTA format.
 
     Raises
     ------
     AssertionError
         If the input_type is not 'helm' or 'fasta'.
+        If the output_type is not 'helm' or 'fasta'.
 
     """
-    msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
+    msg_error = 'Format (%s) not handled as input. Please use FASTA or HELM format.'
     assert input_type.lower() in ['fasta', 'helm'], msg_error % input_type
+    msg_error = 'Format (%s) not handled as output. Please use FASTA or HELM format.'
+    assert output_type.lower() in ['fasta', 'helm'], msg_error % input_type
 
     if input_type.lower() == 'helm':
         complex_polymer, connections, _, _ = utils.parse_helm(polymer)
@@ -522,5 +560,8 @@ def scrumbled_scanning(polymer, input_type='helm', positions=None):
             new_complex_polymer[new_position[0]][new_position[1]] = complex_polymer[old_position[0]][old_position[1]]
 
         new_polymer = utils.build_helm_string(new_complex_polymer, connections)
+
+        if output_type.lower() == 'fasta':
+            new_polymer = utils.convert_HELM_to_FASTA(new_polymer)[0]
 
         yield new_polymer
