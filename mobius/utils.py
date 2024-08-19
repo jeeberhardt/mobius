@@ -20,6 +20,15 @@ from rdkit import Chem
 from rdkit import RDLogger
 
 
+class ProgressBar:
+    def __init__(self, desc="Fitting GPR model", unit="step"):
+        self._pbar = tqdm.tqdm(desc=desc, unit=unit)
+
+    def __call__(self, parameters, OptimizationResult):
+        self._pbar.set_postfix(loss=OptimizationResult.fval)
+        self._pbar.update(1)
+
+
 def constrained_sum_sample_pos(n, total):
     """
     Return a randomly chosen list of n positive integers summing to total.
@@ -259,6 +268,48 @@ def get_device():
     return device
 
 
+def is_fasta_sequence(sequence):
+    """
+    Check if a sequence is in FASTA format.
+
+    The regex used to recognize each format is the following:
+    - FASTA: ^[^{}\[\].:,;=\$\-\(\)\+\*\n]+$
+
+    Parameters
+    ----------
+    sequence : str
+        Input sequence to check.
+
+    Returns
+    -------
+    bool
+        True if the sequence is in FASTA format, False otherwise.
+
+    """
+    return re.match('^[^{}\[\].:,;=\$\-\(\)\+\*\n]+$', sequence)
+
+
+def is_helm_sequence(sequence):
+    """
+    Check if a sequence is in HELM format.
+
+    The regex used to recognize each format is the following:
+    - HELM: ^[^>\n]*\{[^>\n]+\}[^>\n]*\$*\$\$\$(V2\.0)?$
+
+    Parameters
+    ----------
+    sequence : str
+        Input sequence to check.
+
+    Returns
+    -------
+    bool
+        True if the sequence is in HELM format, False otherwise.
+
+    """
+    return re.match('^[^>\n]*\{[^>\n]+\}[^>\n]*\$*\$\$\$(V2\.0)?$', sequence)
+
+
 def guess_input_formats(sequences):
     """
     Guess the format for each input sequence. This function recognizes
@@ -290,9 +341,9 @@ def guess_input_formats(sequences):
     formats = []
 
     for sequence in sequences:
-        if re.match('^[^>\n]*\{[^>\n]+\}[^>\n]*\$*\$\$\$(V2\.0)?$', sequence):
+        if is_helm_sequence(sequence):
             formats.append('HELM')
-        elif re.match('^[^{}\[\].:,;=\$\-\(\)\+\*\n]+$', sequence):
+        elif is_fasta_sequence(sequence):
             formats.append('FASTA')
         else:
             formats.append('unknown')
@@ -323,7 +374,8 @@ def generate_random_linear_polymers(n_polymers, polymers_lengths, monomers=None,
 
     Raises
     ------
-        AssertionError: If output format is not 'fasta' or 'helm'.
+    AssertionError
+        If output format is not 'fasta' or 'helm'.
 
     """
     msg_error = 'Format (%s) not handled. Please use FASTA or HELM format.'
@@ -373,6 +425,12 @@ def generate_random_polymers_from_designs(n_polymers, scaffold_designs):
     -------
     ndarray
         Randomly generated polymers.
+
+    Raises
+    ------
+    AssertionError
+        If the size of the list of number of polymers per scaffold
+        is not equal to the number of scaffold.
 
     """
     random_polymers = []
@@ -581,7 +639,8 @@ def convert_HELM_to_FASTA(polymers, ignore_connections=False):
     Raises
     ------
     ValueError
-        If a polymer contains connections or more than one simple polymer.
+        If a polymer contains connections.
+        If a polymer contains more than one simple polymer.
 
     """
     if not isinstance(polymers, (list, tuple, np.ndarray)):
@@ -666,6 +725,11 @@ def parse_helm(polymer):
     attributes : str
         A string containing any additional attributes related to the complex polymer.
 
+    Raises
+    ------
+    ValueError
+        If the HELM string is invalid.
+
     """
     dtype = [('SourcePolymerID', 'U20'), ('TargetPolymerID', 'U20'),
              ('SourceMonomerPosition', 'i4'), ('SourceAttachment', 'U2'),
@@ -696,7 +760,7 @@ def parse_helm(polymer):
                          target_position, target_attachment))
 
     connections = np.array(data, dtype=dtype)
-    
+
     return complex_polymer, connections, hydrogen_bonds, attributes
 
 
@@ -794,6 +858,67 @@ def write_design_protocol_from_polymers(polymers, filename='design.yaml'):
         yaml.dump(design_protocol, f)
 
 
+def generate_biopolymer_design_protocol_from_probabilities(probabilities, monomers, starting_residue=1, name='PROTEIN', fixed_positions=None):
+    """
+    Generate a design protocol from a list of probabilities and list of monomer.
+
+    Parameters
+    ----------
+    probabilities : ndarray or pytorch.Tensor
+        Array of probabilities for each position.
+    monomers : list
+        List of monomers to be used as default collection.
+    starting_residue : int, default=1
+        Starting residue number.
+    name : str, default='PROTEIN'
+        Name of the biopolymer.
+    fixed_positions : dict, default=None
+        Dictionary of fixed positions and their monomers. Positions are 1-based.
+
+    Notes
+    -----
+    The order of monomers in the list must match the order of probabilities.
+
+    Returns
+    -------
+    dict
+        A dictionary representing the design protocol
+
+    """
+    i = 1
+
+    if isinstance(probabilities, torch.Tensor):
+        probabilities = np.squeeze(probabilities.detach().cpu().numpy())
+    
+    positions = {}
+
+    for p in probabilities:
+        p = p.tolist()
+
+        if fixed_positions and i in fixed_positions:
+            p = [0.] * len(p)
+            p[monomers.index(fixed_positions[i])] = 1.
+
+        positions[i] = {'monomers': 'default', 'probabilities': p}
+        i += 1
+
+    design = {
+        'design' : {
+            'monomers' : {'default' : monomers},
+            'biopolymers' : [
+                {
+                    'name' : name,
+                    'starting_residue' : starting_residue,
+                    'length' : len(probabilities),
+                    'positions' : positions
+                },
+            ]
+        },
+    }
+
+    return design
+
+
 def MolFromHELM(polymers, HELM_extra_library_filename=None):
     """
     Generate a list of RDKit molecules from HELM strings.
@@ -812,6 +937,11 @@ def MolFromHELM(polymers, HELM_extra_library_filename=None):
     -------
     List
         A list of RDKit molecules.
+
+    Raises
+    ------
+    KeyError
+        If a monomer is unknown.
 
     """
     rdkit_polymers = []
@@ -1030,181 +1160,121 @@ def read_pssm_file(pssm_file):
 
     return pssm, intercept
 
-def global_min_pssm_score(pssm_pd,intercept):
+
+def global_min_pssm_score(pssm, intercept):
     """
-    Reads a PSSM data frame and returns the residue sequence
-    and its corresponding globally minimum pssm score.
+    Reads a PSSM pandas dataframe and returns the sequence
+    and its corresponding global minimum PSSM score.
 
     Parameters
     ----------
-    pssm : pandas dataframe
-        The data frame of each individual pssm score for an allele.
+    pssm : pandas.DataFrame
+        A pandas DataFrame containing PSSM data.
     intercept : float
-        The intercept value from the PSSM file.
+        The intercept value.
 
     Returns
     -------
-    global min peptide : str
-        String of residue corresponding to the lowest PSSM score possible for that matrix.
     min_score : float
-        Associated globally minimum PSSM score for that matrix.
+        Value of the global minimum PSSM score.
+    result_string : str
+        Residue sequence corresponding to the global minimum PSSM score in FASTA format.
 
     """
-
-    min_values = pssm_pd.min()
-    min_row_titles = pssm_pd.idxmin()
-    min_score = min_values.sum()+intercept
+    min_values = pssm.min()
+    min_row_titles = pssm.idxmin()
+    min_score = min_values.sum() + intercept
     result_string = "".join(min_row_titles)
+
     return min_score, result_string
 
 
-def optimisation_tracker(n, df_old, polymers,scores):
-
+def sequence_to_mutations(sequence, chain, reference_sequence=None, starting_residue=1):
     """
-    Record optimisation progression of suggested polymers.
+    Converts polymer/biopolymer sequence in HELM or FASTA format into a list of mutations.
 
     Parameters
     ----------
-    n : int
-        Optimisation number. If 0, creates dataframe for progression tracking.
-    df_old : pd dataframe
-        Old dataframe from previous optimisation round for updating.
-    polymers: list
-        List of new suggested polymers to update progression tracking.
-    score: ndarray
-        Associated scores in each objective to the list of polymers.
-
-    Returns
-    -------
-    df : pandas dataframe
-        Updated dataframe tracking optimisation progression.
-
-    """
-
-    if n == 0:
-        data = {
-            "Polymers": polymers,
-            "Optimisation": [n] * len(polymers)
-        }
-
-        # Add the dynamic array columns to the dictionary
-        for i in range(scores.shape[1]):
-            column_name = f"Score_{i+1}"
-            data[column_name] = scores[:, i]
-
-        # Create the DataFrame
-        df = pd.DataFrame(data)
-        return df
-    
-    else:
-        new_data = {
-            "Polymers": polymers,
-            "Optimisation": n,
-        }
-
-        for i in range(scores.shape[1]):
-            column_name = f"Score_{i+1}"
-            new_data[column_name] = scores[:,i].flatten()
-
-        df_new = pd.DataFrame(new_data)
-        df = pd.concat([df_old,df_new], ignore_index=True)
-
-        return df
-
-
-class ProgressBar:
-    def __init__(self, desc="Fitting GPR model", unit="step"):
-        self._pbar = tqdm.tqdm(desc=desc, unit=unit)
-
-    def __call__(self, parameters, OptimizationResult):
-        self._pbar.set_postfix(loss=OptimizationResult.fval)
-        self._pbar.update(1)
-
-
-def polymer_to_mutations(polymer, chain):
-    """
-    Converts polymer in HELM format into a list of mutations.
-
-    Parameters
-    ----------
-    polymer : str
-        The polymer in HELM format.
+    sequence : str
+        The sequence in HELM or FASTA format.
     chain : str
         The chain id.
+    reference_sequence : str, default : None
+        The reference sequence in HELM or FASTA format.
+    starting_residue : int, default : 1
+        The residue ID of the first residue in the sequence. Usually, 
+        it corresponds to the resid of the first residue in a PDB file.
 
     Returns
     -------
     mutations : list of str
-        The list of mutations in the format chainid:resid:resname.
+        The list of mutations in the format chainid:resid:resname. If the input
+        sequence is in HELM format and contains multiple polymers, we consider
+        they all are part of the same chain and the resids are consecutive and in 
+        the same order as they would appear in a PDB file.
+
+    Raises
+    ------
+    AssertionError
+        If the sequence format is not HELM or FASTA.
+        If the sequence and reference sequence formats are different.
+        If the sequence and reference sequence lengths are different, in case of FASTA format.
+        If the sequence and reference sequence scaffolds are different, in case of HELM format.
 
     """
-    mutations = {}
+    mutations = []
+    reference_was_provided = reference_sequence is not None
 
-    complex_polymer, _, _, _ = parse_helm(polymer)
+    print(reference_was_provided)
 
-    for pid, residues in complex_polymer.items():
-        for i, resname in enumerate(residues, start=1):
-            mutation = f"{chain}:{i}:{resname}"
-            mutations.setdefault(pid, []).append(mutation)
+    # If reference_sequence is not provided, use the sequence as reference
+    if reference_sequence is None:
+        reference_sequence = sequence
+
+    sequence_format = guess_input_formats(sequence)[0]
+    reference_sequence_format = guess_input_formats(reference_sequence)[0]
+
+    assert sequence_format in ['HELM', 'FASTA'], 'Invalid sequence format. Must be HELM or FASTA.'
+    assert reference_sequence_format in ['HELM', 'FASTA'], 'Invalid reference sequence format. Must be HELM or FASTA.'
+    assert sequence_format == reference_sequence_format, 'Sequence and reference sequence must have the same format.'
+
+    if sequence_format == 'HELM':
+        i = 0
+
+        scaffold_sequence = get_scaffold_from_helm_string(sequence)
+        scaffold_reference_sequence = get_scaffold_from_helm_string(reference_sequence)
+
+        assert scaffold_sequence == scaffold_reference_sequence, 'Sequence and reference sequence must have the same scaffold.'
+
+        complex_polymer, _, _, _ = parse_helm(sequence)
+        reference_complex_polymer, _, _, _ = parse_helm(reference_sequence)
+
+        for pid, resnames in complex_polymer.items():
+            for j, resname in enumerate(resnames):
+                if reference_was_provided:
+                    reference_resname = reference_complex_polymer[pid][j]
+                else:
+                    reference_resname = ''
+
+                if resname != reference_resname:
+                    mutation = f"{chain}:{i + starting_residue}:{resname}"
+                    mutations.append(mutation)
+
+                i += 1
+    else:
+        length_sequence = len(sequence)
+        length_reference_sequence = len(reference_sequence)
+
+        assert length_sequence == length_reference_sequence, 'Sequence and reference sequence must have the same length.'
+
+        for i in range(length_sequence):
+            if reference_was_provided:
+                reference_resname = reference_sequence[i]
+            else:
+                reference_resname = ''
+
+            if sequence[i] != reference_resname:
+                mutation = f"{chain}:{i + starting_residue}:{sequence[i]}"
+                mutations.append(mutation)
 
     return mutations
-
-
-def generate_biopolymer_design_protocol_from_probabilities(probabilities, monomers, starting_residue=1, name='PROTEIN', fixed_positions=None):
-    """
-    Generate a design protocol from a list of probabilities and list of monomer.
-
-    Parameters
-    ----------
-    probabilities : ndarray or pytorch.Tensor
-        Array of probabilities for each position.
-    monomers : list
-        List of monomers to be used as default collection.
-    starting_residue : int, default=1
-        Starting residue number.
-    name : str, default='PROTEIN'
-        Name of the biopolymer.
-    fixed_positions : dict, default=None
-        Dictionary of fixed positions and their monomers. Positions are 1-based.
-
-    Notes
-    -----
-    The order of monomers in the list must match the order of probabilities.
-
-    Returns
-    -------
-    dict
-        A dictionary representing the design protocol
-    """
-    i = 1
-
-    if isinstance(probabilities, torch.Tensor):
-        probabilities = np.squeeze(probabilities.detach().cpu().numpy())
-    
-    positions = {}
-
-    for p in probabilities:
-        p = p.tolist()
-
-        if fixed_positions and i in fixed_positions:
-            p = [0.] * len(p)
-            p[monomers.index(fixed_positions[i])] = 1.
-
-        positions[i] = {'monomers': 'default', 'probabilities': p}
-        i += 1
-
-    design = {
-        'design' : {
-            'monomers' : {'default' : monomers},
-            'biopolymers' : [
-                {
-                    'name' : name,
-                    'starting_residue' : starting_residue,
-                    'length' : len(probabilities),
-                    'positions' : positions
-                },
-            ]
-        },
-    }
-
-    return design

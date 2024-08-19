@@ -23,14 +23,14 @@ from .generators import monomers_scanning, alanine_scanning, random_monomers_sca
 from .kernels import TanimotoSimilarityKernel, CosineSimilarityKernel
 from .emulators import LinearPeptideEmulator, FindMe
 from .structure import RosettaScorer, DamiettaScorer, InverseFolding
-from .plotting import plot_results, visualise_2d, visualise_3d_scatter
 from .filters import PeptideSelfAggregationFilter, PeptideSolubilityFilter
-from .utils import parse_helm, build_helm_string, get_scaffold_from_helm_string, read_pssm_file
+from .utils import parse_helm, build_helm_string, get_scaffold_from_helm_string
 from .utils import affinity_binding_to_energy, energy_to_affinity_binding, ic50_to_pic50, pic50_to_ic50
 from .utils import generate_random_linear_polymers, generate_random_polymers_from_designs
-from .utils import adjust_polymers_to_design
-from .utils import convert_FASTA_to_HELM, convert_HELM_to_FASTA,global_min_pssm_score
-from .utils import optimisation_tracker
+from .utils import convert_FASTA_to_HELM, convert_HELM_to_FASTA, global_min_pssm_score
+from .utils import read_pssm_file, global_min_pssm_score
+from .utils import sequence_to_mutations
+from .utils import generate_biopolymer_design_protocol_from_probabilities, write_design_protocol_from_polymers
 
 
 __all__ = ['VirtualTarget', 'ForceField',
@@ -51,11 +51,12 @@ __all__ = ['VirtualTarget', 'ForceField',
            'scrumbled_scanning', 'homolog_scanning',
            'RosettaScorer', 'DamiettaScorer', 'InverseFolding',
            'plot_results',
-           'parse_helm', 'build_helm_string', 'get_scaffold_from_helm_string', 'read_pssm_file', 
+           'parse_helm', 'build_helm_string', 'get_scaffold_from_helm_string',
            'affinity_binding_to_energy', 'energy_to_affinity_binding', 
            'generate_random_linear_polymers', 'generate_random_polymers_from_designs',
-           'adjust_polymers_to_design',
            'ic50_to_pic50', 'pic50_to_ic50',
            'PeptideSelfAggregationFilter', 'PeptideSolubilityFilter',
-           'convert_FASTA_to_HELM', 'convert_HELM_to_FASTA','global_min_pssm_score','visualise_2d',
-           'visualise_3d_scatter','optimisation_tracker']
+           'convert_FASTA_to_HELM', 'convert_HELM_to_FASTA',
+           'read_pssm_file', 'global_min_pssm_score', 
+           'sequence_to_mutations',
+           'generate_biopolymer_design_protocol_from_probabilities', 'write_design_protocol_from_polymers']
