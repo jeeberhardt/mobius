@@ -19,11 +19,11 @@ The quickiest way to get started with `mobius` is to look through the different 
 - Would BO have helped me?: [Colab notebook](https://colab.research.google.com/github/jeeberhardt/mobius/blob/colab/examples/Would_BO_have_helped_me/Would_Bayesian_optimization_have_helped_me%3F.ipynb)
 - Optimization of linear peptides towards MHC class I: [Jupyter notebook](examples/hello_world.ipynb)
 - Example of multi-objectives optimization: [Jupyter notebook](examples/multi_objectives.ipynb)
-- Integration of non-standard amino acids: [Jupyter notebook](examples/non-standard_monomers_and_macrocycles.ipynb)
+- Integration of non-standard amino acids and macrocyclic peptides: [Jupyter notebook](examples/non-standard_monomers_and_macrocycles.ipynb)
 - Protein language models for peptide optimization: [Jupyter notebook](examples/protein_language_model.ipynb)
 - Example of peptide permeability optimization: [Jupyter notebook](examples/macrocyclic_peptides_permeability/macrocyclic_peptides_permeability.ipynb)
 - Think of proteins as... kind of a big peptide: [Jupyter notebook](examples/protein_optimization/protein_optimization.ipynb)
-- Graph Neural Networks and Graph Kernel for peptide optimizatio: [Jupyter notebook (GNN)](examples/graph_neural_networks.ipynb) and [Jupyter notebook (GK)](examples/graph_kernels.ipynb)
+- Graph Neural Networks and Graph Kernel for peptide optimization: [Jupyter notebook (GNN)](examples/graph_neural_networks.ipynb) and [Jupyter notebook (GK)](examples/graph_kernels.ipynb)
 - Use my own molecular representation: [Jupyter notebook](examples/custom_fingerprint.ipynb)
 
 ## Documentation
