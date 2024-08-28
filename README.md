@@ -16,7 +16,7 @@ A python package for optimizing peptide sequences using Bayesian optimization (B
 
 The quickiest way to get started with `mobius` is to look through the different examples. This notebooks will introduce you to the different features of `mobius` and give you some ideas how to integrate it in your own projects.
 
-- Would BO have helped me?: [Jupyter notebook](examples/Would_BO_have_helped_me/Would_Bayesian_optimization_have_helped_me?.ipynb) and [Colab notebook](https://colab.research.google.com/github/jeeberhardt/mobius/blob/colab/examples/Would_BO_have_helped_me/Would_Bayesian_optimization_have_helped_me%3F.ipynb)
+- Would BO have helped me?: [Colab notebook](https://colab.research.google.com/github/jeeberhardt/mobius/blob/colab/examples/Would_BO_have_helped_me/Would_Bayesian_optimization_have_helped_me%3F.ipynb)
 - Optimization of linear peptides towards MHC class I: [Jupyter notebook](examples/hello_world.ipynb)
 - Example of multi-objectives optimization: [Jupyter notebook](examples/multi_objectives.ipynb)
 - Integration of non-standard amino acids: [Jupyter notebook](examples/non-standard_monomers_and_macrocycles.ipynb)
