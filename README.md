@@ -12,6 +12,20 @@ A python package for optimizing peptide sequences using Bayesian optimization (B
 - Easily extensible to add your own molecular representations (fingerprints, graph kernels, GNN, ..)
 - Can be seamlessly integrated with other tools (docking, pyRosetta, Damietta, AlphaFold, ..)
 
+## Examples
+
+The quickiest way to get started with `mobius` is to look through the different examples. This notebooks will introduce you to the different features of `mobius` and give you some ideas how to integrate it in your own projects.
+
+- Would BO have helped me?: [Jupyter notebook](examples/Would_BO_have_helped_me/Would_Bayesian_optimization_have_helped_me?.ipynb) and [Colab notebook](https://colab.research.google.com/github/jeeberhardt/mobius/blob/colab/examples/Would_BO_have_helped_me/Would_Bayesian_optimization_have_helped_me%3F.ipynb)
+- Optimization of linear peptides towards MHC class I: [Jupyter notebook](examples/hello_world.ipynb)
+- Example of multi-objectives optimization: [Jupyter notebook](examples/multi_objectives.ipynb)
+- Integration of non-standard amino acids: [Jupyter notebook](examples/non-standard_monomers_and_macrocycles.ipynb)
+- Protein language models for peptide optimization: [Jupyter notebook](examples/protein_language_model.ipynb)
+- Example of peptide permeability optimization: [Jupyter notebook](examples/macrocyclic_peptides_permeability/macrocyclic_peptides_permeability.ipynb)
+- Think of proteins as... kind of a big peptide: [Jupyter notebook](examples/protein_optimization/protein_optimization.ipynb)
+- Graph Neural Networks and Graph Kernel for peptide optimizatio: [Jupyter notebook (GNN)](examples/graph_neural_networks.ipynb) and [Jupyter notebook (GK)](examples/graph_kernels.ipynb)
+- Use my own molecular representation: [Jupyter notebook](examples/custom_fingerprint.ipynb)
+
 ## Documentation
 
 The installation instructions, documentation and tutorials can be found at [mobius.readthedocs.io](https://mobius.readthedocs.io/en/master/about.html).
