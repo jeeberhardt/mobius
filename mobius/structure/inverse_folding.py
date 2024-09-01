@@ -97,11 +97,10 @@ class InverseFolding:
         """Returns the device on which the model is running."""
         return self._device
 
-    def _get_logits(self, coords, seq):
-        batch = [(coords, None, seq)]
-        coords, confidence, _, tokens, padding_mask = self._tokenizer(batch, device=self.device)
+    def _get_logits(self, coords, seqs):
+        coords, confidence, _, tokens, padding_mask = self._tokenizer([(coords, None, seqs)], device=self.device)
 
-        logits, _ = self._model.forward(batch, padding_mask, confidence, tokens)
+        logits, _ = self._model.forward(coords, padding_mask, confidence, tokens)
 
         return logits
 
@@ -132,6 +131,9 @@ class InverseFolding:
             'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'.
 
         """
+        if chainids is not None:
+            assert target_chainid in chainids, f'The target chain ID must be loaded (chain IDs loaded: {chainids})'
+
         structure = esm.inverse_folding.util.load_structure(structure_filename, chainids)
         coords, seqs = esm.inverse_folding.multichain_util.extract_coords_from_complex(structure)
 
@@ -148,7 +150,6 @@ class InverseFolding:
 
         # Get probabilities of the target chain only
         probabilities = probabilities[:target_chain_len]
-
         probabilities = probabilities.detach().cpu().numpy()
 
         return probabilities
