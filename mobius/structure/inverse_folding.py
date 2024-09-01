@@ -75,9 +75,7 @@ class InverseFolding:
         self._model, alphabet = esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
         self._tokenizer = CoordBatchConverter(alphabet)
 
-        # Get special tokens
-        self._mask_token = '<mask>'
-        self._padding_idx = alphabet.padding_idx
+        # Get vocabulary
         self._vocab = alphabet.all_toks
 
         # Get idx of the natural amino acids in the pLM vocab, so we select only these
