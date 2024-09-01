@@ -13,17 +13,24 @@ from esm.inverse_folding.util import CoordBatchConverter
 
 def _concatenate_chains(coords, seqs, target_chainid, padding_length=10):
     """
-    Args:
-        coords: Dictionary mapping chain ids to L x 3 x 3 array for N, CA, C
+    Concatenates the coordinates and sequences of multiple chains, with padding in between, 
+    and put the target chain first in concatenation.
+   
+    Parameters
+    ----------
+    coords: Dictionary mapping chain ids to L x 3 x 3 array for N, CA, C
             coordinates representing the backbone of each chain
-        target_chain_id: The chain id to sample sequences for
-        padding_length: Length of padding between concatenated chains
-    Returns:
-        Tuple (coords, seq)
-            - coords is an L x 3 x 3 array for N, CA, C coordinates, a
-              concatenation of the chains with padding in between
-            - seq is the extracted sequence, with padding tokens inserted
-              between the concatenated chains
+    target_chain_id: The chain id to put first in concatenation
+    padding_length: Length of padding between concatenated chains
+
+    Returns
+    -------
+    Tuple (coords, seq)
+        - coords is an L x 3 x 3 array for N, CA, C coordinates, a
+        concatenation of the chains with padding in between. The target chain 
+        is put first in concatenation.
+        - seq is a string representing the concatenated sequences of the chains
+        with the target chain first in concatenation.
     """
     pad_coords = np.full((padding_length, 3, 3), np.nan, dtype=np.float32)
 
