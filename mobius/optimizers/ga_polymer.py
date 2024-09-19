@@ -29,7 +29,6 @@ from pymoo.util.display.multi import MultiObjectiveOutput
 from .display import SingleObjectiveOutput
 from .terminations import NoChange
 from .problem import Problem
-from ..utils import adjust_polymers_to_design
 from ..utils import build_helm_string, parse_helm, get_scaffold_from_helm_string
 
 
@@ -387,9 +386,6 @@ class SerialPolymerGA():
             Score for each polymer found.
 
         """
-        # Starts by automatically adjusting the input polymers to the design
-        polymers, _ = adjust_polymers_to_design(polymers, design)
-
         # Initialize the problem
         problem = Problem(polymers, scores, acquisition_functions, filters)
 

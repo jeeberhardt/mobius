@@ -9,6 +9,7 @@ import os
 import sys
 import warnings
 import yaml
+from collections import defaultdict
 
 import numpy as np
 import ray
@@ -22,11 +23,8 @@ from pymoo.algorithms.soo.nonconvex.ga import GA
 
 from .ga_biopolymer import SerialBioPolymerGA
 from .ga_polymer import SerialPolymerGA
-from ..utils import guess_input_formats
-from ..utils import generate_random_polymers_from_designs
-from ..utils import group_polymers_by_scaffold, group_biopolymers_by_design
+from ..utils import guess_input_formats, build_helm_string
 from ..utils import parse_helm, get_scaffold_from_helm_string
-from ..utils import generate_design_protocol_from_polymers
 
 
 @ray.remote
@@ -366,6 +364,309 @@ def _load_filters_from_config(config_filename):
     return _load_methods_from_config(config_filename, yaml_key='filters')
 
 
+def _group_polymers_by_scaffold(polymers, return_index=False):
+    """
+    Groups a list polymers in HELM format by their scaffolds.
+
+    Parameters
+    ----------
+    polymers : List of str
+        List of input polymers in HELM format to group.
+    return_index : bool, default : False
+        Whether to return also the original index of the grouped polymers.
+
+    Returns
+    -------
+    groups : Dict[str, List of str]
+        A dictionary with scaffold polymers as keys and 
+        lists of grouped polymers as values.
+    group_indices : Dict[str, List of int]
+        If `return_index` is True, a dictionary with scaffold polymers 
+        as keys and lists of indices of the original polymers.
+
+    Examples
+    --------
+    >>> polymers = ['PEPTIDE1{A.A.R}$$$$V2.0', 'PEPTIDE1{A.A}$$$$V2.0', 'PEPTIDE1{R.G}$$$$V2.0']
+    >>> groups = _group_by_scaffold(polymers)
+    >>> print(groups)
+    {'X$PEPTIDE1{$X.X.X$}$V2.0': ['PEPTIDE1{A.A.R}$$$$V2.0'], 
+     'X$PEPTIDE1{$X.X$}$V2.0': ['PEPTIDE1{A.A}$$$$V2.0', 'PEPTIDE1{R.G}$$$$V2.0']}
+
+    """
+    groups = defaultdict(list)
+    group_indices = defaultdict(list)
+
+    for i, polymer in enumerate(polymers):
+        scaffold_polymer = get_scaffold_from_helm_string(polymer)
+        groups[scaffold_polymer].append(polymer)
+        group_indices[scaffold_polymer].append(i)
+
+    if return_index:
+        return groups, group_indices
+    else:
+        return groups
+
+
+def _group_biopolymers_by_design(biopolymers, designs, return_index=False):
+    """
+    Groups a list biopolymers in FASTA format by design using the sequence lengths.
+
+    Parameters
+    ----------
+    biopolymers : List of str
+        List of input biopolymers in FASTA format to group.
+    designs : Dictionnary
+        Dictionnary containing the design protocol.
+    return_index : bool, default : False
+        Whether to return also the original index of the grouped biopolymers.
+
+    Returns
+    -------
+    groups : Dict[str, List of str]
+        A dictionary with the biopolymer names as keys and 
+        lists of grouped biopolymers as values.
+    group_indices : Dict[str, List of int]
+        If `return_index` is True, a dictionary with biopolymer names 
+        as keys and lists of indices of the original biopolymers.
+
+    """
+    groups = defaultdict(list)
+    group_indices = defaultdict(list)
+    design_by_lengths = defaultdict(list)
+
+    # Gather all the design names by the length of the sequences they will be applied to.
+    # Example: {8: ['PEPTIDE1', 'PEPTIDE2'] -> PEPTIDE1 and PEPTIDE2 will be both applied to 8-mers
+    for name, positions in designs.items():
+        design_by_lengths[len(positions)].append(name)
+
+    for i, biopolymer in enumerate(biopolymers):
+        length = len(biopolymer)
+
+        # A sequence can be part of multiple designs
+        for name in design_by_lengths[length]:
+            groups[name].append(biopolymer)
+            group_indices[name].append(i)
+
+    if return_index:
+        return groups, group_indices
+    else:
+        return groups
+
+
+def _generate_design_protocol_from_polymers(polymers):
+    """
+    Generate the bare minimum design protocol yaml config from a list of polymers in HELM format.
+
+    Parameters
+    ----------
+    polymers : List of str
+        List of polymers in HELM format.
+
+    Returns
+    -------
+    dict
+        The design protocol yaml config.
+
+    """
+    design_protocol = {
+        'design': {
+            'monomers': {
+                'default': ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+            },
+            'polymers': []
+        }
+    }
+
+    # Get the scaffold of each polymer
+    groups = group_polymers_by_scaffold(polymers)
+    design_protocol['design']['polymers'] = list(groups.keys())
+
+    return design_protocol
+
+
+def _generate_random_polymers_from_designs(n_polymers, scaffold_designs):
+    """
+    Generates random polymers using scaffold designs.
+
+    Parameters
+    ----------
+    n_polymers : int or list of int
+        Number of random polymers to generate, or list of numbers of 
+        polymers to generate per scaffold.
+    scaffold_designs : dictionary
+        Dictionary with scaffold polymers and defined set of monomers 
+        to use for each position.
+
+    Returns
+    -------
+    ndarray
+        Randomly generated polymers.
+
+    Raises
+    ------
+    AssertionError
+        If the size of the list of number of polymers per scaffold
+        is not equal to the number of scaffold.
+
+    """
+    random_polymers = []
+
+    if isinstance(n_polymers, int):
+        n_polymers_per_scaffold = constrained_sum_sample_nonneg(len(scaffold_designs), n_polymers)
+    else:
+        msg_error = 'Size of the list of number of polymers per scaffold must be equal to the number of scaffolds designs'
+        assert len(n_polymers) == len(scaffold_designs), msg_error
+        n_polymers_per_scaffold = n_polymers
+
+    for scaffold, design in scaffold_designs.items():
+        i = 0
+
+        complex_polymer, connections, _, _ = parse_helm(scaffold)
+
+        for _ in range(n_polymers_per_scaffold[i]):
+            random_complex_polymer = {}
+
+            for pid, simple_polymer in complex_polymer.items():
+                random_simple_polymer = list(simple_polymer)
+
+                for i, monomer in enumerate(simple_polymer):
+                    if monomer == 'X':
+                        random_simple_polymer[i] = np.random.choice(design[pid][i + 1])
+
+                random_complex_polymer[pid] = random_simple_polymer
+
+            random_polymer = build_helm_string(random_complex_polymer, connections)
+            random_polymers.append(random_polymer)
+
+        i += 1
+
+    return np.asarray(random_polymers)
+
+
+def _adjust_polymers_to_designs(polymers, designs):
+    """
+    Modify polymers to fit given designs.
+
+    Parameters
+    ----------
+    polymers : List
+        List of polymers in HELM format.
+    designs : dictionary
+        Dictionnary of all the positions allowed to be optimized.
+
+    Returns
+    -------
+    ndarray
+        Adjusted polymers in HELM format based on designs.
+    ndarray
+        ndarray of boolean values indicating whether the 
+        polymers was modified or not.
+
+    """
+    modified_polymers = []
+    modified = np.zeros(shape=(len(polymers),), dtype=bool)
+
+    for i, polymer in enumerate(polymers):
+        complex_polymer, connections, _, _ = parse_helm(polymer)
+        scaffold = get_scaffold_from_helm_string(polymer)
+
+        for pid, simple_polymer in complex_polymer.items():
+            modified_complex_polymer = {}
+            modified_simple_polymer = list(simple_polymer)
+
+            for j, monomer in enumerate(simple_polymer):
+                if monomer not in designs[scaffold][pid][j + 1]:
+                    modified_simple_polymer[j] = np.random.choice(designs[scaffold][pid][j + 1])
+                    modified[i] = True
+
+            modified_complex_polymer[pid] = modified_simple_polymer
+
+        modified_polymer = build_helm_string(modified_complex_polymer, connections)
+        modified_polymers.append(modified_polymer)
+
+    return np.asarray(modified_polymers), modified
+
+
+def _prepare_polymers(sequences, scores, acquisition_function, designs):
+    """
+    Function to prepare the polymers for the GA optimization.
+
+    Parameters
+    ----------
+    sequences : ndarray of str
+        Sequences in HELM format.
+    scores : ndarray of float or int
+        Score associated to each sequence.
+    acquisition_function : `AcquisitionFunction`
+        The acquisition function that will be used to score the adjusted sequences.
+    designs : dict of dict of list of str
+        Dictionary of lists of strings defining the design protocol for each scaffold.
+
+    Returns
+    -------
+    sequences : ndarray of str
+        Sequences in HELM format.
+    scores : ndarray of float or int
+        Score associated to each sequence.
+    
+    """
+    # Adjust the sequences to the designs
+    adjusted_sequences, adjusted = _adjust_polymers_to_designs(sequences, designs)
+
+    # If any sequence was adjusted, we score them and add them to the rest
+    if any(adjusted):
+        sequences = np.concatenate([sequences, adjusted_sequences[adjusted]])
+        scores = np.concatenate([scores, acquisition_function.forward(adjusted_sequences[adjusted])])
+
+    # And in the case we provided a design protocol, check that at least one polymer 
+    # is defined per scaffold present in the design protocol. We need to generate at 
+    # least one polymer per scaffold to be able to start the GA optimization. Here we 
+    # generate 42 random polymers per scaffold. We do that in the case we want 
+    # to explore different scaffolds that are not in the initial dataset.
+    groups, group_indices = _group_polymers_by_scaffold(sequences, return_index=True)
+    scaffolds_not_present = list(set(designs.keys()).difference(groups.keys()))
+
+    if scaffolds_not_present:
+        tmp_scaffolds_designs = {key: designs[key] for key in scaffolds_not_present}
+        # We generate them
+        n_sequences = [42] * len(tmp_scaffolds_designs)
+        new_sequences = _generate_random_polymers_from_designs(n_sequences, tmp_scaffolds_designs)
+        # We score them
+        new_scores = acquisition_function.forward(new_sequences)
+        # Add them to the rest
+        sequences = np.concatenate([sequences, new_sequences])
+        scores = np.concatenate([scores, new_scores])
+
+    return sequences, scores
+
+
+def _prepare_biopolymers(sequences, scores, acquisition_function, designs):
+    """
+    Function to prepare the biopolymers for the GA optimization.
+
+    Parameters
+    ----------
+    sequences : array-like of str
+        Sequences in FASTA format.
+    scores : array-like of float or int
+        Score associated to each sequence.
+    acquisition_function : `AcquisitionFunction`
+        The acquisition function that will be used to score the sequences.
+    designs : dict of dict of list of str
+        Dictionary of lists of strings defining the design protocol for each scaffold.
+
+    Returns
+    -------
+    sequences : array-like of str
+        Sequences in FASTA format.
+    scores : array-like of float or int
+        Score associated to each sequence.
+    
+    """
+    # Placeholder
+    return sequences, scores
+
+
 class SequenceGA():
     """
     Class for the Single/Multi-Objectives SequenceGA optimization.
@@ -469,8 +770,8 @@ class SequenceGA():
 
         """
         self._single = {'GA': GA}
-        self._multi = {'NSGA2' : NSGA2, 'AGEMOEA2': AGEMOEA2, 'SMSEMOA': SMSEMOA}
-        self._available_algorithms = self._single | self._multi
+        self._multi = {'NSGA2': NSGA2, 'AGEMOEA2': AGEMOEA2, 'SMSEMOA': SMSEMOA}
+        self._available_algorithms = {**self._single, **self._multi}
 
         msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
         assert algorithm in self._available_algorithms, msg_error
@@ -528,55 +829,31 @@ class SequenceGA():
         sequence_formats = guess_input_formats(sequences)
         unique_sequence_formats = np.unique(sequence_formats)
 
-        msg_error = f'The input contains sequences in an unknown format (only HELM or FASTA allowed): \n'
-        for s in sequence_formats[sequence_formats == 'unknown']:
-            msg_error += f'  -  {s}\n'
-        assert 'unknown' not in unique_sequence_formats, msg_error
-
-        msg_error = f'The input contains sequences in a multiple formats: {unique_sequence_formats}'
-        assert len(unique_sequence_formats) == 1, msg_error
+        if len(unique_sequence_formats) > 1:
+            msg_error = f'The input contains sequences in multiple formats: {unique_sequence_formats}'
+            raise ValueError(msg_error)
+        elif 'unknown' in unique_sequence_formats:
+            msg_error = f'The input contains sequences in an unknown format (only HELM or FASTA allowed): \n'
+            for s in sequence_formats[sequence_formats == 'unknown']:
+                msg_error += f'  -  {s}\n'
+            raise ValueError(msg_error)
 
         if unique_sequence_formats[0] == 'HELM':
             # Use the SerialPolymerGA class for polymers
             serial_seq_ga = SerialPolymerGA
 
-            # Check that all the polymer designs are defined for all the polymers
-            # First, look at the design protocol. If a design protocol was not provided 
-            # at the initialization, we generate a default design protocol based on 
-            # the input polymers.
+            # If a design protocol was not provided at the initialization, we 
+            # generate a default design protocol based on the input polymers.
             if self._parameters['design_protocol_filename'] is None:
-                design_protocol = generate_design_protocol_from_polymers(sequences)
+                design_protocol = _generate_design_protocol_from_polymers(sequences)
                 designs = _load_polymer_design_from_config(design_protocol)
                 filters = {}
             else:
                 designs = _load_polymer_design_from_config(self._parameters['design_protocol_filename'])
                 filters = _load_filters_from_config(self._parameters['design_protocol_filename'])
 
-            # And in the case we provided a design protocol, check that at least one polymer 
-            # is defined per scaffold present in the design protocol. We need to generate at 
-            # least one polymer per scaffold to be able to start the GA optimization. Here we 
-            # generate 42 random polymers per scaffold. We do that in the case we want 
-            # to explore different scaffolds that are not in the initial dataset.
-            groups, group_indices = group_polymers_by_scaffold(sequences, return_index=True)
-            scaffolds_not_present = list(set(designs.keys()).difference(groups.keys()))
-
-            if scaffolds_not_present:
-                tmp_scaffolds_designs = {key: designs[key] for key in scaffolds_not_present}
-                # We generate them
-                n_sequences = [42] * len(tmp_scaffolds_designs)
-                new_sequences = generate_random_polymers_from_designs(n_sequences, tmp_scaffolds_designs)
-                # We score them
-                new_scores = acquisition_function.forward(new_sequences)
-                # Add them to the rest
-                sequences = np.concatenate([sequences, new_sequences])
-                scores = np.concatenate([scores, new_scores])
-                # Recluster all of them again (easier than updating the groups)
-                groups, group_indices = group_polymers_by_scaffold(sequences, return_index=True)
-            
-            # Get only the polymers that are defined in the design protocol
-            # Which is fine, because the surrogate model was trained on all the data already
-            groups = {key: groups[key] for key in designs.keys()}
-            group_indices = {key: group_indices[key] for key in designs.keys()}
+            sequences, scores = _prepare_polymers(sequences, scores, acquisition_function, designs)
+            groups, group_indices = _group_polymers_by_scaffold(sequences, return_index=True)
         else:
             # Use the SerialBioPolymerGA class for biopolymers
             serial_seq_ga = SerialBioPolymerGA
@@ -587,7 +864,8 @@ class SequenceGA():
             else:
                 raise ValueError('A design protocol must be provided for biopolymers optimization.')
 
-            groups, group_indices = group_biopolymers_by_design(sequences, designs, return_index=True)
+            sequences, scores = _prepare_biopolymers(sequences, scores, acquisition_function, designs)
+            groups, group_indices = _group_biopolymers_by_design(sequences, designs, return_index=True)
 
         # Initialize the GA optimization object
         seq_gao = serial_seq_ga(**self._parameters)
@@ -662,7 +940,7 @@ class RandomGA():
         self._n_gen = n_gen
         self._n_children = n_children
 
-    def run(self, polymers, scores, acquisition_function):
+    def run(self, sequences, scores, acquisition_function):
         """
         Run the RandomGA "optimization".
 
@@ -698,17 +976,18 @@ class RandomGA():
         sequence_formats = guess_input_formats(sequences)
         unique_sequence_formats = np.unique(sequence_formats)
 
-        msg_error = f'The input contains sequences in an unknown format (only HELM or FASTA allowed): \n'
-        for s in sequence_formats[sequence_formats == 'unknown']:
-            msg_error += f'  -  {s}\n'
-        assert 'unknown' not in unique_sequence_formats, msg_error
-
-        msg_error = f'The input contains sequences in a multiple formats: {unique_sequence_formats}'
-        assert len(unique_sequence_formats) == 1, msg_error
+        if len(unique_sequence_formats) > 1:
+            msg_error = f'The input contains sequences in multiple formats: {unique_sequence_formats}'
+            raise ValueError(msg_error)
+        elif unique_sequence_formats[0] == 'unknown':
+            msg_error = f'The input contains sequences in an unknown format (only HELM or FASTA allowed): \n'
+            for s in sequence_formats[sequence_formats == 'unknown']:
+                msg_error += f'  -  {s}\n'
+            raise ValueError(msg_error)
 
         if unique_sequence_formats[0] == 'HELM':
             if self._design_protocol_filename is None:
-                design_protocol = generate_design_protocol_from_polymers(polymers)
+                design_protocol = _generate_design_protocol_from_polymers(sequences)
                 designs = _load_polymer_design_from_config(design_protocol)
                 filters = {}
             else:
@@ -716,7 +995,7 @@ class RandomGA():
                 filters = _load_filters_from_config(self._design_protocol_filename)
 
             # Generate (n_children * n_gen) polymers
-            all_polymers = generate_random_polymers_from_designs(self._n_children * self._n_gen, designs, filters)
+            all_polymers = _generate_random_polymers_from_designs(self._n_children * self._n_gen, designs, filters)
         else:
             if self._parameters['design_protocol_filename'] is not None:
                 designs = _load_biopolymer_design_from_config(self._parameters['design_protocol_filename'])
@@ -725,7 +1004,7 @@ class RandomGA():
                 raise ValueError('A design protocol must be provided for biopolymers optimization.')
             
             # Generate (n_children * n_gen) biopolymers
-            all_polymers = generate_random_polymers_from_designs(self._n_children * self._n_gen, designs, filters)
+            all_polymers = _generate_random_polymers_from_designs(self._n_children * self._n_gen, designs, filters)
 
         all_polymers = np.asarray(all_polymers)
 
