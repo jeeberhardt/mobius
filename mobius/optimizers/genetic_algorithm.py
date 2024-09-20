@@ -88,7 +88,8 @@ def _load_polymer_design_from_config(config):
         msg_error = 'The `polymers` key is missing in the input design protocol.'
         raise KeyError(msg_error)
 
-    assert len(polymer_designs) > 0, 'No polymer design provided. You need to define at least one.'
+    if len(polymer_designs) == 0:
+        raise ValueError('No polymer design provided. You need to define at least one.')
 
     for polymer_design in polymer_designs:
         try:
@@ -187,17 +188,28 @@ def _load_biopolymer_design_from_config(config):
         msg_error = 'The `biopolymers` key is missing in the input design protocol.'
         raise KeyError(msg_error)
 
-    assert len(biopolymer_designs) > 0, 'No biopolymer design provided. You need to define at least one.'
+    if len(biopolymer_designs) == 0:
+        raise ValueError('No biopolymer design provided. You need to define at least one.')
 
     for biopolymer_design in biopolymer_designs:
         # Check if all the keys exists
-        assert 'name' in biopolymer_design, 'A `name` key is missing in the input design protocol.'
-        assert 'length' in biopolymer_design, 'A `length` key is missing in the input design protocol.'
-        assert 'positions' in biopolymer_design, 'A `positions` key is missing in the input design protocol.'
+        try:
+            biopolymer_name = biopolymer_design['name']
+        except:
+            msg_error = f'A `name` key is missing in the input design protocol.'
+            raise KeyError(msg_error)
 
-        biopolymer_name = biopolymer_design['name']
-        positions = biopolymer_design['positions']
-        length = biopolymer_design['length']
+        try:
+            positions = biopolymer_design['positions']
+        except:
+            msg_error = f'A `positions` key is missing in the input design protocol.'
+            raise KeyError(msg_error)
+
+        try:
+            length = biopolymer_design['length']
+        except:
+            msg_error = f'A `length` key is missing in the input design protocol.'
+            raise KeyError(msg_error)
 
         try:
             starting_residue = biopolymer_design['starting_residue']
@@ -248,8 +260,10 @@ def _load_biopolymer_design_from_config(config):
             # Make sure that the probabilities sums up to 1
             probabilities = probabilities / np.sum(probabilities)
 
-            msg_error = f'The number of monomers and probabilities must be equal for position {position}  ({len(user_defined_monomers)} != {probabilities.size})'
-            assert probabilities.size == len(user_defined_monomers), msg_error
+            if probabilities.size != len(user_defined_monomers):
+                msg_error = f'The number of monomers and probabilities must be equal for position {position} '
+                msg_error += f'({len(user_defined_monomers)} != {probabilities.size})'
+                raise ValueError(msg_error)
 
             if isinstance(position, int):
                 start = end = position - starting_residue + 1
@@ -504,7 +518,7 @@ def _generate_random_polymers_from_designs(n_polymers, scaffold_designs):
 
     Raises
     ------
-    AssertionError
+    ValueError
         If the size of the list of number of polymers per scaffold
         is not equal to the number of scaffold.
 
@@ -514,8 +528,10 @@ def _generate_random_polymers_from_designs(n_polymers, scaffold_designs):
     if isinstance(n_polymers, int):
         n_polymers_per_scaffold = constrained_sum_sample_nonneg(len(scaffold_designs), n_polymers)
     else:
-        msg_error = 'Size of the list of number of polymers per scaffold must be equal to the number of scaffolds designs'
-        assert len(n_polymers) == len(scaffold_designs), msg_error
+        if len(n_polymers) != len(scaffold_designs):
+            msg_error = 'Size of the list of number of polymers per scaffold must be equal to the number of scaffolds designs'
+            raise ValueError(msg_error)
+
         n_polymers_per_scaffold = n_polymers
 
     for scaffold, design in scaffold_designs.items():
@@ -773,8 +789,9 @@ class SequenceGA():
         self._multi = {'NSGA2': NSGA2, 'AGEMOEA2': AGEMOEA2, 'SMSEMOA': SMSEMOA}
         self._available_algorithms = {**self._single, **self._multi}
 
-        msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
-        assert algorithm in self._available_algorithms, msg_error
+        if algorithm not in self._available_algorithms:
+            msg_error = f'Only {list(self._available_algorithms.keys())} are supported, not {algorithm}'
+            raise ValueError(msg_error)
 
         # Parameters
         self._optimization_type = 'single' if algorithm in self._single else 'multi'
@@ -818,12 +835,13 @@ class SequenceGA():
 
         # Check that the number of scores is consistent with the optimization type
         if self._optimization_type == 'single':
-            msg_error = 'Only one score per sequence is allowed for single-objective optimization.'
-            assert scores.shape[1] == 1, msg_error
+            if scores.shape[1] != 1:
+                msg_error = 'Only one score per sequence is allowed for single-objective optimization.'
+                raise ValueError(msg_error)
         else:
-            msg_error = 'Only one score per sequence provided. '
-            msg_error += 'You need at least two scores per sequence for multi-objective optimization.'
-            assert scores.shape[1] >= 2, msg_error
+            if scores.shape[1] < 2:
+                msg_error = 'Only one score per sequence provided for multi-objective optimization.'
+                raise ValueError(msg_error)
 
         # Check input if they are polymers in HELM format or biopolymers in FASTA format
         sequence_formats = guess_input_formats(sequences)
