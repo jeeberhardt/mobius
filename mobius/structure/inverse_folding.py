@@ -13,31 +13,36 @@ from esm.inverse_folding.util import CoordBatchConverter
 
 def _concatenate_chains(coords, seqs, target_chainid, padding_length=10):
     """
-    Args:
-        coords: Dictionary mapping chain ids to L x 3 x 3 array for N, CA, C
+    Concatenates the coordinates and sequences of multiple chains, with padding in between, 
+    and put the target chain first in concatenation.
+   
+    Parameters
+    ----------
+    coords: Dictionary mapping chain ids to L x 3 x 3 array for N, CA, C
             coordinates representing the backbone of each chain
-        target_chain_id: The chain id to sample sequences for
-        padding_length: Length of padding between concatenated chains
-    Returns:
-        Tuple (coords, seq)
-            - coords is an L x 3 x 3 array for N, CA, C coordinates, a
-              concatenation of the chains with padding in between
-            - seq is the extracted sequence, with padding tokens inserted
-              between the concatenated chains
+    seqs: Dictionary mapping chain ids to their sequences
+    target_chainid: The chain id to put first in concatenation
+    padding_length: Length of padding between concatenated chains
+
+    Returns
+    -------
+    Tuple (coords, seq)
+        - coords is an L x 3 x 3 array for N, CA, C coordinates, a
+        concatenation of the chains with padding in between. The target chain 
+        is put first in concatenation.
+        - seq is a string representing the concatenated sequences of the chains
+        with the target chain first in concatenation.
     """
     pad_coords = np.full((padding_length, 3, 3), np.nan, dtype=np.float32)
 
     # For best performance, put the target chain first in concatenation.
     coords_list = [coords[target_chainid]]
-    seqs_concatenated  = seqs[target_chainid]
+    seqs_concatenated = seqs[target_chainid]
 
-    for chain_id in coords:
-        if chain_id == target_chainid:
-            continue
-
-        coords_list.append(pad_coords)
-        coords_list.append(coords[chain_id])
-        seqs_concatenated += seqs[chain_id]
+    for chain_id, chain_coords in coords.items():
+        if chain_id != target_chainid:
+            coords_list.extend([pad_coords, chain_coords])
+            seqs_concatenated += seqs[chain_id]
 
     coords_concatenated = np.concatenate(coords_list, axis=0)
 
@@ -68,9 +73,7 @@ class InverseFolding:
         self._model, alphabet = esm.pretrained.esm_if1_gvp4_t16_142M_UR50()
         self._tokenizer = CoordBatchConverter(alphabet)
 
-        # Get special tokens
-        self._mask_token = '<mask>'
-        self._padding_idx = alphabet.padding_idx
+        # Get vocabulary
         self._vocab = alphabet.all_toks
 
         # Get idx of the natural amino acids in the pLM vocab, so we select only these
@@ -150,9 +153,8 @@ class InverseFolding:
 
         # Get probabilities of the target chain only
         probabilities = probabilities[:target_chain_len]
-        probabilities = probabilities.detach().cpu().numpy()
-
-        return probabilities
+        
+        return probabilities.detach().cpu().numpy()
 
     @staticmethod
     def get_entropies_from_probabilities(probabilities):
@@ -161,16 +163,12 @@ class InverseFolding:
 
         Parameters
         ----------
-        probabilities : torch.Tensor of shape (n_sequences, n_tokens, n_amino_acids)
-            Probabilities of amino acids at each position per sequence.
+        probabilities : numpy.ndarray of shape (n_residues, n_amino_acids)
+            Probabilities of amino acids at each position.
 
         Returns
         -------
-        entropy : ndarray of shape (n_sequences, n_tokens)
-            Entropy at each position per sequence.
-
+        entropy : ndarray of shape (n_residues,)
+            Entropy at each position.
         """
-        entropy = -torch.sum(probabilities * torch.log(probabilities), dim=-1)
-        entropy = entropy.detach().cpu().numpy()
-
-        return entropy
+        return -np.sum(probabilities * np.log(probabilities + 1e-10), axis=-1)
