@@ -750,7 +750,7 @@ def generate_biopolymer_design_protocol_from_probabilities(probabilities, monome
     return design
 
 
-ddef MolFromHELM(polymers, HELM_extra_library_filename=None):
+def MolFromHELM(polymers, HELM_extra_library_filename=None):
     """
     Generate a list of RDKit molecules from HELM strings.
 
@@ -825,7 +825,7 @@ ddef MolFromHELM(polymers, HELM_extra_library_filename=None):
                     try:
                         monomer_data = HELMCoreLibrary[monomer_symbol]
                     except KeyError:
-                        raise KeyError(f'Monomer {monomer_symbol} unknown.' % monomer_symbol)
+                        raise KeyError(f'Monomer {monomer_symbol} unknown.')
     
                     # Read SMILES string
                     monomer = Chem.MolFromSmiles(monomer_data['MonomerSmiles'])
