@@ -561,7 +561,11 @@ def parse_helm(polymer):
         pid = simple_polymer_str.split('{')[0]
 
         if 'CHEM' in pid:
-            simple_polymer = [simple_polymer_str[len(pid) + 2:-2]]
+            # If the monomer starts with [ and ends with ], then we must have a CXSMILES in between
+            if simple_polymer_str[len(pid) + 1:].startswith('[') and simple_polymer_str[:-1].endswith(']'):
+                simple_polymer = [simple_polymer_str[len(pid) + 2:-2]]
+            else:
+                simple_polymer = [simple_polymer_str[len(pid) + 1: -1]]
 
             if '.' in simple_polymer[0]:
                 raise ValueError('CHEM Simple Polymer cannot contains more than one monomer.')
@@ -595,7 +599,7 @@ def parse_helm(polymer):
     return complex_polymer, connections, hydrogen_bonds, attributes
 
 
-def get_scaffold_from_helm_string(polymer):
+def get_scaffold_from_helm_string(polymer, ignore_connecting_residues=True):
     """
     Get the scaffold of the input polymer in HELM format.
 
@@ -603,6 +607,8 @@ def get_scaffold_from_helm_string(polymer):
     ----------
     polymer : str
         A polymer in HELM format.
+    ignore_connecting_residues : bool
+        Ignore or not the residues involved in connections.
 
     Returns
     -------
@@ -611,8 +617,12 @@ def get_scaffold_from_helm_string(polymer):
 
     Examples
     --------
-        polymer  : PEPTIDE1{A.C.A.A.A}|PEPTIDE2{A.A.A.A}$PEPTIDE1,PEPTIDE2,1:R3-1:R3$$$V2.0
-        scaffold : PEPTIDE1{X.C.X.X.X}|PEPTIDE2{X.A.X.X}$PEPTIDE1,PEPTIDE2,1:R3-1:R3$$$V2.0
+    - If residues in connections are not ignored (ignore_connecting_residues=False):
+        polymer  : PEPTIDE1{A.C.A.A.A}|PEPTIDE2{A.C.A.A}$PEPTIDE1,PEPTIDE2,2:R3-2:R3$$$V2.0
+        scaffold : PEPTIDE1{X.C.X.X.X}|PEPTIDE2{X.C.X.X}$PEPTIDE1,PEPTIDE2,2:R3-2:R3$$$V2.0
+    - If residues in connections are ignored (ignore_connecting_residues=True):
+        polymer  : PEPTIDE1{A.C.A.A.A}|PEPTIDE2{A.C.A.A}$PEPTIDE1,PEPTIDE2,2:R3-2:R3$$$V2.0
+        scaffold : PEPTIDE1{X.X.X.X.X}|PEPTIDE2{X.X.X.X}$PEPTIDE1,PEPTIDE2,2:R3-2:R3$$$V2.0
 
     """
     scaffold_complex_polymer = {}
@@ -627,13 +637,14 @@ def get_scaffold_from_helm_string(polymer):
         # (X represents an unknown monomer in the HELM notation)
         scaffold_complex_polymer[pid] = np.array(['X'] * len(simple_polymer), dtype=dtype)
 
-        if connections.size > 0:
-            # Get all the connections in this polymer
-            attachment_positions1 = connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition']
-            attachment_positions2 = connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition']
-            attachment_positions = np.concatenate([attachment_positions1, attachment_positions2])
-            # Put back the monomers involed in a connection
-            scaffold_complex_polymer[pid][attachment_positions - 1] = np.array(simple_polymer)[attachment_positions - 1]
+        if not ignore_connecting_residues:
+            if connections.size > 0:
+                # Get all the connections in this polymer
+                attachment_positions1 = connections[connections['SourcePolymerID'] == pid]['SourceMonomerPosition']
+                attachment_positions2 = connections[connections['TargetPolymerID'] == pid]['TargetMonomerPosition']
+                attachment_positions = np.concatenate([attachment_positions1, attachment_positions2])
+                # Put back the monomers involed in a connection
+                scaffold_complex_polymer[pid][attachment_positions - 1] = np.array(simple_polymer)[attachment_positions - 1]
 
     scaffold = build_helm_string(scaffold_complex_polymer, connections)
 
@@ -938,7 +949,9 @@ def MolFromHELM(polymers, HELM_extra_library_filename=None):
                                 # ... and add monomer cap to polymer
                                 molecules_to_zip.append(cap)
                         else:
-                            raise ValueError(f'Attachment point {label} not defined for monomer {monomer_symbol} in {pid}.')
+                            msg_error = f'Attachment point for {label} in monomer {monomer_symbol} located in polymer {pid} is missing '
+                            msg_error += f'({polymer}).'
+                            raise ValueError(msg_error)
 
                 molecules_to_zip.append(monomer)
 
@@ -1069,8 +1082,6 @@ def sequence_to_mutations(sequence, chain, reference_sequence=None, starting_res
     """
     mutations = []
     reference_was_provided = reference_sequence is not None
-
-    print(reference_was_provided)
 
     # If reference_sequence is not provided, use the sequence as reference
     if reference_sequence is None:
