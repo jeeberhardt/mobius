@@ -206,14 +206,12 @@ class Map4Fingerprint:
         msg_error = 'Format (%s) not handled. Please use FASTA, HELM or SMILES format.'
         assert input_type.lower() in ['fasta', 'helm', 'smiles'], msg_error
 
+        self._dimensions = dimensions
+        self._radius = radius
+        self._chiral = chiral
         self._input_type = input_type.lower()
         self._HELM_parser = HELM_parser.lower()
         self._HELM_extra_library_filename = HELM_extra_library_filename
-
-        if chiral:
-            self._map4calc = MAP4CCalculator(dimensions=dimensions, radius=radius)
-        else:
-            self._map4calc = MAP4Calculator(dimensions=dimensions, radius=radius)
 
     def __call__(self, polymers):
         """
@@ -250,6 +248,12 @@ class Map4Fingerprint:
         if not isinstance(polymers, (list, tuple, np.ndarray)):
             polymers = [polymers]
 
+        # We define the method here, otherwise we cannot pickle Map4Fingerprint object
+        if self._chiral:
+            map4calc = MAP4CCalculator(dimensions=self._dimensions, radius=self._radius)
+        else:
+            map4calc = MAP4Calculator(dimensions=self._dimensions, radius=self._radius)
+
         try:
             if self._input_type == 'fasta':
                 mols = [Chem.rdmolfiles.MolFromFASTA(c) for c in polymers]
@@ -263,7 +267,7 @@ class Map4Fingerprint:
             print('Error: there are issues with the input polymers')
             print(polymers)
 
-        fps =self._map4calc.calculate_many(mols)
+        fps = map4calc.calculate_many(mols)
 
         fps = np.asarray(fps)
 
