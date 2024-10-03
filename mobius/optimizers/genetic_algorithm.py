@@ -23,6 +23,7 @@ from pymoo.algorithms.soo.nonconvex.ga import GA
 
 from .ga_biopolymer import SerialBioPolymerGA
 from .ga_polymer import SerialPolymerGA
+from ..utils import constrained_sum_sample_nonneg
 from ..utils import guess_input_formats, build_helm_string
 from ..utils import parse_helm, get_scaffold_from_helm_string
 
