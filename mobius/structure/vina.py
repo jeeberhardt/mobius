@@ -33,13 +33,18 @@ def constrained_embed_multiple_confs(mobile, ref, random_seed=0xf00d, num_confs=
         The reference molecule.
     random_seed : int, default=0xf00d
         The random seed to use for the embedding.
+    num_confs : int, default=10
+        The number of conformations to generate.
+    cluster : bool, default=True
+        Whether to cluster the conformations.
+    distance_cutoff : float, default=1.0
+        The distance cutoff to use for clustering.
 
     Returns
     -------
-    success : bool
-        Whether the superposition was successful.
-    rmsd_core : float
-        The RMSD of the aligned core.
+    molecules : list of rdkit.Chem.rdchem.Mol
+        The list of aligned molecules, or None if no conformations 
+        were generated.
 
     Notes
     -----
@@ -106,11 +111,6 @@ class VinaScorer:
             The center of the docking box.
         dimensions : list
             The dimensions of the docking box.
-        scrub : bool, default=True
-            Whether scrub the input molecule (using Scrubber) or not before docking. 
-            If not, the input molecule is expected to be fully prepared (hydrogen, protonations, ...)
-        pH : float, default=7.4
-            The pH to use if the molecule is scrubed before docking.
 
         """
         self._vina = Vina(verbosity=0)
@@ -144,7 +144,7 @@ class VinaScorer:
         Returns
         -------
         docked_molecule : rdkit.Chem.rdchem.Mol
-            The RDKit molecule of the docked molecule.
+            The RDKit molecule of the docked molecule, or None if the docking failed.
         scores : np.array
             The Vina scores of the docked molecule.
 
