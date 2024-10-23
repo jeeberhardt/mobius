@@ -19,6 +19,8 @@ import torch
 from rdkit import Chem
 from rdkit import RDLogger
 
+from .optimizers.genetic_algorithm import _generate_design_protocol_from_polymers
+
 
 class ProgressBar:
     def __init__(self, desc="Fitting GPR model", unit="step"):
@@ -640,37 +642,6 @@ def get_scaffold_from_helm_string(polymer):
     return scaffold
 
 
-def generate_design_protocol_from_polymers(polymers):
-    """
-    Generate the bare minimum design protocol yaml config from a list of polymers in HELM format.
-
-    Parameters
-    ----------
-    polymers : List of str
-        List of polymers in HELM format.
-
-    Returns
-    -------
-    dict
-        The design protocol yaml config.
-
-    """
-    design_protocol = {
-        'design': {
-            'monomers': {
-                'default': ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
-            },
-            'polymers': []
-        }
-    }
-
-    # Get the scaffold of each polymer
-    groups = group_polymers_by_scaffold(polymers)
-    design_protocol['design']['polymers'] = list(groups.keys())
-
-    return design_protocol
-
-
 def write_design_protocol_from_polymers(polymers, filename='design.yaml'):
     """
     Write the bare minimum design protocol yaml file from a list of polymers in HELM format.
@@ -683,7 +654,7 @@ def write_design_protocol_from_polymers(polymers, filename='design.yaml'):
         Name of the design protocol yaml file to write.
 
     """
-    design_protocol = generate_design_protocol_from_polymers(polymers)
+    design_protocol = _generate_design_protocol_from_polymers(polymers)
 
     with open(filename, 'w') as f:
         yaml.dump(design_protocol, f)
@@ -750,7 +721,7 @@ def generate_biopolymer_design_protocol_from_probabilities(probabilities, monome
     return design
 
 
-ddef MolFromHELM(polymers, HELM_extra_library_filename=None):
+def MolFromHELM(polymers, HELM_extra_library_filename=None):
     """
     Generate a list of RDKit molecules from HELM strings.
 

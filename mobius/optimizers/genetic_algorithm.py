@@ -25,6 +25,7 @@ from .ga_biopolymer import SerialBioPolymerGA
 from .ga_polymer import SerialPolymerGA
 from ..utils import guess_input_formats, build_helm_string
 from ..utils import parse_helm, get_scaffold_from_helm_string
+from ..utils import constrained_sum_sample_nonneg
 
 
 @ray.remote
@@ -492,7 +493,7 @@ def _generate_design_protocol_from_polymers(polymers):
     }
 
     # Get the scaffold of each polymer
-    groups = group_polymers_by_scaffold(polymers)
+    groups = _group_polymers_by_scaffold(polymers)
     design_protocol['design']['polymers'] = list(groups.keys())
 
     return design_protocol
