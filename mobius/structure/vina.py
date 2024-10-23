@@ -15,11 +15,13 @@ from meeko import PDBQTWriterLegacy
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdFMCS
+from rdkit.Chem import rdMolAlign
+from rdkit.ML.Cluster import Butina
 from scrubber import Scrub
 from vina import Vina
 
 
-def superpose_molecule(mobile, ref, random_seed=0xf00d):
+def constrained_embed_multiple_confs(mobile, ref, random_seed=0xf00d, num_confs=10, cluster=True, distance_cutoff=1.0):
     """
     Superpose a molecule onto a reference molecule using RDKit.
 
@@ -42,47 +44,57 @@ def superpose_molecule(mobile, ref, random_seed=0xf00d):
     Notes
     -----
     - The superposition is done in place.
-    - Source: https://greglandrum.github.io/rdkit-blog/posts/2023-02-10-more-on-constrained-embedding.html
+    - Sources: 
+        - https://greglandrum.github.io/rdkit-blog/posts/2023-02-10-more-on-constrained-embedding.html
+        - https://github.com/rdkit/rdkit/issues/3266
 
     """
-    delta = 0.0
     max_displacement = 0.5
     force_constant = 1.e4
 
-    # Get common substructure between mobile and ref molecules
     mcs = rdFMCS.FindMCS([ref, mobile])
     smarts = mcs.smartsString
     patt = Chem.MolFromSmarts(smarts)
     mobile_match = mobile.GetSubstructMatch(patt)
     ref_match = ref.GetSubstructMatch(patt)
 
-    # Do the superposition
-    cmap = {mobile_match[i]:ref.GetConformer().GetAtomPosition(ref_match[i]) for i in range(len(ref_match))}
-    failed = AllChem.EmbedMolecule(mobile, randomSeed=random_seed, coordMap=cmap, useRandomCoords=True, 
-                                   useBasicKnowledge=False, enforceChirality=False)
-    
-    if failed:
-        return False, np.nan
-    
-    # Minimize conformation since we set useBasicKnowledge to False,
+    cmap = {mobile_match[i]: ref.GetConformer().GetAtomPosition(ref_match[i]) for i in range(len(ref_match))}
+    cids = AllChem.EmbedMultipleConfs(mobile, numConfs=num_confs, coordMap=cmap, randomSeed=random_seed, 
+                                      useRandomCoords=True, useBasicKnowledge=False, enforceChirality=False)
+
+    cids = list(cids)
+
+    if len(cids) == 0:
+        return None
+
+    # Minimize conformations since we set useBasicKnowledge to False,
     # but we minimize only the atoms that were not matched.
     mp = AllChem.MMFFGetMoleculeProperties(mobile)
-    ff = AllChem.MMFFGetMoleculeForceField(mobile, mp)
-    for i in mobile_match:
-        ff.MMFFAddPositionConstraint(i, max_displacement, force_constant)
-    ff.Minimize()
 
-    # Compute RMSD between matched atoms
-    for ref_i, mobile_i in zip(ref_match, mobile_match):
-        delta += (ref.GetConformer().GetAtomPosition(ref_i) - mobile.GetConformer().GetAtomPosition(mobile_i)).LengthSq()
-    rmsd_core = np.sqrt(delta / len(mobile_match))
+    for cid in cids:
+        ff = AllChem.MMFFGetMoleculeForceField(mobile, mp, confId=cid)
+        for i in mobile_match:
+            ff.MMFFAddPositionConstraint(i, max_displacement, force_constant)
+        ff.Minimize()
 
-    return True, rmsd_core
+    if cluster:
+        dists = []
+
+        for i in range(len(cids)):
+            for j in range(i):
+                dists.append(rdMolAlign.GetBestRMS(mobile, mobile, i, j))
+
+        clusts = Butina.ClusterData(dists, len(cids), distance_cutoff, isDistData=True, reordering=True)
+        mobiles = [Chem.Mol(mobile, confId=i[0]) for i in clusts]
+    else:
+        mobiles = [Chem.Mol(mobile, confId=i) for i in cids]
+
+    return mobiles
 
 
 class VinaScorer:
 
-    def __init__(self, receptor_pdbqt_filename, center, dimensions, scrub=True, pH=7.4):
+    def __init__(self, receptor_pdbqt_filename, center, dimensions):
         """
         Constructs a new instance of the Vina scorer.
 
@@ -104,20 +116,12 @@ class VinaScorer:
         self._vina = Vina(verbosity=0)
         self._vina.set_receptor(receptor_pdbqt_filename)
         self._vina.compute_vina_maps(center, dimensions)
-        self._scrub = scrub
-
-        if scrub:
-            self._scrubber = Scrub(ph_low=pH)
-        else:
-            self._scrubber = None
-
         self._preparator = MoleculePreparation()
 
-    def dock(self, input_molecule, reference=None):
+    def dock(self, input_molecule, reference=None, scrub=True, pH=7.4, num_confs=10, cluster=True):
         """
         Superpose input molecule onto a reference molecule, if provided. 
         If not, do global docking.
-         
 
         Parameters
         ----------
@@ -126,6 +130,16 @@ class VinaScorer:
         reference : rdkit.Chem.rdchem.Mol, default=None
             The reference molecule to use for the superposition. If None,
             the molecule will be docked.
+        scrub : bool, default=True
+            Whether scrub the input molecule (using Scrubber) or not before docking. 
+            If not, the input molecule is expected to be fully prepared (hydrogen, protonations, ...)
+        pH : float, default=7.4
+            The pH to use if the molecule is scrubed before docking.
+        num_confs: int, default=10
+            Number of conformation to generate, if reference provided.
+        cluster : bool, default=True
+            Cluster conformations before scoring, if reference provided.
+            Use Butina clustering method with a distance cutoff of 1 A.
 
         Returns
         -------
@@ -137,29 +151,41 @@ class VinaScorer:
         """
         output_pdbqt = 'docker_tmp.pdbqt'
 
-        if self._scrub:
-            input_molecule = self._scrubber(input_molecule)[0]
-        
+        if scrub:
+            scrubber = Scrub(ph_low=pH)
+            input_molecule = scrubber(input_molecule)[0]
+
         if reference is not None:
-            succeeded, _ = superpose_molecule(input_molecule, reference, random_coordinates=True)
+            all_scores = []
+            all_pdbqt_mols = []
 
-            if not succeeded:
+            mols = constrained_embed_multiple_confs(input_molecule, reference, num_confs=num_confs, cluster=cluster)
+
+            if mols is None:
                 return None, np.array([np.nan] * 8)
 
-            mol_setup = self._preparator.prepare(input_molecule)[0]
-            pdbqt_string = PDBQTWriterLegacy.write_string(mol_setup)[0]
+            for mol in mols:
+                mol_setup = self._preparator.prepare(mol)[0]
+                pdbqt_string = PDBQTWriterLegacy.write_string(mol_setup)[0]
 
-            try:
-                self._vina.set_ligand_from_string(pdbqt_string)
-            except TypeError:
-                print('Could not read input PDBQT file!')
-                return None, np.array([np.nan] * 8)
+                try:
+                    self._vina.set_ligand_from_string(pdbqt_string)
+                except TypeError:
+                    print('Could not read input PDBQT file!')
+                    return None, np.array([np.nan] * 8)
 
-            # Do local optimization
-            self._vina.optimize()
-            scores = self._vina.score()
-            self._vina.write_pose(output_pdbqt, overwrite=True)
-            pdbqt_mol = PDBQTMolecule.from_file(output_pdbqt, is_dlg=False, skip_typing=True)
+                # Do local optimization
+                self._vina.optimize()
+                all_scores.append(self._vina.score())
+                self._vina.write_pose(output_pdbqt, overwrite=True)
+                all_pdbqt_mols.append(PDBQTMolecule.from_file(output_pdbqt, is_dlg=False, skip_typing=True))
+
+            # Keep only best pose based on total energy
+            best_mol_id = np.argmin(np.asarray(all_scores)[:, 0])
+            scores = all_scores[best_mol_id]
+            pdbqt_mol = all_pdbqt_mols[best_mol_id]
+
+            # Cleanup temp pdbqt file
             os.remove(output_pdbqt)
         else:
             mol_setup = self._preparator.prepare(input_molecule)[0]
