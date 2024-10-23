@@ -37,3 +37,4 @@ dependencies:
     - pymoo
     - mapchiral
     - numpy == 1.26.4
+    - git+https://github.com/forlilab/scrubber.git
