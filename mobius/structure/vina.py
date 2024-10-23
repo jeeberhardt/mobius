@@ -82,7 +82,7 @@ def superpose_molecule(mobile, ref, random_seed=0xf00d):
 
 class VinaScorer:
 
-    def __init__(self, receptor_pdbqt_filename, center, dimensions, protonate=True, pH=7.4):
+    def __init__(self, receptor_pdbqt_filename, center, dimensions, scrub=True, pH=7.4):
         """
         Constructs a new instance of the Vina scorer.
 
@@ -94,58 +94,59 @@ class VinaScorer:
             The center of the docking box.
         dimensions : list
             The dimensions of the docking box.
-        protonate : bool, default=True
-            Whether to protonate the input ligand before docking.
+        scrub : bool, default=True
+            Whether scrub the input molecule (using Scrubber) or not before docking. 
+            If not, the input molecule is expected to be fully prepared (hydrogen, protonations, ...)
         pH : float, default=7.4
-            The pH to use for protonation, if protonation is enabled.
+            The pH to use if the molecule is scrubed before docking.
 
         """
         self._vina = Vina(verbosity=0)
         self._vina.set_receptor(receptor_pdbqt_filename)
         self._vina.compute_vina_maps(center, dimensions)
-        self._protonate = protonate
-        self._scrubber = Scrub(ph_low=pH)
+        self._scrub = scrub
+
+        if scrub:
+            self._scrubber = Scrub(ph_low=pH)
+        else:
+            self._scrubber = None
+
         self._preparator = MoleculePreparation()
 
-    def dock(self, smiles, reference=None):
+    def dock(self, input_molecule, reference=None):
         """
-        Docks a molecule on a reference molecule.
+        Superpose input molecule onto a reference molecule, if provided. 
+        If not, do global docking.
+         
 
         Parameters
         ----------
-        smiles : str
-            The SMILES of the molecule to dock.
+        input_molecule : rdkit.Chem.rdchem.Mol
+            The input molecule to be docked.
         reference : rdkit.Chem.rdchem.Mol, default=None
             The reference molecule to use for the superposition. If None,
             the molecule will be docked.
 
         Returns
         -------
-        molecule : rdkit.Chem.rdchem.Mol
-            RDKit molecule of the docked molecule.
+        docked_molecule : rdkit.Chem.rdchem.Mol
+            The RDKit molecule of the docked molecule.
         scores : np.array
-            Vina scores of the docked molecule.
+            The Vina scores of the docked molecule.
 
         """
         output_pdbqt = 'docker_tmp.pdbqt'
 
-        mobile = Chem.MolFromSmiles(smiles)
-
-        if self._protonate:
-            mobile = self._scrubber(mobile)[0]
-        else:
-            mobile = Chem.AddHs(mobile)
-        
-        if mobile is None:
-            return None, np.array([np.nan] * 8)
+        if self._scrub:
+            input_molecule = self._scrubber(input_molecule)[0]
         
         if reference is not None:
-            succeeded, _ = superpose_molecule(mobile, reference, random_coordinates=True)
+            succeeded, _ = superpose_molecule(input_molecule, reference, random_coordinates=True)
 
             if not succeeded:
                 return None, np.array([np.nan] * 8)
 
-            mol_setup = self._preparator.prepare(mobile)[0]
+            mol_setup = self._preparator.prepare(input_molecule)[0]
             pdbqt_string = PDBQTWriterLegacy.write_string(mol_setup)[0]
 
             try:
@@ -161,7 +162,7 @@ class VinaScorer:
             pdbqt_mol = PDBQTMolecule.from_file(output_pdbqt, is_dlg=False, skip_typing=True)
             os.remove(output_pdbqt)
         else:
-            mol_setup = self._preparator.prepare(mobile)[0]
+            mol_setup = self._preparator.prepare(input_molecule)[0]
             pdbqt_string = PDBQTWriterLegacy.write_string(mol_setup)[0]
 
             try:
