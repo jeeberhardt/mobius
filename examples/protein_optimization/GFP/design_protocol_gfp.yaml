@@ -1,0 +1,11 @@
+
+    design:
+      monomers:
+        default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
+      biopolymers:
+        - name: PEPTIDE1
+          starting_residue: 1
+          length: 237
+          positions:
+            1-237: default
+    

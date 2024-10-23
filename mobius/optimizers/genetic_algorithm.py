@@ -23,6 +23,7 @@ from pymoo.algorithms.soo.nonconvex.ga import GA
 
 from .ga_biopolymer import SerialBioPolymerGA
 from .ga_polymer import SerialPolymerGA
+from ..utils import constrained_sum_sample_nonneg
 from ..utils import guess_input_formats, build_helm_string
 from ..utils import parse_helm, get_scaffold_from_helm_string
 from ..utils import constrained_sum_sample_nonneg
@@ -584,11 +585,12 @@ def _adjust_polymers_to_designs(polymers, designs):
     modified = np.zeros(shape=(len(polymers),), dtype=bool)
 
     for i, polymer in enumerate(polymers):
+        modified_complex_polymer = {}
+        
         complex_polymer, connections, _, _ = parse_helm(polymer)
         scaffold = get_scaffold_from_helm_string(polymer)
 
         for pid, simple_polymer in complex_polymer.items():
-            modified_complex_polymer = {}
             modified_simple_polymer = list(simple_polymer)
 
             for j, monomer in enumerate(simple_polymer):

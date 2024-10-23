@@ -185,7 +185,7 @@ class PolymerMutation(Mutation):
     Class to define mutation behaviour applied to new generation of polymers (in HELM format).
     """
 
-    def __init__(self, design, pm=0.1, minimum_mutations=1, maximum_mutations=None, keep_connections=True):
+    def __init__(self, design, pm=0.1, minimum_mutations=1, maximum_mutations=None, keep_connections=False):
         """
         Initialize the mutation class for new generation of polymers.
 
@@ -199,7 +199,7 @@ class PolymerMutation(Mutation):
             Minimal number of mutations introduced in the new child.
         maximum_mutations : int, default : None
             Maximal number of mutations introduced in the new child.
-        keep_connections : Bool, default : True
+        keep_connections : Bool, default : False
             Whether to retain connections between mutated residues and the rest of the polymer.
 
         """
@@ -262,11 +262,11 @@ class PolymerMutation(Mutation):
                         chosen_monomer = _rng.choice(self._design[pid][mutation_position + 1])
                         mutated_simple_polymer[mutation_position] = chosen_monomer
 
-                mutant_complex_polymer[pid] = (mutated_simple_polymer, mutation_positions)
-                n_mutations += len(mutation_positions)
+                    mutant_complex_polymer[pid] = (mutated_simple_polymer, mutation_positions)
+                    n_mutations += len(mutation_positions)
 
                 if n_mutations > 0:
-                    if not self._keep_connections:
+                    if self._keep_connections:
                         connections_to_keep = []
 
                         # Check if we have to remove connections due to the mutations

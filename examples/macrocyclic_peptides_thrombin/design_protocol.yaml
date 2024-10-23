@@ -1,0 +1,52 @@
+
+    design:
+      monomers:
+        BB-AA: [X21, X22, X23, X24, X25, X26, X27, X28, X29, X30]
+        SD-AA: [X1, X2, X3, X4, X5, X6, X7, X8, X9, X10]
+        Di-AA: [X11, X12, X13, X14, X15, X16, X17, X18, X19, X20]
+        linkers: ['[*]Cc1cccc(C[*])n1 |$_R1;;;;;;;;_R2;$|', '[*]CS(=O)(=O)C[*] |$_R1;;;;;;_R2$|', '[*]Cc1ccc(C[*])cc1 |$_R1;;;;;;;_R2;;$|', '[*]C/C=C/C[*] |$_R1;;;;;_R2$|']
+        acids: [A5, A6, A7, A8, A9, A10, A11, A12, A13, A14]
+        default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
+      polymers:
+        - CHEM1{X}|PEPTIDE1{X.C.X.X.[Mea]}$CHEM1,PEPTIDE1,1:R1-2:R3|CHEM1,PEPTIDE1,1:R2-5:R3$$$V2.0:
+            CHEM1:
+              1: linkers
+            PEPTIDE1:
+              1: acids
+              3: [SD-AA, BB-AA]
+              4: [SD-AA, BB-AA]
+        - CHEM1{X}|PEPTIDE1{C.X.X.[Mea]}$CHEM1,PEPTIDE1,1:R1-2:R3|CHEM1,PEPTIDE1,1:R2-4:R3$$$V2.0:
+            CHEM1:
+              1: linkers
+            PEPTIDE1:
+              2: [SD-AA, BB-AA]
+              3: [SD-AA, BB-AA]
+        - CHEM1{X}|PEPTIDE1{[Mpa].X.X.[Mea]}$CHEM1,PEPTIDE1,1:R1-1:R3|CHEM1,PEPTIDE1,1:R2-4:R3$$$V2.0:
+            CHEM1:
+              1: linkers
+            PEPTIDE1:
+              2: Di-AA
+              3: SD-AA
+        - CHEM1{X}|PEPTIDE1{[Mpa].X.X.[Mea]}|PEPTIDE2{X}$CHEM1,PEPTIDE1,1:R1-1:R3|CHEM1,PEPTIDE1,1:R2-4:R3|PEPTIDE1,PEPTIDE2,2:R3-1:R2$$$V2.0:
+            CHEM1:
+              1: linkers
+            PEPTIDE1:
+              2: Di-AA
+              3: SD-AA
+            PEPTIDE2:
+              1: acids
+        - CHEM1{X}|PEPTIDE1{[Mpa].X.X.[Mea]}$CHEM1,PEPTIDE1,1:R1-1:R3|PEPTIDE1,CHEM1,4:R3-1:R2$$$V2.0:
+            CHEM1:
+              1: linkers
+            PEPTIDE1:
+              2: SD-AA
+              3: Di-AA
+        - CHEM1{X}|PEPTIDE1{[Mpa].X.X.[Mea]}|PEPTIDE2{X}$CHEM1,PEPTIDE1,1:R1-1:R3|CHEM1,PEPTIDE1,1:R2-4:R3|PEPTIDE1,PEPTIDE2,3:R3-1:R2$$$V2.0:
+            CHEM1:
+              1: linkers
+            PEPTIDE1:
+              2: SD-AA
+              3: Di-AA
+            PEPTIDE2:
+              1: acids
+    

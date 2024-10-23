@@ -1,0 +1,14 @@
+
+    design:
+      monomers:
+        default: [A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y]
+      biopolymers:
+        - name: GB1
+          starting_residue: 1
+          length: 56
+          positions:
+            39: default
+            40: default
+            41: default
+            54: default
+    
