@@ -12,7 +12,7 @@ dependencies:
   - gpytorch
   - matplotlib
   - numba 
-  - numpy == 1.26.4
+  - numpy
   - numpydoc
   - pandas
   - parmed
@@ -38,6 +38,5 @@ dependencies:
     - ray
     - pymoo
     - mapchiral
-    - numpy == 1.26.4
     - vina
     - git+https://github.com/forlilab/scrubber.git
