@@ -13,32 +13,37 @@ from meeko import MoleculePreparation
 from meeko import RDKitMolCreate
 from meeko import PDBQTWriterLegacy
 from rdkit import Chem
+from rdkit import RDLogger
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdFMCS
 from rdkit.Chem import rdMolAlign
+from rdkit.Chem import rdDistGeom
 from rdkit.ML.Cluster import Butina
 from scrubber import Scrub
+from scrubber.protonate import AcidBaseConjugator
 from vina import Vina
 
 
-def constrained_embed_multiple_confs(mobile, ref, random_seed=0xf00d, num_confs=10, cluster=True, distance_cutoff=1.0):
+def constrained_embed_multiple_confs(query_mol, core_mol, num_confs=10, cluster=True, distance_cutoff=1.0, random_seed=0xf00d, mcs_timeout=1):
     """
     Superpose a molecule onto a reference molecule using RDKit.
 
     Parameters
     ----------
-    mobile : rdkit.Chem.rdchem.Mol
+    query_mol : rdkit.Chem.rdchem.Mol
         The molecule to align.
-    ref : rdkit.Chem.rdchem.Mol
+    core_mol : rdkit.Chem.rdchem.Mol
         The reference molecule.
-    random_seed : int, default=0xf00d
-        The random seed to use for the embedding.
     num_confs : int, default=10
         The number of conformations to generate.
     cluster : bool, default=True
         Whether to cluster the conformations.
     distance_cutoff : float, default=1.0
         The distance cutoff to use for clustering.
+    random_seed : int, default=0xf00d
+        The random seed to use for the embedding.
+    mcs_timeout : float, default=1
+        Timeout for MCS algorithm. Helps a lot with big peptides.
 
     Returns
     -------
@@ -49,52 +54,91 @@ def constrained_embed_multiple_confs(mobile, ref, random_seed=0xf00d, num_confs=
     Notes
     -----
     - The superposition is done in place.
-    - Sources: 
-        - https://greglandrum.github.io/rdkit-blog/posts/2023-02-10-more-on-constrained-embedding.html
-        - https://github.com/rdkit/rdkit/issues/3266
+    - Source: 
+        - https://github.com/forlilab/scrubber/blob/develop/scrubber/core.py#L577
 
     """
-    max_displacement = 0.5
-    force_constant = 1.e4
+    # Set up the ETKDG parameters
+    ps = rdDistGeom.ETKDGv3()
+    ps.randomSeed = random_seed
+    ps.useRandomCoords = True
+    ps.useBasicKnowledge = True
+    ps.trackFailures = False
+    ps.enforceChirality = True
+    ps.useSmallRingTorsions = True
+    ps.useMacrocycleTorsions = False
+    ps.clearConfs = True
 
-    mcs = rdFMCS.FindMCS([ref, mobile])
+    # Forcefield-related parameters
+    getForceField = AllChem.UFFGetMoleculeForceField
+    force_constant = 1e4
+    force_tolerance = 1e-3
+    energy_tolerance = 1e-4
+    force_constant_final = 0.1
+    max_displacement = 1.5
+
+    # Find common substructure between probe and reference
+    mcs = rdFMCS.FindMCS([query_mol, core_mol], timeout=int(mcs_timeout))
     smarts = mcs.smartsString
     patt = Chem.MolFromSmarts(smarts)
-    mobile_match = mobile.GetSubstructMatch(patt)
-    ref_match = ref.GetSubstructMatch(patt)
+    query_match = query_mol.GetSubstructMatch(patt)
+    core_match = core_mol.GetSubstructMatch(patt)
+    cmap = [(i, j) for i, j in zip(query_match, core_match)]
 
-    cmap = {mobile_match[i]: ref.GetConformer().GetAtomPosition(ref_match[i]) for i in range(len(ref_match))}
-    cids = AllChem.EmbedMultipleConfs(mobile, numConfs=num_confs, coordMap=cmap, randomSeed=random_seed, 
-                                      useRandomCoords=True, useBasicKnowledge=False, enforceChirality=False)
-
+    cids = rdDistGeom.EmbedMultipleConfs(query_mol, num_confs, ps)
     cids = list(cids)
 
     if len(cids) == 0:
         return None
 
-    # Minimize conformations since we set useBasicKnowledge to False,
-    # but we minimize only the atoms that were not matched.
-    mp = AllChem.MMFFGetMoleculeProperties(mobile)
+    core_conf = core_mol.GetConformer()
 
     for cid in cids:
-        ff = AllChem.MMFFGetMoleculeForceField(mobile, mp, confId=cid)
-        for i in mobile_match:
-            ff.MMFFAddPositionConstraint(i, max_displacement, force_constant)
-        ff.Minimize()
+        n = 4
+
+        # Superpose the query onto the core
+        rms_ini = rdMolAlign.AlignMol(query_mol, core_mol, atomMap=cmap, prbCid=cid)
+
+        # Do first minimization to superpose all the query atoms on the top of the core atoms
+        ff = getForceField(query_mol, confId=cid)
+
+        for atom_pair in cmap:
+            p = core_conf.GetAtomPosition(atom_pair[1])
+            pIdx = ff.AddExtraPoint(p.x, p.y, p.z, fixed=True) - 1
+            ff.AddDistanceConstraint(pIdx, atom_pair[0], 0, 0, force_constant)
+
+        ff.Initialize()
+        more = ff.Minimize(energyTol=energy_tolerance, forceTol=force_tolerance)
+        while more and n:
+            more = ff.Minimize(energyTol=energy_tolerance, forceTol=force_tolerance)
+            n -= 1
+
+        # Do a last minimization to relax the whole query molecule without
+        # deviating too far from the initial placement
+        ff = getForceField(query_mol, confId=cid)
+
+        for atom_pair in cmap:
+            ff.UFFAddPositionConstraint(atom_pair[0], max_displacement, force_constant_final)
+
+        ff.Initialize()
+        ff.Minimize(energyTol=energy_tolerance, forceTol=force_tolerance)
+
+        # Re-superpose the query onto the core
+        rms_final = rdMolAlign.AlignMol(query_mol, core_mol, atomMap=cmap)
 
     if cluster:
         dists = []
 
         for i in range(len(cids)):
             for j in range(i):
-                dists.append(rdMolAlign.GetBestRMS(mobile, mobile, i, j))
+                dists.append(rdMolAlign.GetBestRMS(query_mol, query_mol, i, j))
 
         clusts = Butina.ClusterData(dists, len(cids), distance_cutoff, isDistData=True, reordering=True)
-        mobiles = [Chem.Mol(mobile, confId=i[0]) for i in clusts]
+        query_mols = [Chem.Mol(query_mol, confId=i[0]) for i in clusts]
     else:
-        mobiles = [Chem.Mol(mobile, confId=i) for i in cids]
+        query_mols = [Chem.Mol(query_mol, confId=i) for i in cids]
 
-    return mobiles
+    return query_mols
 
 
 class VinaScorer:
@@ -116,9 +160,10 @@ class VinaScorer:
         self._vina = Vina(verbosity=0)
         self._vina.set_receptor(receptor_pdbqt_filename)
         self._vina.compute_vina_maps(center, dimensions)
+        self._protonator = AcidBaseConjugator.from_default_data_files()
         self._preparator = MoleculePreparation()
 
-    def dock(self, input_molecule, reference=None, scrub=True, pH=7.4, num_confs=10, cluster=True):
+    def dock(self, input_molecule, template=None, num_confs=10, cluster=True, adjust_protonation=True, pH=7.4):
         """
         Superpose input molecule onto a reference molecule, if provided. 
         If not, do global docking.
@@ -127,19 +172,21 @@ class VinaScorer:
         ----------
         input_molecule : rdkit.Chem.rdchem.Mol
             The input molecule to be docked.
-        reference : rdkit.Chem.rdchem.Mol, default=None
-            The reference molecule to use for the superposition. If None,
-            the molecule will be docked.
-        scrub : bool, default=True
-            Whether scrub the input molecule (using Scrubber) or not before docking. 
-            If not, the input molecule is expected to be fully prepared (hydrogen, protonations, ...)
-        pH : float, default=7.4
-            The pH to use if the molecule is scrubed before docking.
+        template : rdkit.Chem.rdchem.Mol, default=None
+            The template molecule to use for the superposition. If None,
+            the input molecule will be docked (global search).
         num_confs: int, default=10
-            Number of conformation to generate, if reference provided.
+            Number of conformation generated in total, if reference provided.
         cluster : bool, default=True
             Cluster conformations before scoring, if reference provided.
             Use Butina clustering method with a distance cutoff of 1 A.
+        adjust_protonation : bool, default=True
+            Whether the protonation of the input molecule is adjusted 
+            (using Scrubber) or not before docking. If not, the input molecule 
+            is expected have the correct protonation.
+        pH : float, default=7.4
+            The pH to use if the protonation of the input molecule is adjusted 
+            before docking.
 
         Returns
         -------
@@ -151,15 +198,19 @@ class VinaScorer:
         """
         output_pdbqt = 'docker_tmp.pdbqt'
 
-        if scrub:
-            scrubber = Scrub(ph_low=pH)
-            input_molecule = scrubber(input_molecule)[0]
+        if adjust_protonation:
+            input_molecule = self._protonator(input_molecule, pH, pH)[0]
 
-        if reference is not None:
+        if template is not None:
             all_scores = []
             all_pdbqt_mols = []
 
-            mols = constrained_embed_multiple_confs(input_molecule, reference, num_confs=num_confs, cluster=cluster)
+            # Ignore warning because hydrogen atoms are missing
+            RDLogger.DisableLog('rdApp.warning')
+
+            mols = constrained_embed_multiple_confs(input_molecule, template, num_confs=num_confs, cluster=cluster)
+                
+            RDLogger.EnableLog('rdApp.warning')
 
             if mols is None:
                 return None, np.array([np.nan] * 8)
@@ -187,7 +238,7 @@ class VinaScorer:
 
             # Cleanup temp pdbqt file
             os.remove(output_pdbqt)
-        else:
+        else:    
             mol_setup = self._preparator.prepare(input_molecule)[0]
             pdbqt_string = PDBQTWriterLegacy.write_string(mol_setup)[0]
 
