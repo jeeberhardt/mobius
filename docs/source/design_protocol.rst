@@ -167,7 +167,7 @@ you can employ the `PeptideSolubilityFilter` as shown in the following example:
         charged_per_amino_acids: 5
 
 In the example above, we defined a filter that excludes peptides with a hydrophobic ratio greater than 0.5
-and a charge per amino acid ratio greater than 5. The `init_args` section is used to pass arguments to the
+and a charged ratio lower than 0.25. The `init_args` section is used to pass arguments to the
 filter. In this case, we passed the `hydrophobe_ratio` and `charged_per_amino_acids` arguments to the
 `PeptideSolubilityFilter` filter. For more information on the available filters and their arguments, please
 refer to the :ref:`Mobius documentation <mobius>`.
@@ -185,7 +185,7 @@ If you want to use multiple filters, you can define them as shown in the followi
     - class_path: mobius.PeptideSolubilityFilter
       init_args:
         hydrophobe_ratio: 0.5
-        charged_per_amino_acids: 5
+        charged_ratio: 0.25
     - class_path: mobius.PeptideSelfAggregationFilter
 
 In the example above, we defined two filters: `PeptideSolubilityFilter` and `PeptideSelfAggregationFilter`.

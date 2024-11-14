@@ -80,27 +80,32 @@ class PeptideSolubilityFilter():
 
     """
 
-    def __init__(self, hydrophobe_ratio=0.5, charged_per_amino_acids=5.0, **kwargs):
+    def __init__(self, hydrophobe_ratio=0.5, charged_ratio=0.25, 
+                 ignore_connections=False, ignore_non_natural=False, **kwargs):
         """
         Initialize the PeptideSolubilityFilter.
 
         Parameters
         ----------
         hydrophobe_ratio : float, default: 0.5
-            Maximum ratio of hydrophobic amino acids allowed in the sequence.
-        charged_per_amino_acids : float, default: 5.0
-            Minimum number of charged amino acids per amino acids.
+            Maximum ratio of hydrophobic amino acids allowed in the sequence. 
+            List of residues considered as hydrophobic: 'M', 'F', 'I', 'L', 'V', 'W', 'Y'
+        charged_ratio : float, default: 5.0
+            Minimum ratio of charged amino acids in the sequence. List of 
+            residues considered as charged: 'D', 'E', 'K', 'R', 'H'
 
         """
         self._hydrophobe_ratio = hydrophobe_ratio
-        self._charged_per_amino_acids = charged_per_amino_acids
+        self._charged_ratio = charged_ratio
+        self._ignore_connections = ignore_connections
+        self._ignore_non_natural = ignore_non_natural
 
     def apply(self, polymers):
         """
         Filter polymers that are not soluble using rule-based approach [1]_:
 
-            #. Keep hydrophobic amino acids [AFGILPVW] below 50% of the total sequence
-            #. At least one charged amino acid [DEKR] for every 5 amino acids
+            #. Keep hydrophobic amino acids [MFILVWY] below 50% of the total sequence
+            #. Keep charged amino acids [DEKRH] above 25% of the total sequence
 
         Parameters
         ----------
@@ -113,28 +118,26 @@ class PeptideSolubilityFilter():
             Numpy array of boolean values indicating which polymers 
             passed the filter.
 
-        References
-        ----------
-        .. [1] https://www.sigmaaldrich.com/CH/de/technical-documents/technical-article/protein-biology/protein-labeling-and-modification/peptide-stability
-
         """
         passed = np.ones(shape=(len(polymers),), dtype=bool)
         NATAA = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 
                  'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
-        APOLAR = ['A', 'F', 'G', 'I', 'L', 'P', 'V', 'W']
-        AA_CHARGED = ['D', 'E', 'K', 'R']
+        APOLAR = ['M', 'F', 'I', 'L', 'V', 'W', 'Y']
+        AA_CHARGED = ['D', 'E', 'K', 'R', 'H']
 
         for i, complex_polymer in enumerate(polymers):
             simple_polymers, connections, _, _ = parse_helm(complex_polymer)
 
-            if connections:
-                msg_error = 'Self-aggregration filter only works for linear peptides.'
-                raise RuntimeError(msg_error)
+            if not self._ignore_connections:
+                if connections:
+                    msg_error = 'Self-aggregration filter only works for linear peptides.'
+                    raise RuntimeError(msg_error)
 
             for _, simple_polymer in simple_polymers.items():
-                if not set(simple_polymer).issubset(NATAA):
-                    msg_error = 'Self-aggregration filter only works polymers containing the 20 natural amino acids.'
-                    raise RuntimeError(msg_error)
+                if not self._ignore_non_natural:
+                    if not set(simple_polymer).issubset(NATAA):
+                        msg_error = 'Self-aggregration filter only works polymers containing the 20 natural amino acids.'
+                        raise RuntimeError(msg_error)
 
                 length = len(simple_polymer)
 
@@ -146,10 +149,7 @@ class PeptideSolubilityFilter():
 
                 charged_monomers = set(simple_polymer).intersection(AA_CHARGED)
 
-                if len(charged_monomers) == 0:
-                    passed[i] = False
-                    break
-                elif length / len(charged_monomers) >= self._charged_per_amino_acids:
+                if len(charged_monomers) / length <= self._charged_ratio:
                     passed[i] = False
                     break
 
