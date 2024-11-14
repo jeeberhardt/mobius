@@ -1,0 +1,728 @@
+[
+    {
+        "MonomerID": "Mpa",
+        "MonomerSmiles": "[*]SCCC(=O)[*] |$_R3;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "Mpa",
+        "Attachments": [
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            },
+            {
+                "AttachmentID": "R3-H",
+                "AttachmentLabel": "R3",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "Mea",
+        "MonomerSmiles": "[*]NCCS[*] |$_R1;;;;;_R3$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "Mea",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R3-H",
+                "AttachmentLabel": "R3",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "A2",
+        "MonomerSmiles": "[*]NCCCS[*] |$_R1;;;;;;_R3$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "A2",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R3-H",
+                "AttachmentLabel": "R3",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "A3",
+        "MonomerSmiles": "[*]N(C)CCCS[*] |$_R1;;;;;;;_R3$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "A3",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R3-H",
+                "AttachmentLabel": "R3",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "A4",
+        "MonomerSmiles": "[*]NCC=CCS[*] |$_R1;;;;;;;_R3$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "A4",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R3-H",
+                "AttachmentLabel": "R3",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "A5",
+        "MonomerSmiles": "[*]N(C1)CC1CS[*] |$_R1;;;;;;;_R3$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "A5",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R3-H",
+                "AttachmentLabel": "R3",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "A6",
+        "MonomerSmiles": "[*]N(CC1)CCC1S[*] |$_R1;;;;;;;;_R3$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "A6",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R3-H",
+                "AttachmentLabel": "R3",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "A7",
+        "MonomerSmiles": "[*]N(CC1)CCC1CS[*] |$_R1;;;;;;;;;_R3$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "A7",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R3-H",
+                "AttachmentLabel": "R3",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R3;$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "NMeA",
+        "MonomerSmiles": "CN([*])[C@@H](C)C(=O)[*] |$;;_R1;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "NMeA",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "bAla",
+        "MonomerSmiles": "[*]NCCC(=O)[*] |$_R1;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "bAla",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "gAla",
+        "MonomerSmiles": "[*]NCCCC(=O)[*] |$_R1;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "gAla",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "Aib",
+        "MonomerSmiles": "[*]NC(C)(C)C(=O)[*] |$_R1;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "Aib",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "Ac3c",
+        "MonomerSmiles": "[*]NC1(CC1)C(=O)[*] |$_R1;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "Ac3c",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "Amcp",
+        "MonomerSmiles": "[*]NCC1(CC1)C(=O)[*] |$_R1;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "Amcp",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "Acpc",
+        "MonomerSmiles": "[*]N[C@H]1[C@@H](CCC1)C(=O)[*] |$_R1;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "Acpc",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "Ac6c",
+        "MonomerSmiles": "[*]NC1(CCCCC1)C(=O)[*] |$_R1;;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "Ac6c",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "2Amb",
+        "MonomerSmiles": "[*]Nc1c(cccc1)C(=O)[*] |$_R1;;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "2Amb",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "3Amb",
+        "MonomerSmiles": "[*]Nc1cc(ccc1)C(=O)[*] |$_R1;;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "3Amb",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "4Amb",
+        "MonomerSmiles": "[*]Nc1ccc(cc1)C(=O)[*] |$_R1;;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "4Amb",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "2Achc",
+        "MonomerSmiles": "[*]N[C@H]1[C@@H](CCCC1)C(=O)[*] |$_R1;;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "2Achc",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "4Achc",
+        "MonomerSmiles": "[*]N[C@@H]1CC[C@@H](CC1)C(=O)[*] |$_R1;;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "4Achc",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "Trx",
+        "MonomerSmiles": "[*]NC[C@H]1CC[C@@H](CC1)C(=O)[*] |$_R1;;;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "Trx",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "cAcha",
+        "MonomerSmiles": "[*]N[C@@H]1CC[C@@H](CC1)CC(=O)[*] |$_R1;;;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "cAcha",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "tAcha",
+        "MonomerSmiles": "[*]N[C@@H]1CC[C@H](CC1)CC(=O)[*] |$_R1;;;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "tAcha",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "dPip",
+        "MonomerSmiles": "[*]N1CCCC[C@@H]1C([*])=O |$_R1;;;;;;;;_R2;$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "dPip",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "Nip",
+        "MonomerSmiles": "[*]N1C[C@H](CCC1)C(=O)[*] |$_R1;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "Nip",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "dNip",
+        "MonomerSmiles": "[*]N1C[C@@H](CCC1)C(=O)[*] |$_R1;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "dNip",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "Isn",
+        "MonomerSmiles": "[*]N1CCC(CC1)C(=O)[*] |$_R1;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "Isn",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "bhPro",
+        "MonomerSmiles": "[*]N1CCC[C@H]1CC([*])=O |$_R1;;;;;;;;_R2;$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "bhPro",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "Aze",
+        "MonomerSmiles": "[*]N1CC[C@H]1C([*])=O |$_R1;;;;;;_R2;$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "Aze",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "APipAc",
+        "MonomerSmiles": "[*]NC1CCN(CC1)CC(=O)[*] |$_R1;;;;;;;;;;;_R2$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "APipAc",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "4CIF",
+        "MonomerSmiles": "[*]N[C@@H](Cc1ccc(Cl)cc1)C([*])=O |$_R1;;;;;;;;;;;;_R2;$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "4CIF",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    },
+    {
+        "MonomerID": "Thio",
+        "MonomerSmiles": "[*]N[C@@H](CNC(=O)C1=CC=C(Cl)S1)C([*])=O |$_R1;;;;;;;;;;;;;;_R2;$|",
+        "MonomerType": "Backbone",
+        "PolymerType": "PEPTIDE",
+        "NaturalAnalog": "X",
+        "MonomerName": "Thio",
+        "Attachments": [
+            {
+                "AttachmentID": "R1-H",
+                "AttachmentLabel": "R1",
+                "CapGroupName": "H",
+                "CapGroupSmiles": "[*][H] |$_R1;$|"
+            },
+            {
+                "AttachmentID": "R2-OH",
+                "AttachmentLabel": "R2",
+                "CapGroupName": "OH",
+                "CapGroupSmiles": "O[*] |$;_R2$|"
+            }
+        ]
+    }
+]

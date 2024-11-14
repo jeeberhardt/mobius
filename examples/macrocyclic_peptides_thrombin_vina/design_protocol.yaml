@@ -1,0 +1,28 @@
+design:
+  monomers:
+    S1: [R, 4CIF, Thio]
+    BB-AA: [G, NMeA, bAla, gAla, Ac3c, Amcp, Acpc, Ac6c, 2Amb, 3Amb, 4Amb, 2Achc, 4Achc, Trx, cAcha, tAcha, dPip, Nip, dNip, Isn, P, dP, bhPro, Aze, APipAc]
+    AT-AA: [Mea, A2, A3, A4, A5, A6, A7]
+    linkers: ['[*]CC(=O)C[*] |$_R1;;;;;_R2$|', '[*]CS(=O)(=O)C[*] |$_R1;;;;;;_R2$|', '[*]C/C=C/C[*] |$_R1;;;;;_R2$|', '[*]Cc1cccc(C[*])n1 |$_R1;;;;;;;;_R2;$|', '[*]CC1=COC=C1(C[*]) |$_R1;;;;;;;;_R2;$|', '[*]Cc1ccc(C[*])cc1 |$_R1;;;;;;;_R2;;$|', '[*]Cc1nc2ccccc2nc1(C[*]) |$_R1;;;;;;;;;;;;;_R2;$|']
+  polymers:
+    - CHEM1{X}|PEPTIDE1{[Mpa].X.X.X}$CHEM1,PEPTIDE1,1:R1-1:R3|CHEM1,PEPTIDE1,1:R2-4:R3$$$V2.0:
+        CHEM1:
+          1: linkers
+        PEPTIDE1:
+          2: BB-AA
+          3: S1
+          4: AT-AA
+    - CHEM1{X}|PEPTIDE1{[Mpa].X.X.X}$CHEM1,PEPTIDE1,1:R1-1:R3|CHEM1,PEPTIDE1,1:R2-4:R3$$$V2.0:
+        CHEM1:
+          1: linkers
+        PEPTIDE1:
+          2: S1
+          3: BB-AA
+          4: AT-AA
+    - CHEM1{X}|PEPTIDE1{[Mpa].X.X}$CHEM1,PEPTIDE1,1:R1-1:R3|CHEM1,PEPTIDE1,1:R2-3:R3$$$V2.0:
+        CHEM1:
+          1: linkers
+        PEPTIDE1:
+          2: S1
+          3: AT-AA
+    
